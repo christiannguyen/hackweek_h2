@@ -113,9 +113,6 @@ function RedeemOption({ balance: b, goal, price }: { balance: Balance; goal: Goa
         <h2 className={styles.ellipsis}>{b.cardName}</h2>
         <FreshnessTag balance={b} />
       </div>
-      <div className={styles.label} style={{ marginTop: 4 }}>
-        {p.name}
-      </div>
       <div className={styles.estimate}>
         {estimate}
         <div className={styles.assumptions}>{assumption}</div>

@@ -4,28 +4,15 @@ import styles from './pointpool.module.css'
 
 interface Props {
   balances: Balance[]
-  variant?: 'condensed' | 'full'
-  moreHref?: string // shows a chevron link in the header (e.g. to #redeem)
   onEdit?: (id?: number) => void
 }
 
 // Where each balance could go, side by side, with an estimated value per use. No totals across programs.
-export function PointsUses({ balances, variant = 'condensed', moreHref, onEdit }: Props) {
-  const full = variant === 'full'
-
+export function PointsUses({ balances, onEdit }: Props) {
   return (
     <div className={styles.card}>
-      <div className={styles.cardHead}>
-        <h2>Where your points could go</h2>
-        {moreHref && (
-          <a className={styles.chev} href={moreHref} aria-label="Ways to use your points">
-            ›
-          </a>
-        )}
-      </div>
-      <div className={styles.cardSub}>
-        If you have this many points, here’s where they could go. Each program’s points are used within that program.
-      </div>
+      <h2>Where your points could go</h2>
+      <div className={styles.cardSub}>With the balance you have, here’s what each use could look like.</div>
 
       {balances.length === 0 && (
         <div className={styles.empty}>
@@ -41,17 +28,14 @@ export function PointsUses({ balances, variant = 'condensed', moreHref, onEdit }
       )}
 
       {balances.map((b) => (
-        <UsesBlock key={b.id} balance={b} full={full} />
+        <UsesBlock key={b.id} balance={b} />
       ))}
 
-      {balances.length > 0 && (
-        <div className={styles.sample}>Illustrative value per point for each use — real pricing varies by program.</div>
-      )}
     </div>
   )
 }
 
-function UsesBlock({ balance: b, full }: { balance: Balance; full: boolean }) {
+function UsesBlock({ balance: b }: { balance: Balance }) {
   const uses = balanceUses(b)
   const credit = uses.find((u) => u.id === 'cashback')
   const tie = credit ? lifestyleTie(credit.value) : null
@@ -64,7 +48,7 @@ function UsesBlock({ balance: b, full }: { balance: Balance; full: boolean }) {
           <div className={`${styles.useTitle} ${styles.ellipsis}`}>{b.cardName}</div>
           <div className={`${styles.rowSub} ${styles.ellipsis}`}>{fmtBalance(b)}</div>
         </div>
-        {full && <FreshnessTag balance={b} />}
+        <FreshnessTag balance={b} />
       </div>
 
       {uses.length > 0 && !(b.amount > 0) ? (
@@ -79,16 +63,15 @@ function UsesBlock({ balance: b, full }: { balance: Balance; full: boolean }) {
             <span className={styles.useEmoji}>💵</span>
             <span>Same value as a statement credit, bank deposit, or at checkout.</span>
           </div>
-          {full &&
-            uses.map((u) => (
-              <div key={u.id} className={styles.useLine}>
-                <span className={styles.useEmoji}>{u.emoji}</span>
-                <span>
-                  {u.label[0].toUpperCase() + u.label.slice(1)}
-                  <span className={styles.useDetail}>{u.detail}</span>
-                </span>
-              </div>
-            ))}
+          {uses.map((u) => (
+            <div key={u.id} className={styles.useLine}>
+              <span className={styles.useEmoji}>{u.emoji}</span>
+              <span>
+                {u.label[0].toUpperCase() + u.label.slice(1)}
+                <span className={styles.useDetail}>{u.detail}</span>
+              </span>
+            </div>
+          ))}
         </>
       ) : (
         uses.map((u) => (
@@ -96,7 +79,7 @@ function UsesBlock({ balance: b, full }: { balance: Balance; full: boolean }) {
             <span className={styles.useEmoji}>{u.emoji}</span>
             <span>
               <b>≈{fmtMoney(u.value)}</b> {u.label}
-              {full && <span className={styles.useDetail}>{u.detail}</span>}
+              <span className={styles.useDetail}>{u.detail}</span>
             </span>
           </div>
         ))

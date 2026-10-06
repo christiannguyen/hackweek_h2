@@ -20,7 +20,6 @@
 .pageSub { color: var(--muted); font-size: 13px; margin: 2px 2px 0; }
 .sectionHead { display: flex; justify-content: space-between; align-items: center; margin: 10px 2px -4px; }
 .sectionTitle { font-size: 17px; font-weight: 500; margin: 0; letter-spacing: -0.2px; }
-.eyebrow { font-size: 10px; letter-spacing: 0.6px; text-transform: uppercase; color: #444; }
 
 .back {
   display: inline-flex; align-items: center; gap: 4px; width: fit-content;
@@ -40,7 +39,6 @@ a.card { text-decoration: none; color: inherit; display: block; }
 .cardHead > :last-child:not(:first-child) { flex-shrink: 0; }
 .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chev { color: #9a9a9a; font-size: 20px; line-height: 1; text-decoration: none; }
-.bigNumber { font-size: 40px; font-weight: 500; margin: 6px 0 2px; letter-spacing: -1px; line-height: 1.1; }
 .label { color: var(--muted); font-size: 12px; }
 .body { color: var(--text); font-size: 14px; line-height: 1.45; }
 
@@ -52,10 +50,8 @@ a.card { text-decoration: none; color: inherit; display: block; }
 .tag.sm { font-size: 11px; padding: 1px 8px; }
 .tag.warn { background: var(--orange-tint); color: var(--orange); }
 .tag.gray { background: #f0f0f0; color: #777; }
-.tag.solidOrange { background: #f5835a; color: #fff; }
 
 .green { color: var(--green); }
-.orange { color: var(--orange); }
 
 /* Smart-tasks style banner (lime border + lime arrow) */
 .tip {
@@ -68,13 +64,7 @@ a.card { text-decoration: none; color: inherit; display: block; }
 }
 .tipIcon { width: 30px; height: 30px; border-radius: 8px; background: #8fdc5a; display: grid; place-items: center; font-size: 16px; flex-shrink: 0; }
 .tipMain { flex: 1; min-width: 0; }
-.tipText { font-size: 13px; margin-top: 1px; line-height: 1.35; }
-.circleBtn {
-  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
-  display: grid; place-items: center; font-size: 15px;
-  background: var(--lime); color: var(--ink); margin-left: auto;
-}
-.circleBtn.black { background: var(--ink); color: #fff; }
+.tipText { font-size: 13px; line-height: 1.35; }
 
 /* Balance list rows */
 .row {
@@ -83,6 +73,10 @@ a.card { text-decoration: none; color: inherit; display: block; }
   cursor: pointer;
 }
 .row:first-of-type { border-top: none; }
+a.row { text-decoration: none; color: inherit; }
+.rowIcon.gray { background: #f4f4f5; font-size: 16px; }
+.rowTitleLine { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.rowMain > .tag { margin-top: 5px; }
 .rowIcon {
   width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
   background: var(--green-tint); color: var(--green);
@@ -92,42 +86,6 @@ a.card { text-decoration: none; color: inherit; display: block; }
 .rowTitle { font-size: 14px; font-weight: 500; }
 .rowSub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .rowAmount { font-size: 14px; font-weight: 500; text-align: right; white-space: nowrap; }
-.rowEnd { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
-
-/* "More ways" list items */
-.listItem {
-  display: flex; align-items: center; gap: 12px;
-  background: #fff; border-radius: var(--radius);
-  padding: 14px 16px; box-shadow: var(--shadow);
-  text-decoration: none; color: var(--ink);
-}
-.listItem .rowIcon { width: 38px; height: 38px; font-size: 17px; background: #f4f4f5; }
-.listTitle { font-size: 15px; font-weight: 500; }
-.listSub { font-size: 13px; color: #666; margin-top: 2px; line-height: 1.35; }
-.listItem.disabled { opacity: 0.55; }
-
-/* Tinted feature cards (like "Dispute inaccuracies"), horizontally scrollable */
-.carousel {
-  display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory;
-  margin: 0 -14px; padding: 0 14px 2px; scrollbar-width: none;
-}
-.carousel::-webkit-scrollbar { display: none; }
-.feature {
-  flex: 0 0 78%; scroll-snap-align: start;
-  display: flex; flex-direction: column; gap: 6px; min-height: 150px;
-  border-radius: var(--radius); padding: 16px;
-  background: var(--green-tint); color: var(--ink); text-decoration: none;
-}
-.feature.peach { background: #fdeee9; }
-.feature.blue { background: #eaf3fe; }
-.featureTitle { font-size: 17px; font-weight: 600; }
-.featureSub { font-size: 13px; line-height: 1.4; color: var(--text); }
-.readTag { width: fit-content; background: #fff; }
-.pillBtn {
-  margin-top: auto; width: fit-content;
-  background: var(--ink); color: #fff; font-size: 13px; font-weight: 500;
-  padding: 6px 14px; border-radius: 999px;
-}
 
 /* Marketplace gradient card */
 .promo {
@@ -145,7 +103,6 @@ a.card { text-decoration: none; color: inherit; display: block; }
   font: inherit; font-size: 13px; background: none; border: none;
   color: var(--ink); cursor: pointer; padding: 4px 2px;
 }
-.btnText.danger { color: var(--orange); }
 .add { font-weight: 600; }
 
 /* Chips (category / goal pickers) */
@@ -161,6 +118,7 @@ a.card { text-decoration: none; color: inherit; display: block; }
 .chip.active { background: var(--ink); color: #fff; border-color: var(--ink); }
 
 /* Card Coach (spend-driven earnings, side by side) */
+.coachHero h2 { font-size: 18px; }
 .coachHero { border: none; background: linear-gradient(180deg, var(--green-tint) 0, #fff 96px); }
 .headline { font-size: 15px; font-weight: 500; line-height: 1.35; margin-top: 12px; }
 .headline b { font-weight: 600; }
@@ -178,7 +136,7 @@ a.card { text-decoration: none; color: inherit; display: block; }
   display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
   text-align: right;
 }
-.earnValue { font-size: 14px; font-weight: 500; white-space: nowrap; }
+.earnValue { font-size: 14px; font-weight: 500; }
 .note { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
 .sample { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.4; }
 .moreLink { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 500; color: var(--green); text-decoration: none; }
@@ -205,6 +163,6 @@ a.card { text-decoration: none; color: inherit; display: block; }
 .assumptions { font-size: 11px; color: var(--muted); margin-top: 4px; }
 .steps { margin: 10px 0 0; padding-left: 18px; color: var(--text); line-height: 1.6; font-size: 13px; }
 
-.disclaimer { font-size: 10px; color: var(--muted); margin: 2px 2px 0; letter-spacing: 0.4px; text-transform: uppercase; }
+.disclaimer { font-size: 11px; color: var(--muted); margin: 2px 2px 0; line-height: 1.4; }
 .empty { text-align: center; color: #666; padding: 18px 0; font-size: 13px; }
 .mt { margin-top: 8px; }
