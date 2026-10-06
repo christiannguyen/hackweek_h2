@@ -20,7 +20,7 @@ export function CoachPage({ balances, category, onCategory, onEdit }: Props) {
       <div>
         <div className={styles.pageTitle}>Card Coach</div>
         <div className={styles.pageSub}>
-          What your everyday spending could earn on each of your cards — and the ways to use it.
+          What your spending could earn on each card, and where your points could go.
         </div>
       </div>
 
@@ -33,16 +33,13 @@ export function CoachPage({ balances, category, onCategory, onEdit }: Props) {
           onEdit={onEdit}
           variant="full"
         />
-        <div className={styles.estimate}>
-          <b>How we estimate:</b> your monthly spend × each card’s earn rate × an illustrative value per point for each
-          way to use it.
-          <div className={styles.assumptions}>
-            Illustrative rates for the demo. Caps and categories change — your card issuer has the latest.
-          </div>
+        <div className={styles.sample}>
+          Estimate = monthly spend × earn rate × an illustrative value per point. Caps and categories change — your
+          card issuer has the latest.
         </div>
       </div>
 
-      <PointsUses balances={balances} variant="full" onEdit={onEdit} />
+      <PointsUses balances={balances} onEdit={onEdit} />
 
       {tips.length > 0 && (
         <>
@@ -72,23 +69,12 @@ export function CoachPage({ balances, category, onCategory, onEdit }: Props) {
               >
                 <div className={styles.tipIcon}>{t.icon}</div>
                 <div className={`${styles.tipText} ${styles.tipMain}`}>{t.text}</div>
-                <div className={styles.circleBtn}>→</div>
+                <span className={styles.chev}>›</span>
               </a>
             ),
           )}
         </>
       )}
-
-      <div className={styles.sectionHead}>
-        <span className={styles.sectionTitle}>Coming soon</span>
-      </div>
-      <div className={`${styles.listItem} ${styles.disabled}`}>
-        <div className={styles.rowIcon}>🔔</div>
-        <div className={styles.rowMain}>
-          <div className={styles.listTitle}>Coach alerts</div>
-          <div className={styles.listSub}>A heads-up when a bonus category opens or a balance is ready for a trip</div>
-        </div>
-      </div>
 
       <Disclaimer />
     </>

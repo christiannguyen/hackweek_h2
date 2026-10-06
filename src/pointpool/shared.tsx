@@ -1,10 +1,10 @@
-import { ageDays, STALE_DAYS, type Balance } from './data'
+import { isStale, type Balance } from './data'
 import styles from './pointpool.module.css'
 
+// Only shown when a balance is due for an update — fresh balances stay quiet.
 export function FreshnessTag({ balance }: { balance: Balance }) {
-  const d = ageDays(balance.updatedAt)
-  if (d > STALE_DAYS) return <span className={`${styles.tag} ${styles.sm} ${styles.warn}`}>Ready to refresh</span>
-  return <span className={`${styles.tag} ${styles.sm}`}>{d === 0 ? 'Updated today' : `Updated ${d}d ago`}</span>
+  if (!isStale(balance)) return null
+  return <span className={`${styles.tag} ${styles.sm} ${styles.warn}`}>Ready to refresh</span>
 }
 
 export function BackLink() {
@@ -16,5 +16,10 @@ export function BackLink() {
 }
 
 export function Disclaimer() {
-  return <div className={styles.disclaimer}>ⓘ ESTIMATES ONLY — SAMPLE SPENDING, ILLUSTRATIVE RATES. EACH PROGRAM'S POINTS ARE USED WITHIN THAT PROGRAM.</div>
+  return (
+    <div className={styles.disclaimer}>
+      Estimates only, based on sample spending and illustrative rates. Each program’s points are used within that
+      program.
+    </div>
+  )
 }
