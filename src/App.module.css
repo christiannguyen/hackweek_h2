@@ -1,0 +1,13 @@
+.page {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+
+.colorModeToggle {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
