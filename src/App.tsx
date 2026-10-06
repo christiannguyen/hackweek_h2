@@ -1,24 +1,43 @@
 import { useState } from 'react'
-import { Button, Heading, Stack, Text } from '@chakra-ui/react'
-import { ColorModeButton } from '@/components/ui/color-mode'
-import styles from './App.module.css'
+import { MobileShell } from '@/components/MobileShell'
+import { BalanceSheet } from '@/pointpool/BalanceSheet'
+import { CoachPage } from '@/pointpool/CoachPage'
+import { TOP_CATEGORY, type CategoryId } from '@/pointpool/data'
+import { HomePage } from '@/pointpool/HomePage'
+import { LearnPage } from '@/pointpool/LearnPage'
+import { RedeemPage } from '@/pointpool/RedeemPage'
+import { useBalances } from '@/pointpool/useBalances'
+import { useHashRoute } from '@/pointpool/useHashRoute'
+import styles from '@/pointpool/pointpool.module.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const route = useHashRoute()
+  const { balances, upsert, remove } = useBalances()
+  // Shared so the category picked on the home hero carries into the full Coach page.
+  // Starts on the user's highest-spend category from the sample transactions.
+  const [category, setCategory] = useState<CategoryId>(TOP_CATEGORY)
+  const [sheet, setSheet] = useState<{ open: boolean; id?: number; key: number }>({ open: false, key: 0 })
+
+  const openSheet = (id?: number) => setSheet((s) => ({ open: true, id, key: s.key + 1 }))
+  const coachProps = { balances, category, onCategory: setCategory, onEdit: openSheet }
 
   return (
-    <main className={styles.page}>
-      <ColorModeButton className={styles.colorModeToggle} />
-      <Stack gap="4" align="center">
-        <Heading size="3xl">hackweek_h2</Heading>
-        <Text color="fg.muted">
-          React + Vite + TypeScript + Chakra UI + CSS Modules
-        </Text>
-        <Button onClick={() => setCount((count) => count + 1)}>
-          Count is {count}
-        </Button>
-      </Stack>
-    </main>
+    <MobileShell>
+      <main className={`${styles.root} ${styles.view}`}>
+        {route === 'home' && <HomePage {...coachProps} />}
+        {route === 'coach' && <CoachPage {...coachProps} />}
+        {route === 'redeem' && <RedeemPage balances={balances} />}
+        {route === 'learn' && <LearnPage />}
+      </main>
+      <BalanceSheet
+        key={sheet.key}
+        open={sheet.open}
+        balance={balances.find((b) => b.id === sheet.id)}
+        onClose={() => setSheet((s) => ({ ...s, open: false }))}
+        onSave={upsert}
+        onRemove={remove}
+      />
+    </MobileShell>
   )
 }
 

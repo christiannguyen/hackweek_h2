@@ -1,0 +1,210 @@
+/* Shared Pointpool primitives — sized to match the Kikoff app (Figtree, light weights, soft cards). */
+.root {
+  --green: #2fa83c;
+  --green-tint: #e7f8e9;
+  --lime: #c8f53a;
+  --lime-border: #b4ec4c;
+  --ink: #111;
+  --text: #2b2b2b;
+  --muted: #8a8a8e;
+  --line: #f0f0f0;
+  --orange: #f05a1a;
+  --orange-tint: #fdeee8;
+  --radius: 18px;
+  --shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
+}
+
+.view { padding: 4px 14px 16px; display: flex; flex-direction: column; gap: 14px; }
+
+.pageTitle { font-size: 22px; font-weight: 500; margin: 4px 2px 0; letter-spacing: -0.2px; }
+.pageSub { color: var(--muted); font-size: 13px; margin: 2px 2px 0; }
+.sectionHead { display: flex; justify-content: space-between; align-items: center; margin: 10px 2px -4px; }
+.sectionTitle { font-size: 17px; font-weight: 500; margin: 0; letter-spacing: -0.2px; }
+.eyebrow { font-size: 10px; letter-spacing: 0.6px; text-transform: uppercase; color: #444; }
+
+.back {
+  display: inline-flex; align-items: center; gap: 4px; width: fit-content;
+  color: var(--ink); text-decoration: none; font-size: 14px; font-weight: 500;
+}
+
+.card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+a.card { text-decoration: none; color: inherit; display: block; }
+.cardHead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.cardHead h2, .card h2 { margin: 0; font-size: 17px; font-weight: 500; }
+.cardHead h2 { min-width: 0; }
+.cardHead > :last-child:not(:first-child) { flex-shrink: 0; }
+.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chev { color: #9a9a9a; font-size: 20px; line-height: 1; text-decoration: none; }
+.bigNumber { font-size: 40px; font-weight: 500; margin: 6px 0 2px; letter-spacing: -1px; line-height: 1.1; }
+.label { color: var(--muted); font-size: 12px; }
+.body { color: var(--text); font-size: 14px; line-height: 1.45; }
+
+.tag {
+  display: inline-block; font-size: 12px; font-weight: 500;
+  padding: 2px 9px; border-radius: 999px; white-space: nowrap;
+  background: var(--green-tint); color: var(--green);
+}
+.tag.sm { font-size: 11px; padding: 1px 8px; }
+.tag.warn { background: var(--orange-tint); color: var(--orange); }
+.tag.gray { background: #f0f0f0; color: #777; }
+.tag.solidOrange { background: #f5835a; color: #fff; }
+
+.green { color: var(--green); }
+.orange { color: var(--orange); }
+
+/* Smart-tasks style banner (lime border + lime arrow) */
+.tip {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff;
+  border: 1.5px solid var(--lime-border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  text-decoration: none; color: var(--ink);
+}
+.tipIcon { width: 30px; height: 30px; border-radius: 8px; background: #8fdc5a; display: grid; place-items: center; font-size: 16px; flex-shrink: 0; }
+.tipMain { flex: 1; min-width: 0; }
+.tipText { font-size: 13px; margin-top: 1px; line-height: 1.35; }
+.circleBtn {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center; font-size: 15px;
+  background: var(--lime); color: var(--ink); margin-left: auto;
+}
+.circleBtn.black { background: var(--ink); color: #fff; }
+
+/* Balance list rows */
+.row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 0; border-top: 1px solid var(--line);
+  cursor: pointer;
+}
+.row:first-of-type { border-top: none; }
+.rowIcon {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: var(--green-tint); color: var(--green);
+  display: grid; place-items: center; font-weight: 600; font-size: 12px;
+}
+.rowMain { flex: 1; min-width: 0; }
+.rowTitle { font-size: 14px; font-weight: 500; }
+.rowSub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.rowAmount { font-size: 14px; font-weight: 500; text-align: right; white-space: nowrap; }
+.rowEnd { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+
+/* "More ways" list items */
+.listItem {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; border-radius: var(--radius);
+  padding: 14px 16px; box-shadow: var(--shadow);
+  text-decoration: none; color: var(--ink);
+}
+.listItem .rowIcon { width: 38px; height: 38px; font-size: 17px; background: #f4f4f5; }
+.listTitle { font-size: 15px; font-weight: 500; }
+.listSub { font-size: 13px; color: #666; margin-top: 2px; line-height: 1.35; }
+.listItem.disabled { opacity: 0.55; }
+
+/* Tinted feature cards (like "Dispute inaccuracies"), horizontally scrollable */
+.carousel {
+  display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory;
+  margin: 0 -14px; padding: 0 14px 2px; scrollbar-width: none;
+}
+.carousel::-webkit-scrollbar { display: none; }
+.feature {
+  flex: 0 0 78%; scroll-snap-align: start;
+  display: flex; flex-direction: column; gap: 6px; min-height: 150px;
+  border-radius: var(--radius); padding: 16px;
+  background: var(--green-tint); color: var(--ink); text-decoration: none;
+}
+.feature.peach { background: #fdeee9; }
+.feature.blue { background: #eaf3fe; }
+.featureTitle { font-size: 17px; font-weight: 600; }
+.featureSub { font-size: 13px; line-height: 1.4; color: var(--text); }
+.readTag { width: fit-content; background: #fff; }
+.pillBtn {
+  margin-top: auto; width: fit-content;
+  background: var(--ink); color: #fff; font-size: 13px; font-weight: 500;
+  padding: 6px 14px; border-radius: 999px;
+}
+
+/* Marketplace gradient card */
+.promo {
+  display: flex; align-items: center; gap: 12px;
+  border-radius: var(--radius); padding: 14px 16px;
+  background: linear-gradient(110deg, #fff 40%, #d4f7cf 75%, #b0ecab 100%);
+  box-shadow: var(--shadow);
+  text-decoration: none; color: var(--ink);
+}
+.promoTitle { font-size: 15px; font-weight: 600; }
+.promoSub { font-size: 13px; margin-top: 2px; color: var(--text); }
+
+/* Buttons */
+.btnText {
+  font: inherit; font-size: 13px; background: none; border: none;
+  color: var(--ink); cursor: pointer; padding: 4px 2px;
+}
+.btnText.danger { color: var(--orange); }
+.add { font-weight: 600; }
+
+/* Chips (category / goal pickers) */
+.chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+/* Inside a card, chips scroll edge to edge (like the carousel) instead of clipping at the card padding. */
+.card .chips { margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; scroll-padding: 0 16px; }
+.chip {
+  font: inherit; font-size: 13px; white-space: nowrap;
+  border: 1px solid #e6e6e6; background: #fff; color: var(--ink);
+  padding: 6px 12px; border-radius: 999px; cursor: pointer;
+}
+.chip.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* Card Coach (spend-driven earnings, side by side) */
+.coachHero { border: none; background: linear-gradient(180deg, var(--green-tint) 0, #fff 96px); }
+.headline { font-size: 15px; font-weight: 500; line-height: 1.35; margin-top: 12px; }
+.headline b { font-weight: 600; }
+.subhead { font-size: 13px; color: var(--text); margin-top: 4px; }
+.earnList { margin-top: 6px; }
+.earnRow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 0; border-top: 1px solid var(--line);
+  cursor: pointer;
+}
+.earnRow:first-child { border-top: none; }
+.earnMain { flex: 1; min-width: 0; }
+.earnValues {
+  flex-shrink: 0; max-width: 52%;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+  text-align: right;
+}
+.earnValue { font-size: 14px; font-weight: 500; white-space: nowrap; }
+.note { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+.sample { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.4; }
+.moreLink { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 500; color: var(--green); text-decoration: none; }
+
+/* Where your points could go */
+.cardSub { font-size: 13px; color: var(--text); margin-top: 4px; line-height: 1.4; }
+.useBlock { padding: 12px 0 2px; border-top: 1px solid var(--line); margin-top: 12px; }
+.useHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.useTitle { flex: 1; min-width: 0; font-size: 15px; font-weight: 500; }
+.useHead > span { flex-shrink: 0; }
+.useLine { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 1.4; margin-top: 6px; }
+.useLine b { font-weight: 600; }
+.useEmoji { flex-shrink: 0; width: 20px; text-align: center; }
+.useDetail { display: block; font-size: 12px; color: var(--muted); }
+.tie { font-size: 13px; color: var(--green); margin-top: 8px; line-height: 1.35; }
+
+/* Redeem */
+.priceInput { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.priceInput input {
+  font: inherit; font-size: 15px; width: 100%;
+  padding: 9px 12px; border: 1px solid #e2e2e2; border-radius: 12px; background: #fff;
+}
+.estimate { background: #f5fbf3; border-radius: 12px; padding: 10px 12px; margin-top: 10px; font-size: 13px; line-height: 1.45; }
+.assumptions { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.steps { margin: 10px 0 0; padding-left: 18px; color: var(--text); line-height: 1.6; font-size: 13px; }
+
+.disclaimer { font-size: 10px; color: var(--muted); margin: 2px 2px 0; letter-spacing: 0.4px; text-transform: uppercase; }
+.empty { text-align: center; color: #666; padding: 18px 0; font-size: 13px; }
+.mt { margin-top: 8px; }
