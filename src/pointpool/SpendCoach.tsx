@@ -80,6 +80,14 @@ export function SpendCoach({ balances, category, onCategory, onEdit, variant = '
 
 const unitLabel = (e: CardEarning) => (e.program.unit === 'points' ? 'pts' : e.program.unit)
 
+// Points are worth different amounts depending on how they're used, so show the low–high range.
+function valueRange(e: CardEarning) {
+  const vals = Object.values(e.value)
+  const lo = Math.min(...vals)
+  const hi = Math.max(...vals)
+  return lo === hi ? `≈${fmtMoney(lo)}` : `≈${fmtMoney(lo)}–${fmtMoney(hi)}`
+}
+
 function EarnRow({ earning: e, full, onEdit }: { earning: CardEarning; full: boolean; onEdit: (id?: number) => void }) {
   const cash = e.program.type === 'cashback'
   const base = earnRateLabel({ program: e.program, rate: 1 })
@@ -101,22 +109,21 @@ function EarnRow({ earning: e, full, onEdit }: { earning: CardEarning; full: boo
         {full && <div className={styles.rowSub}>{yearly}</div>}
         {full && e.note && <div className={styles.note}>{e.note}</div>}
       </div>
+      {/* Plain values, no emoji — icons here read as spending categories, not ways to use points. */}
       <div className={styles.earnValues}>
         {cash ? (
           <span className={styles.earnValue}>
-            💵 {upTo}
-            {fmtMoney(e.value.cashback)} cash
+            {upTo}
+            {fmtMoney(e.value.cashback)} cash back
           </span>
-        ) : (
+        ) : full ? (
           <>
-            <span className={styles.earnValue}>✈️ ≈{fmtMoney(e.value.travel)} travel</span>
-            {full && (
-              <>
-                <span className={styles.earnValue}>🛒 ≈{fmtMoney(e.value.everyday)} gift cards</span>
-                <span className={styles.earnValue}>💵 ≈{fmtMoney(e.value.cashback)} cash</span>
-              </>
-            )}
+            <span className={styles.earnValue}>≈{fmtMoney(e.value.travel)} as travel</span>
+            <span className={styles.earnValue}>≈{fmtMoney(e.value.everyday)} as gift cards</span>
+            <span className={styles.earnValue}>≈{fmtMoney(e.value.cashback)} as a credit</span>
           </>
+        ) : (
+          <span className={styles.earnValue}>{valueRange(e)} value</span>
         )}
       </div>
     </div>
