@@ -1,7 +1,7 @@
 import { CardCompare, ScoreGoal, type CompareProps } from "./CardCompare";
 import { coachTips, type Balance } from "./data";
 import { PointsUses } from "./PointsUses";
-import { BackLink, Disclaimer } from "./shared";
+import { Disclaimer } from "./shared";
 import styles from "./pointpool.module.css";
 
 interface Props {
@@ -15,8 +15,7 @@ export function CoachPage({ balances, onEdit, compare }: Props) {
 
   return (
     <>
-      <BackLink />
-      <div className={styles.pageTitle}>Earn more on your spending</div>
+      <div className={styles.pageTitle}>Card Coach</div>
 
       <div className={styles.card}>
         <CardCompare {...compare} variant="full" />

@@ -7,10 +7,10 @@ export function FreshnessTag({ balance }: { balance: Balance }) {
   return <span className={`${styles.tag} ${styles.sm} ${styles.warn}`}>Ready to refresh</span>
 }
 
-export function BackLink() {
+export function BackLink({ to = '#pointpool', label = 'Pointpool' }: { to?: string; label?: string } = {}) {
   return (
-    <a className={styles.back} href="#home">
-      ‹ Pointpool
+    <a className={styles.back} href={to}>
+      ‹ {label}
     </a>
   )
 }
