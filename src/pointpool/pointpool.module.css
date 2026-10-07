@@ -25,10 +25,22 @@
 
 .view { padding: 4px 14px 16px; display: flex; flex-direction: column; gap: 14px; }
 
-.pageTitle { font-size: 22px; font-weight: 500; margin: 4px 2px 0; letter-spacing: -0.2px; }
+/* Headings step down in weight: the page name (700) names the section you're on,
+   card and section headings (650) sit a step below it. */
+.pageTitle { font-size: 26px; font-weight: 700; margin: 4px 2px 0; letter-spacing: -0.5px; }
 .pageSub { color: var(--muted); font-size: 13px; margin: 2px 2px 0; }
+
+/* Layout only — the tint behind the page name comes from the shell's top wash (.phone),
+   so the heading sits on the page background rather than in a box of its own.
+   Holds a page-level action (e.g. "+ Add") on the same row as the name. */
+.pageHead {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin: 2px 2px 0; padding-bottom: 2px;
+}
+.pageHead .pageTitle { margin: 0; }
+.pageHead .pageSub { margin: 4px 0 0; color: #5d6a55; }
 .sectionHead { display: flex; justify-content: space-between; align-items: center; margin: 10px 2px -4px; }
-.sectionTitle { font-size: 17px; font-weight: 500; margin: 0; letter-spacing: -0.2px; }
+.sectionTitle { font-size: 18px; font-weight: 650; margin: 0; letter-spacing: -0.2px; }
 
 .back {
   display: inline-flex; align-items: center; gap: 4px; width: fit-content;
@@ -43,7 +55,7 @@
 }
 a.card { text-decoration: none; color: inherit; display: block; }
 .cardHead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.cardHead h2, .card h2 { margin: 0; font-size: 17px; font-weight: 500; }
+.cardHead h2, .card h2 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.2px; }
 .cardHead h2 { min-width: 0; }
 .cardHead > :last-child:not(:first-child) { flex-shrink: 0; }
 .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -128,7 +140,7 @@ a.row { text-decoration: none; color: inherit; }
 .chip.active { background: var(--selection-tint); color: var(--selection-ink); border-color: var(--selection-border); }
 
 /* Earn more on your spending (hero card) */
-.coachHero h2 { font-size: 18px; }
+.coachHero h2 { font-size: 20px; }
 .coachHero { border: none; background: #fff; }
 .note { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
 .sample { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.4; }
@@ -402,7 +414,7 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .rewardsBalanceBottom small { display: block; font-size: 10px; color: #b5c2ad; margin-top: 3px; }
 .rewardsBalanceBottom button { flex-shrink: 0; display: flex; align-items: center; gap: 5px; border: 0; background: var(--lime); color: #182117; padding: 8px 10px; border-radius: 9px; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
 .rewardsSectionHead { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-.rewardsSectionHead h2 { margin: 0; font-size: 17px; font-weight: 600; }
+.rewardsSectionHead h2 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.2px; }
 .rewardsSectionHead span { color: #626b5e; font-size: 11px; }
 .redemptionGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .redemptionGrid > :only-child { grid-column: 1 / -1; }

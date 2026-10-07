@@ -12,7 +12,9 @@
   max-width: 430px;
   min-height: 100svh;
   margin: 0 auto;
-  background: #fafbf7;
+  /* One wash from the very top, so the logo and the page name below it sit on the same
+     gradient instead of the logo reading as a separate white strip. Fades into the page. */
+  background: linear-gradient(180deg, #e6f4d8 0%, rgba(230, 244, 216, 0) 230px) no-repeat, #fafbf7;
   padding-bottom: 72px;
 }
 
@@ -42,5 +44,6 @@
   font-size: 10px; color: #737b6c; text-decoration: none; width: 60px;
 }
 .tab svg { width: 20px; height: 20px; color: #737b6c; }
-.active { color: #196b36; font-weight: 600; }
+/* The active label is bold so the tab bar and the page title agree on which section you're on. */
+.active { color: #196b36; font-weight: 700; }
 .active svg { color: #196b36; background: #e7f8e9; box-shadow: 0 0 0 4px #e7f8e9; border-radius: 5px; }
