@@ -188,6 +188,18 @@ a.row { text-decoration: none; color: inherit; }
 .tileValue { font-size: 16px; font-weight: 600; }
 .tileSection > .meterBar { width: 100%; margin-top: 4px; }
 
+/* Wallet tiles borrow the dark + lime treatment from the rewards balance card on the Use points page,
+   so "a card of yours" reads the same way everywhere. Scoped to the tile, not .card generally. */
+.walletTile { background: #1c241b; color: #fff; box-shadow: none; }
+.walletTile .rowIcon { background: #2f3b2d; color: var(--lime); }
+.walletTile .rowSub { color: #b5c2ad; }
+.walletTile .tileSection { border-top-color: #3d4939; }
+.walletTile .tileLabel { color: #b5c2ad; }
+.walletTile .tileValue { color: #fff; }
+.walletTile .tileSection:last-child .tileValue { color: var(--lime); }
+.walletTile .meterBar { background: #3d4939; }
+.walletTile .tag.warn { background: #46331f; color: #ffbe7a; }
+
 .disclaimer { font-size: 11px; color: var(--muted); margin: 2px 2px 0; line-height: 1.4; }
 .empty { text-align: center; color: #666; padding: 18px 0; font-size: 13px; }
 .mt { margin-top: 8px; }
@@ -376,8 +388,6 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 }
 
 /* Manual rewards balances and visual redemption examples. */
-.rewardsEntryNote { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.5; color: #626b5e; padding: 0 2px; }
-.rewardsEntryNote > svg { flex-shrink: 0; width: 15px; height: 15px; margin-top: 2px; }
 .rewardsProgramRow { display: flex; align-items: flex-end; gap: 12px; }
 .rewardsProgramRow label { flex: 1; min-width: 0; font-size: 11px; color: #626b5e; }
 .rewardsProgramRow select { display: block; width: 100%; margin-top: 5px; padding: 10px; border: 1px solid #dfdfd8; border-radius: 10px; background: white; color: var(--ink); font: inherit; font-size: 13px; }
@@ -419,13 +429,27 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .rewardsEstimate { margin-top: 12px; font-size: 13px; line-height: 1.5; }
 .rewardsEstimate > strong { color: var(--green-ink); font-size: 18px; }
 .rewardsEstimate > span { display: block; margin-top: 7px; color: #626b5e; font-size: 11px; }
-.rewardsCustomPrice { margin-top: 12px; font-size: 12px; }
-.rewardsCustomPrice summary { cursor: pointer; color: var(--green-ink); }
-.rewardsCustomPrice label { display: flex; align-items: center; gap: 10px; margin-top: 10px; color: #626b5e; }
+.rewardsCoverage { margin-top: 14px; padding: 12px; border-radius: 12px; background: #f4f7f0; }
+.rewardsCoverage > div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 11px; color: #626b5e; }
+.rewardsCoverage strong { flex: none; font-size: 12px; font-weight: 650; color: var(--green-ink); }
+.rewardsCoverage .redemptionProgress { margin: 8px 0 0; }
+/* One disclosure look for every collapsible on this page, so the page reads as a stack of rows. */
+.rewardsCustomPrice { margin-top: 10px; border-top: 1px solid #edf0e8; font-size: 12px; }
+.rewardsCustomPrice summary { display: flex; align-items: center; gap: 6px; padding: 11px 0 2px; cursor: pointer; list-style: none; color: var(--green-ink); font-weight: 600; }
+.rewardsCustomPrice summary::-webkit-details-marker { display: none; }
+.rewardsCustomPrice summary > svg { flex: none; margin-left: auto; width: 15px; height: 15px; transition: transform 0.15s ease; }
+.rewardsCustomPrice[open] summary > svg { transform: rotate(180deg); }
+.rewardsCustomPrice label { display: flex; align-items: center; gap: 10px; margin: 10px 0 12px; color: #626b5e; }
 .rewardsCustomPrice input { min-width: 0; width: 120px; border: 1px solid #c8cdbf; border-radius: 8px; padding: 8px; font: inherit; color: var(--ink); }
-.rewardsCustomPrice p { color: var(--selection-ink); }
-.rewardsHow { margin: 18px 0 10px; font-size: 13px; font-weight: 650; }
-.rewardsSteps { margin: 0 0 14px; padding-left: 21px; font-size: 12px; line-height: 1.5; }
+.rewardsCustomPrice > p { color: var(--selection-ink); }
+.rewardsCustomPrice .rewardsAlternatives { margin: 8px 0 12px; }
+.rewardsFinePrint { font-size: 11px; color: #626b5e; padding: 0 2px; }
+.rewardsFinePrint summary { display: flex; align-items: center; gap: 5px; cursor: pointer; list-style: none; }
+.rewardsFinePrint summary::-webkit-details-marker { display: none; }
+.rewardsFinePrint summary > svg { width: 14px; height: 14px; transition: transform 0.15s ease; }
+.rewardsFinePrint[open] summary > svg { transform: rotate(180deg); }
+.rewardsFinePrint p { margin: 8px 0 0; line-height: 1.5; }
+.rewardsSteps { margin: 10px 0 12px; padding-left: 21px; font-size: 12px; line-height: 1.5; }
 .rewardsSteps li { margin: 8px 0; padding-left: 4px; }
 .rewardsSteps li::marker { color: var(--green-ink); font-weight: 650; }
 .rewardsRefresh { background: #fff1df; border-radius: 10px; padding: 12px; color: #7b471d; font-size: 12px; line-height: 1.5; }
@@ -439,7 +463,8 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .rewardsTeasers > div { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 10px; color: #626b5e; }
 .rewardsTeasers svg { width: 22px; height: 22px; color: #8c6724; }
 .redemptionTile:focus-visible, .rewardsProgramRow select:focus-visible { outline: 2px solid var(--selection-border); outline-offset: 3px; }
-.rewardsBalanceBottom button:focus-visible, .rewardsCustomPrice summary:focus-visible, .rewardsCustomPrice input:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+.rewardsBalanceBottom button:focus-visible, .rewardsCustomPrice summary:focus-visible, .rewardsCustomPrice input:focus-visible,
+.rewardsFinePrint summary:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
 @media (max-width: 360px) {
   .rewardsBalance { padding: 16px; }
   .rewardsBalanceBottom { align-items: flex-start; flex-direction: column; gap: 10px; }
