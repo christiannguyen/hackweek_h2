@@ -1,4 +1,4 @@
-import { balanceUses, fmtBalance, fmtMoney, isCash, lifestyleTie, type Balance } from './data'
+import { balanceUses, fmtBalance, fmtMoney, isCash, type Balance } from './data'
 import { FreshnessTag } from './shared'
 import styles from './pointpool.module.css'
 
@@ -12,7 +12,6 @@ export function PointsUses({ balances, onEdit }: Props) {
   return (
     <div className={styles.card}>
       <h2>Where your points could go</h2>
-      <div className={styles.cardSub}>With the balance you have, here’s what each use could look like.</div>
 
       {balances.length === 0 && (
         <div className={styles.empty}>
@@ -37,8 +36,6 @@ export function PointsUses({ balances, onEdit }: Props) {
 
 function UsesBlock({ balance: b }: { balance: Balance }) {
   const uses = balanceUses(b)
-  const credit = uses.find((u) => u.id === 'cashback')
-  const tie = credit ? lifestyleTie(credit.value) : null
   const cash = isCash(b)
 
   return (
@@ -63,15 +60,6 @@ function UsesBlock({ balance: b }: { balance: Balance }) {
             <span className={styles.useEmoji}>💵</span>
             <span>Same value as a statement credit, bank deposit, or at checkout.</span>
           </div>
-          {uses.map((u) => (
-            <div key={u.id} className={styles.useLine}>
-              <span className={styles.useEmoji}>{u.emoji}</span>
-              <span>
-                {u.label[0].toUpperCase() + u.label.slice(1)}
-                <span className={styles.useDetail}>{u.detail}</span>
-              </span>
-            </div>
-          ))}
         </>
       ) : (
         uses.map((u) => (
@@ -79,13 +67,10 @@ function UsesBlock({ balance: b }: { balance: Balance }) {
             <span className={styles.useEmoji}>{u.emoji}</span>
             <span>
               <b>≈{fmtMoney(u.value)}</b> {u.label}
-              <span className={styles.useDetail}>{u.detail}</span>
             </span>
           </div>
         ))
       )}
-
-      {tie && <div className={styles.tie}>As a statement credit, that’s {tie}.</div>}
     </div>
   )
 }

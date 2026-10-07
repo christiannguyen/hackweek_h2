@@ -203,7 +203,7 @@ export interface BalanceUse {
 }
 
 const POINT_USES: Omit<BalanceUse, 'value'>[] = [
-  { id: 'travel', emoji: '✈️', label: 'toward travel', detail: 'Flights or hotels booked through the card’s travel site' },
+  { id: 'travel', emoji: '✈️', label: 'toward travel', detail: "Flights or hotels booked through the card's travel site" },
   { id: 'everyday', emoji: '🛒', label: 'in gift cards', detail: 'Gift cards, or shop with points at stores like Amazon' },
   { id: 'cashback', emoji: '💵', label: 'as a statement credit', detail: 'Credit on your card bill, or a deposit to your bank' },
 ]
@@ -282,19 +282,15 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
     const bonus = cardEarnings(cards, c.id, spend).filter((e) => e.known && e.rate > 1)
     if (bonus.length === 0) continue
     for (const e of bonus) {
-      const earned =
-        e.program.type === 'cashback'
-          ? `about ${fmtMoney(e.monthly)} cashback`
-          : `about ${fmtPts(e.monthly)} ${e.program.unit}, ≈${fmtMoney(e.value.travel)} toward travel or ≈${fmtMoney(e.value.cashback)} as a statement credit`
-      // Rotating categories earn the bonus only in featured quarters, so phrase it as an upper bound.
       const rotating = e.note?.startsWith('Rotating')
+      const earned = e.program.type === 'cashback' ? fmtMoney(e.monthly) : `≈${fmtMoney(e.value.travel)} travel`
       tips.push({
         id: `bonus-${e.balance.id}`,
         kind: 'bonus',
         icon: '✨',
         text: rotating
-          ? `${e.balance.cardName} can earn up to ${earnRateLabel(e)} on ${catName(c.id)} in quarters it’s featured — on your ${fmtMoney(spend[c.id])} a month that’s up to ${fmtMoney(e.monthly)} cashback.`
-          : `${e.balance.cardName} earns ${earnRateLabel(e)} on ${catName(c.id)} — on your ${fmtMoney(spend[c.id])} a month that’s ${earned}.`,
+          ? `${e.balance.cardName}: up to ${earnRateLabel(e)} on ${catName(c.id)} — ${fmtMoney(e.monthly)}/mo in featured quarters.`
+          : `${e.balance.cardName}: ${earnRateLabel(e)} on ${catName(c.id)} — ${earned}/mo.`,
         href: '#coach',
       })
     }
@@ -313,7 +309,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
       id: `uses-${b.id}`,
       kind: 'uses',
       icon: '✈️',
-      text: `Your ${fmtBalance(b)} could cover ≈${fmtMoney(travel.value)} of travel or ≈${fmtMoney(credit.value)} as a statement credit.`,
+      text: `${fmtBalance(b)} → ≈${fmtMoney(travel.value)} travel or ≈${fmtMoney(credit.value)} credit.`,
       href: '#redeem',
     })
   }
@@ -329,7 +325,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
         id: `rotating-${discover.id}`,
         kind: 'rotating',
         icon: '🔁',
-        text: `Discover’s ${rate}% categories rotate each quarter — in quarters that feature ${joinAnd(bonus.map((c) => catName(c.id)))}, that spending can earn ${rate}% once activated.`,
+        text: `Discover rotates ${rate}% categories quarterly — currently ${joinAnd(bonus.map((c) => catName(c.id)))}.`,
         href: '#coach',
       })
     } else {
@@ -337,7 +333,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
         id: `rotating-${discover.id}`,
         kind: 'rotating',
         icon: '🔁',
-        text: 'Discover’s bonus categories rotate each quarter — once activated, spending in that quarter’s categories can earn extra cashback.',
+        text: 'Discover rotates bonus categories quarterly — activate to earn extra cashback.',
         href: '#coach',
       })
     }
@@ -349,7 +345,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
       id: `stale-${b.id}`,
       kind: 'stale',
       icon: '⏰',
-      text: `Your ${b.cardName} balance was last updated ${ageDays(b.updatedAt)} days ago — a quick update keeps these estimates current.`,
+      text: `${b.cardName} balance is ${ageDays(b.updatedAt)} days old — update for better estimates.`,
       href: '#',
       balanceId: b.id,
     })
