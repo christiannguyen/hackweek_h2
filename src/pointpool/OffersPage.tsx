@@ -168,7 +168,7 @@ function redemptionOffers(b: Balance): RedemptionOffer[] {
       offers.push({ id: `${b.id}-giftcard`, emoji: '🎁', title: 'Gift cards', desc: 'Redeem for gift cards at popular retailers.' })
     }
     if (credit && b.amount > 0) {
-      offers.push({ id: `${b.id}-credit`, emoji: '💵', title: 'Statement credit', desc: `Get ≈${fmtMoney(credit.value)} back on your bill.` })
+      offers.push({ id: `${b.id}-credit`, emoji: '💵', title: 'Statement credit', desc: `Takes ≈${fmtMoney(credit.value)} off what you owe on this card.` })
     }
     if (p.brand === 'Chase' || p.brand === 'Amex') {
       offers.push({ id: `${b.id}-transfer`, emoji: '🔄', title: 'Transfer to airlines', desc: `Move ${p.brand} points to airline or hotel partners.`, tag: 'High value' })

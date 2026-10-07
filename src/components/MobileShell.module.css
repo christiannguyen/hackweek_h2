@@ -12,7 +12,9 @@
   max-width: 430px;
   min-height: 100svh;
   margin: 0 auto;
-  background: #fafbf7;
+  /* One wash from the very top, so the logo and the page name below it sit on the same
+     gradient instead of the logo reading as a separate white strip. Fades into the page. */
+  background: linear-gradient(180deg, #e6f4d8 0%, rgba(230, 244, 216, 0) 230px) no-repeat, #fafbf7;
   padding-bottom: 72px;
 }
 

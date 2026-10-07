@@ -30,13 +30,12 @@
 .pageTitle { font-size: 26px; font-weight: 700; margin: 4px 2px 0; letter-spacing: -0.5px; }
 .pageSub { color: var(--muted); font-size: 13px; margin: 2px 2px 0; }
 
-/* The page name sits on a tint that bleeds past the view's gutter and fades out downward,
-   so it reads as the page's own background rather than a card. No border or radius — any of
-   those would turn it back into a box. Holds a page-level action (e.g. "+ Add") on the same row. */
+/* Layout only — the tint behind the page name comes from the shell's top wash (.phone),
+   so the heading sits on the page background rather than in a box of its own.
+   Holds a page-level action (e.g. "+ Add") on the same row as the name. */
 .pageHead {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  margin: -4px -14px -4px; padding: 14px 16px 20px;
-  background: linear-gradient(180deg, #e6f4d8 0%, rgba(230, 244, 216, 0) 100%);
+  margin: 2px 2px 0; padding-bottom: 2px;
 }
 .pageHead .pageTitle { margin: 0; }
 .pageHead .pageSub { margin: 4px 0 0; color: #5d6a55; }
