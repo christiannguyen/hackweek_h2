@@ -71,7 +71,7 @@ export function HomePage({ balances, onEdit, compare }: Props) {
         </a>
       </div>
 
-      <a className={styles.promo} href="#" onClick={(e) => e.preventDefault()}>
+      <a className={styles.promo} href="https://kikoff.com/marketplace" target="_blank" rel="noopener noreferrer">
         <div className={styles.rowMain}>
           <div className={styles.promoTitle}>Kikoff Marketplace</div>
           <div className={styles.promoSub}>
