@@ -58,7 +58,7 @@ function UsesBlock({ balance: b }: { balance: Balance }) {
         <>
           <div className={styles.useLine}>
             <span className={styles.useEmoji}>💵</span>
-            <span>Same value as a statement credit, bank deposit, or at checkout.</span>
+            <span>Cashback can reduce your card bill. Other redemption options depend on your card.</span>
           </div>
         </>
       ) : (

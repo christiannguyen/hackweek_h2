@@ -118,6 +118,7 @@ function CardTile({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numb
               : `${fmtPts(b.amount)} ${p.unit === 'points' ? 'pts' : p.unit}`}
           </span>
         </div>
+        {cash && <div className={styles.rowSub}>Cashback toward your card bill; options vary by card</div>}
       </div>
     </div>
   )

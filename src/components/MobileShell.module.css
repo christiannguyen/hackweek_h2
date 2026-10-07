@@ -1,6 +1,6 @@
 .backdrop {
   min-height: 100svh;
-  background: #e9e9ec; /* desktop backdrop around the phone frame */
+  background: #edf0e8; /* desktop backdrop around the phone frame */
   font-family: "Figtree", -apple-system, BlinkMacSystemFont, sans-serif;
   color: #111;
   -webkit-font-smoothing: antialiased;
@@ -12,27 +12,22 @@
   max-width: 430px;
   min-height: 100svh;
   margin: 0 auto;
-  background: #fafafa;
+  background: #fafbf7;
   padding-bottom: 72px;
 }
 
 .topbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 12px 14px 8px;
+  padding: 20px 18px 16px;
 }
-.avatar {
-  width: 32px; height: 32px; border-radius: 50%;
-  background: #2b2b2b; display: grid; place-items: center; color: #fff; font-size: 14px;
+.brand {
+  display: inline-flex; align-items: center; gap: 9px;
+  color: #111410; text-decoration: none;
+  font-size: 28px; line-height: 1; font-weight: 700; letter-spacing: -1.2px;
 }
-.pills { display: flex; gap: 6px; }
-.pill {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 13px; font-weight: 500; padding: 6px 11px; border-radius: 999px;
-}
-.pillGreen { background: #e7f8e9; }
-.pillBlue { background: linear-gradient(90deg, #2f8ef5, #57b0fb); color: #fff; }
+.brand img { display: block; border-radius: 9px; }
+.brand:focus-visible { outline: 2px solid #196b36; outline-offset: 5px; border-radius: 9px; }
 
 .tabbar {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
@@ -44,8 +39,8 @@
 }
 .tab {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  font-size: 10px; color: #b5b5b5; text-decoration: none; width: 60px;
+  font-size: 10px; color: #737b6c; text-decoration: none; width: 60px;
 }
-.tab svg { width: 20px; height: 20px; color: #c4c4c4; }
-.active { color: #111; font-weight: 500; }
-.active svg { color: #111; }
+.tab svg { width: 20px; height: 20px; color: #737b6c; }
+.active { color: #9d3c12; font-weight: 600; }
+.active svg { color: #9d3c12; background: #ffe2cb; box-shadow: 0 0 0 4px #ffe2cb; border-radius: 5px; }

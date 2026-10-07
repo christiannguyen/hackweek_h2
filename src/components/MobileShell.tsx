@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { IconType } from 'react-icons'
-import { LuCreditCard, LuGraduationCap, LuHouse, LuStar, LuWallet } from 'react-icons/lu'
+import { LuCreditCard, LuGift, LuGraduationCap, LuHouse, LuWallet } from 'react-icons/lu'
 import styles from './MobileShell.module.css'
 
 const TABS: { label: string; icon: IconType; hash: string }[] = [
   { label: 'Home', icon: LuHouse, hash: '#home' },
   { label: 'Card Coach', icon: LuGraduationCap, hash: '#coach' },
+  { label: 'Use points', icon: LuGift, hash: '#redeem' },
   { label: 'Pointpool', icon: LuWallet, hash: '#pointpool' },
   { label: 'Offers', icon: LuCreditCard, hash: '#offers' },
 ]
@@ -19,18 +20,17 @@ export function MobileShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
-  const isTab = TABS.some((t) => t.hash === hash)
+  const routeHash = hash.split('/')[0]
+  const isTab = TABS.some((t) => t.hash === routeHash)
 
   return (
     <div className={styles.backdrop}>
       <div className={styles.phone}>
         <header className={styles.topbar}>
-          <div className={styles.avatar}>
-            <LuStar />
-          </div>
-          <div className={styles.pills}>
-            <span className={`${styles.pill} ${styles.pillBlue}`}>★ Pointpool</span>
-          </div>
+          <a className={styles.brand} href="#home" aria-label="Pointpool home">
+            <img src="/favicon.svg" alt="" width="38" height="38" />
+            <span>pointpool</span>
+          </a>
         </header>
 
         {children}
@@ -40,7 +40,8 @@ export function MobileShell({ children }: { children: ReactNode }) {
             <a
               key={label}
               href={h}
-              className={`${styles.tab} ${(isTab ? hash === h : h === '#home') ? styles.active : ''}`}
+              className={`${styles.tab} ${(isTab ? routeHash === h : h === '#home') ? styles.active : ''}`}
+              aria-current={routeHash === h ? 'page' : undefined}
             >
               <Icon />
               {label}

@@ -554,7 +554,6 @@ export interface CardOption {
   gain: number // net − your best card's net (or net, when you have no cards)
   deposit?: number
   credit?: CreditTier
-  even?: number // cards with a fee: the monthly spend in the category where it starts to be worth it
   worth: boolean // market cards: adds at least MIN_GAIN a month on today's spending, with nothing else changed
   why?: string // market cards that aren't worth it: the short reason
   whyKind?: WhyKind
@@ -712,6 +711,7 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
         r?.note,
         c.note,
         c.deposit && `Needs a refundable deposit of at least ${fmtDollars(c.deposit)}.`,
+        worth && even && `Worth the ${fee} fee from ${fmtMoney(even)} a month in ${catName(cat)}. You spend ${fmtMoney(monthSpend)}.`,
       ].filter((n): n is string => !!n)
 
       return {
@@ -734,7 +734,6 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
         gain,
         deposit: c.deposit,
         credit: c.credit,
-        even,
         worth,
         why,
         whyKind,

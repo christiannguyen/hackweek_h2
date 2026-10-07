@@ -5,13 +5,14 @@ import { PROGRAMS, type Balance, type ProgramId } from './data'
 interface Props {
   open: boolean
   balance?: Balance
+  purpose?: 'rewards'
   onClose: () => void
   onSave: (entry: Omit<Balance, 'id' | 'updatedAt'>, id?: number) => void
   onRemove: (id: number) => void
 }
 
 // Bottom sheet for adding / editing a balance. Remount (via key) on each open to reset the form.
-export function BalanceSheet({ open, balance, onClose, onSave, onRemove }: Props) {
+export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove }: Props) {
   const [programId, setProgramId] = useState<ProgramId>(balance?.programId ?? 'chase_ur')
   const [cardName, setCardName] = useState(balance?.cardName ?? '')
   const [amount, setAmount] = useState(balance ? String(balance.amount) : '')
@@ -20,7 +21,7 @@ export function BalanceSheet({ open, balance, onClose, onSave, onRemove }: Props
 
   const cash = PROGRAMS[programId].type === 'cashback'
   const value = Number(amount)
-  const valid = cardName.trim() !== '' && amount !== '' && value >= 0
+  const valid = cardName.trim() !== '' && amount.trim() !== '' && Number.isFinite(value) && value >= 0 && (cash || Number.isInteger(value))
 
   const save = () => {
     if (!valid) return
@@ -49,11 +50,12 @@ export function BalanceSheet({ open, balance, onClose, onSave, onRemove }: Props
           <Drawer.Content maxW="430px" mx="auto" roundedTop="20px" pb="env(safe-area-inset-bottom)">
             <Drawer.Header>
               <Drawer.Title fontSize="17px" fontWeight="500">
-                {balance ? 'Edit balance' : 'Add a card'}
+                {purpose === 'rewards' ? balance ? 'Update rewards balance' : 'Enter your rewards' : balance ? 'Edit balance' : 'Add a card'}
               </Drawer.Title>
             </Drawer.Header>
             <Drawer.Body>
               <Stack gap="4">
+                {purpose === 'rewards' && <p style={{fontSize: 13, color: '#626b5e'}}>Find your available points, miles, or cashback in your card’s app and enter them here. This balance won’t update automatically.</p>}
                 <Field.Root>
                   <Field.Label fontSize="13px">Rewards program</Field.Label>
                   <NativeSelect.Root size="md">
@@ -81,16 +83,18 @@ export function BalanceSheet({ open, balance, onClose, onSave, onRemove }: Props
                   />
                 </Field.Root>
                 <Field.Root>
-                  <Field.Label fontSize="13px">{cash ? 'Cashback balance ($)' : 'Points balance'}</Field.Label>
+                  <Field.Label fontSize="13px">{cash ? 'Cashback balance ($)' : PROGRAMS[programId].unit === 'miles' ? 'Miles balance' : 'Points balance'}</Field.Label>
                   <Input
                     type="number"
                     inputMode="decimal"
                     min={0}
+                    step={cash ? '0.01' : '1'}
                     value={amount}
                     onChange={(e) => setAmount(e.currentTarget.value)}
                     placeholder={cash ? '42.18' : '50000'}
                     rounded="12px"
                   />
+                  <Field.HelperText fontSize="12px">Saved in this browser. {cash ? 'Enter dollars and cents.' : 'Enter a whole number of points or miles.'}</Field.HelperText>
                 </Field.Root>
                 <Field.Root>
                   <Field.Label fontSize="13px">Credit limit ($)</Field.Label>
@@ -127,8 +131,8 @@ export function BalanceSheet({ open, balance, onClose, onSave, onRemove }: Props
               ) : (
                 <span />
               )}
-              <Button rounded="full" bg="#111" color="#fff" px="6" disabled={!valid} onClick={save}>
-                Save
+              <Button rounded="full" bg="#b2ff4a" color="#182117" px="6" disabled={!valid} onClick={save}>
+                {purpose === 'rewards' ? 'Save balance' : 'Save'}
               </Button>
             </Drawer.Footer>
             <Drawer.CloseTrigger />
