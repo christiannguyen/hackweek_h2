@@ -75,7 +75,7 @@ function CardTile({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numb
   const utilPct = util !== null ? Math.round(util * 100) : null
 
   return (
-    <div className={styles.card} onClick={() => onEdit(b.id)} style={{ cursor: 'pointer' }}>
+    <div className={`${styles.card} ${styles.walletTile}`} onClick={() => onEdit(b.id)} style={{ cursor: 'pointer' }}>
       <div className={styles.cardHead}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           <div className={styles.rowIcon}>{p.short}</div>
@@ -118,7 +118,7 @@ function CardTile({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numb
               : `${fmtPts(b.amount)} ${p.unit === 'points' ? 'pts' : p.unit}`}
           </span>
         </div>
-        {cash && <div className={styles.rowSub}>Cashback toward your card bill; options vary by card</div>}
+        {cash && <div className={styles.rowSub}>Comes off what you owe; options vary by card</div>}
       </div>
     </div>
   )

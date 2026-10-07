@@ -96,7 +96,7 @@ function CardRow({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numbe
   let sub: string
   if (uses.length === 0) sub = 'Estimates coming soon'
   else if (!(b.amount > 0)) sub = 'Update this balance to see where it could go'
-  else if (isCash(b)) sub = 'Cashback toward your card bill; options vary by card'
+  else if (isCash(b)) sub = 'Comes off what you owe; options vary by card'
   else sub = `Could be ≈${fmtMoney(travel!.value)} in travel or ≈${fmtMoney(credit!.value)} as a statement credit`
 
   return (

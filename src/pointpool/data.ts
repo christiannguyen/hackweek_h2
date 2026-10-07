@@ -239,11 +239,11 @@ export interface BalanceUse {
 const POINT_USES: Omit<BalanceUse, 'value'>[] = [
   { id: 'travel', emoji: '✈️', label: 'toward travel', detail: "Flights or hotels booked through the card's travel site" },
   { id: 'everyday', emoji: '🛒', label: 'in gift cards', detail: 'Gift cards, or shop with points at stores like Amazon' },
-  { id: 'cashback', emoji: '💵', label: 'as a statement credit', detail: 'Credit on your card bill, or a deposit to your bank' },
+  { id: 'cashback', emoji: '💵', label: 'as a statement credit', detail: 'Comes off what you owe, or lands in your bank' },
 ]
 
 const CASH_USES: Omit<BalanceUse, 'value'>[] = [
-  { id: 'cashback', emoji: '💵', label: 'as a statement credit', detail: 'Credit on your card bill' },
+  { id: 'cashback', emoji: '💵', label: 'as a statement credit', detail: 'Comes off what you owe on the card' },
   { id: 'deposit', emoji: '🏦', label: 'as a bank deposit', detail: 'Sent to your bank, usually in 1–3 business days' },
   { id: 'checkout', emoji: '🛍️', label: 'at checkout', detail: 'Pay with cashback at Amazon or PayPal' },
 ]
