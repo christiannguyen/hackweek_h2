@@ -174,17 +174,28 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
   )
 }
 
+// Collapsed by default to keep the comparison compact. The costs you'd actually owe — the annual fee and any deposit —
+// stay on the summary row, so the only thing behind the toggle is the explanation of them.
 function NewCardCommitment({ option: o }: { option: CardOption }) {
+  const cost = [o.fee > 0 ? `${fmtDollars(o.fee)}/yr fee` : 'No annual fee', !!o.deposit && `${fmtDollars(o.deposit)} deposit`]
+    .filter(Boolean)
+    .join(' · ')
   return (
-    <section className={styles.cardCommitment} aria-label="Before you apply">
-      <div className={styles.commitmentHeading}><LuReceipt aria-hidden="true" /><h4>Before you apply</h4></div>
-      <div className={styles.commitmentFee}>{fmtDollars(o.fee)}<span>annual fee</span></div>
-      {o.fee > 0 && <p>This is a yearly charge to your card, even if you earn no rewards. We subtract it in the estimate; rewards don’t automatically pay the fee.</p>}
-      {o.feeNote && <p className={styles.commitmentTerms}>{o.feeNote}.</p>}
-      {!!o.deposit && <p><strong>{fmtDollars(o.deposit)} refundable deposit also required.</strong> This is money you need up front.</p>}
-      <p><strong>You’re applying for a new credit account</strong> with its own bill. A credit check may affect your score, and approval isn’t guaranteed.</p>
-      <p>Interest and other charges can outweigh the rewards. Review the APR and full terms before applying.</p>
-    </section>
+    <details className={styles.cardCommitment}>
+      <summary className={styles.commitmentSummary}>
+        <LuReceipt aria-hidden="true" />
+        <span className={styles.commitmentLabel}>Before you apply</span>
+        <span className={styles.commitmentCost}>{cost}</span>
+        <LuChevronDown className={styles.commitmentChevron} aria-hidden="true" />
+      </summary>
+      <div className={styles.commitmentBody}>
+        {o.fee > 0 && <p>This is a yearly charge to your card, even if you earn no rewards. We subtract it in the estimate; rewards don’t automatically pay the fee.</p>}
+        {o.feeNote && <p className={styles.commitmentTerms}>{o.feeNote}.</p>}
+        {!!o.deposit && <p><strong>{fmtDollars(o.deposit)} refundable deposit also required.</strong> This is money you need up front.</p>}
+        <p><strong>You’re applying for a new credit account</strong> with its own bill. A credit check may affect your score, and approval isn’t guaranteed.</p>
+        <p>Interest and other charges can outweigh the rewards. Review the APR and full terms before applying.</p>
+      </div>
+    </details>
   )
 }
 

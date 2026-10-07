@@ -252,13 +252,17 @@ a.row { text-decoration: none; color: inherit; }
 .resetCompare { display: block; background: none; border: 0; padding: 0; margin-top: 8px; text-align: left; color: var(--green-ink); text-decoration: underline; font: inherit; cursor: pointer; }
 .compareCta { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; min-height: 48px; border-radius: 16px; background: var(--lime); color: #182117; text-decoration: none; font-size: 15px; font-weight: 600; padding: 12px; }
 .compareCta:hover { background: #9fee35; }
-.cardCommitment { margin-top: 14px; padding: 16px; border: 1px solid #e9ad83; border-left: 4px solid var(--selection-border); border-radius: 14px; background: #fff7ef; }
-.commitmentHeading { display: flex; align-items: center; gap: 7px; color: var(--selection-ink); }
-.commitmentHeading h4 { margin: 0; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
-.commitmentHeading svg { width: 17px; height: 17px; }
-.commitmentFee { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; font-size: 28px; font-weight: 700; line-height: 1.2; color: var(--ink); }
-.commitmentFee span { font-size: 14px; font-weight: 500; }
+.cardCommitment { margin-top: 14px; border: 1px solid #e9ad83; border-left: 4px solid var(--selection-border); border-radius: 14px; background: #fff7ef; }
+.commitmentSummary { display: flex; align-items: center; gap: 7px; padding: 12px 14px; cursor: pointer; list-style: none; color: var(--selection-ink); }
+.commitmentSummary::-webkit-details-marker { display: none; }
+.commitmentSummary > svg:first-child { flex: none; width: 17px; height: 17px; }
+.commitmentLabel { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
+.commitmentCost { margin-left: auto; font-size: 12px; font-weight: 650; color: var(--ink); }
+.commitmentChevron { flex: none; width: 15px; height: 15px; transition: transform 0.15s ease; }
+.cardCommitment[open] .commitmentChevron { transform: rotate(180deg); }
+.commitmentBody { padding: 0 14px 14px; }
 .cardCommitment p { margin: 9px 0 0; font-size: 12px; line-height: 1.5; color: #554332; }
+.commitmentBody p:first-child { margin-top: 0; }
 .cardCommitment strong { font-weight: 650; }
 .cardCommitment .commitmentTerms { color: var(--selection-ink); font-weight: 600; }
 .compareFootnote { font-size: 10px; line-height: 1.5; color: #626b5e; margin: 12px 0 0; }
@@ -279,7 +283,8 @@ a.row { text-decoration: none; color: inherit; }
 .firstCardNumbers > div:last-child dd { color: var(--green-ink); }
 .firstCardAdd { margin-top: 12px; text-align: center; color: #626b5e; font-size: 12px; }
 .firstCardAdd button { color: var(--green-ink); font-size: 12px; text-decoration: underline; }
-.compareCta:focus-visible, .resetCompare:focus-visible, .tileDetails summary:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 3px; }
+.compareCta:focus-visible, .resetCompare:focus-visible, .tileDetails summary:focus-visible,
+.commitmentSummary:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 3px; }
 @media (max-width: 360px) {
   .compareTile { padding: 12px 8px; }
   .compareColumn h4 { font-size: 9px; letter-spacing: 0; }
