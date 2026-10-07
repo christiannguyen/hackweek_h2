@@ -17,12 +17,7 @@ export function CoachPage({ balances, category, onCategory, onEdit }: Props) {
   return (
     <>
       <BackLink />
-      <div>
-        <div className={styles.pageTitle}>Card Coach</div>
-        <div className={styles.pageSub}>
-          What your spending could earn on each card, and where your points could go.
-        </div>
-      </div>
+      <div className={styles.pageTitle}>Card Coach</div>
 
       <div className={styles.card}>
         <h2>Your spending, by category</h2>
@@ -34,8 +29,7 @@ export function CoachPage({ balances, category, onCategory, onEdit }: Props) {
           variant="full"
         />
         <div className={styles.sample}>
-          Estimate = monthly spend × earn rate × an illustrative value per point. Caps and categories change — your
-          card issuer has the latest.
+          Estimates use monthly spend × earn rate × illustrative point value. Your card issuer has the latest.
         </div>
       </div>
 

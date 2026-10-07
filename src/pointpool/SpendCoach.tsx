@@ -5,7 +5,6 @@ import {
   earnRateLabel,
   fmtMoney,
   fmtPts,
-  SAMPLE_PERIOD,
   SPEND,
   type Balance,
   type CardEarning,
@@ -62,7 +61,6 @@ export function SpendCoach({ balances, category, onCategory, onEdit, variant = '
         </div>
       ) : (
         <>
-          {full && <div className={styles.subhead}>What that could earn each month on your cards:</div>}
           <div className={styles.earnList}>
             {earnings.map((e) => (
               <EarnRow key={e.balance.id} earning={e} full={full} onEdit={onEdit} />
@@ -71,9 +69,6 @@ export function SpendCoach({ balances, category, onCategory, onEdit, variant = '
         </>
       )}
 
-      {full && (
-        <div className={styles.sample}>Based on sample transactions ({SAMPLE_PERIOD}) · monthly average.</div>
-      )}
     </>
   )
 }
@@ -83,11 +78,9 @@ const unitLabel = (e: CardEarning) => (e.program.unit === 'points' ? 'pts' : e.p
 function EarnRow({ earning: e, full, onEdit }: { earning: CardEarning; full: boolean; onEdit: (id?: number) => void }) {
   const cash = e.program.type === 'cashback'
   const base = earnRateLabel({ program: e.program, rate: 1 })
-  // Rotating bonus categories earn the bonus rate only in featured quarters, so figures are an upper bound.
   const upTo = e.rate > 1 && e.note?.startsWith('Rotating') ? 'up to ' : ''
   const amount = cash ? fmtMoney(e.monthly) : `${fmtPts(e.monthly)} ${unitLabel(e)}`
-  const sub = `${upTo}${earnRateLabel(e)} · ${upTo}${amount} a month`
-  const yearly = cash ? `${upTo}${fmtMoney(e.yearly)} a year` : `${upTo}${fmtPts(e.yearly)} ${unitLabel(e)} a year`
+  const sub = `${upTo}${earnRateLabel(e)} · ${upTo}${amount}/mo`
 
   return (
     <div className={styles.earnRow} onClick={() => onEdit(e.balance.id)}>
@@ -98,24 +91,18 @@ function EarnRow({ earning: e, full, onEdit }: { earning: CardEarning; full: boo
           {sub}
           {!e.known && ` (est. at ${base})`}
         </div>
-        {full && <div className={styles.rowSub}>{yearly}</div>}
         {full && e.note && <div className={styles.note}>{e.note}</div>}
       </div>
       <div className={styles.earnValues}>
         {cash ? (
           <span className={styles.earnValue}>
             💵 {upTo}
-            {fmtMoney(e.value.cashback)} cash
+            {fmtMoney(e.value.cashback)}
           </span>
         ) : (
           <>
-            <span className={styles.earnValue}>✈️ ≈{fmtMoney(e.value.travel)} travel</span>
-            {full && (
-              <>
-                <span className={styles.earnValue}>🛒 ≈{fmtMoney(e.value.everyday)} gift cards</span>
-                <span className={styles.earnValue}>💵 ≈{fmtMoney(e.value.cashback)} cash</span>
-              </>
-            )}
+            <span className={styles.earnValue}>✈️ ≈{fmtMoney(e.value.travel)}</span>
+            {full && <span className={styles.earnValue}>💵 ≈{fmtMoney(e.value.cashback)}</span>}
           </>
         )}
       </div>
