@@ -20,17 +20,32 @@ import styles from './onboarding.module.css'
 // password are only checked for shape and never stored.
 
 // Cards users can pick, each tied to the rewards program its balance is kept in.
-const CATALOG: { name: string; issuer: string; programId: ProgramId }[] = [
-  { name: 'Discover it Secured', issuer: 'Discover', programId: 'discover' },
-  { name: 'Discover it', issuer: 'Discover', programId: 'discover' },
-  { name: 'Credit One Platinum Visa', issuer: 'Credit One', programId: 'creditone' },
-  { name: 'Credit One Platinum Rewards Visa', issuer: 'Credit One', programId: 'creditone' },
-  { name: 'Sapphire Preferred', issuer: 'Chase', programId: 'chase_ur' },
-  { name: 'Freedom Unlimited', issuer: 'Chase', programId: 'chase_ur' },
-  { name: 'Amex Gold', issuer: 'American Express', programId: 'amex_mr' },
-  { name: 'Citi Premier', issuer: 'Citi', programId: 'citi_typ' },
-  { name: 'Venture', issuer: 'Capital One', programId: 'capone' },
+// Illustrated card faces in each card's signature colors (not issuer artwork).
+interface CardFace { bg: string; ink: string }
+const CATALOG: { name: string; issuer: string; programId: ProgramId; face: CardFace }[] = [
+  { name: 'Discover it Secured', issuer: 'Discover', programId: 'discover', face: { bg: 'linear-gradient(135deg, #ff9a3d, #e8590c)', ink: '#fff' } },
+  { name: 'Discover it', issuer: 'Discover', programId: 'discover', face: { bg: 'linear-gradient(135deg, #f4f4f2, #c9cbc7)', ink: '#e8590c' } },
+  { name: 'Credit One Platinum Visa', issuer: 'Credit One', programId: 'creditone', face: { bg: 'linear-gradient(135deg, #e6e8ec, #a9afb9)', ink: '#1f3a6e' } },
+  { name: 'Credit One Platinum Rewards Visa', issuer: 'Credit One', programId: 'creditone', face: { bg: 'linear-gradient(135deg, #2b4c8c, #0f1f45)', ink: '#fff' } },
+  { name: 'Sapphire Preferred', issuer: 'Chase', programId: 'chase_ur', face: { bg: 'linear-gradient(135deg, #2a5ea8, #0b2350)', ink: '#fff' } },
+  { name: 'Freedom Unlimited', issuer: 'Chase', programId: 'chase_ur', face: { bg: 'linear-gradient(135deg, #3d8fe0, #1257a8)', ink: '#fff' } },
+  { name: 'Amex Gold', issuer: 'American Express', programId: 'amex_mr', face: { bg: 'linear-gradient(135deg, #f1d58a, #b8893a)', ink: '#3b2a0c' } },
+  { name: 'Citi Premier', issuer: 'Citi', programId: 'citi_typ', face: { bg: 'linear-gradient(135deg, #3a4a63, #121a29)', ink: '#fff' } },
+  { name: 'Venture', issuer: 'Capital One', programId: 'capone', face: { bg: 'linear-gradient(135deg, #4a5566, #1b2230)', ink: '#fff' } },
 ]
+const OTHER_FACE: CardFace = { bg: 'linear-gradient(135deg, #eef0ec, #cfd4ca)', ink: '#4a4f47' }
+const faceFor = (name: string) => CATALOG.find((c) => c.name === name)
+
+function CardArt({ name }: { name: string }) {
+  const c = faceFor(name)
+  const face = c?.face ?? OTHER_FACE
+  return (
+    <span className={styles.cardArt} style={{ background: face.bg, color: face.ink }} aria-hidden="true">
+      <span className={styles.cardIssuer}>{c?.issuer ?? 'Card'}</span>
+      <span className={styles.cardChip} />
+    </span>
+  )
+}
 
 const GOAL_OPTIONS: { id: GoalId; label: string; sub: string; icon: typeof LuPlane }[] = [
   { id: 'travel', label: 'Travel', sub: 'Flights and hotels', icon: LuPlane },
@@ -256,7 +271,7 @@ function Cards({ picked, setPicked, onNext }: { picked: Picked[]; setPicked: (p:
           const on = has(c.name)
           return (
             <button key={c.name} className={`${styles.option} ${on ? styles.selected : ''}`} onClick={() => toggle(c)} aria-pressed={on}>
-              <span className={styles.optIcon}>{PROGRAMS[c.programId].short}</span>
+              <CardArt name={c.name} />
               <span className={styles.optMain}>
                 <b>{c.name}</b>
                 <span>{c.issuer}</span>
@@ -268,7 +283,7 @@ function Cards({ picked, setPicked, onNext }: { picked: Picked[]; setPicked: (p:
         {shown.length === 0 && <p className={styles.sub}>No match. Add it below.</p>}
         {picked.filter((p) => p.programId === 'other').map((p) => (
           <button key={p.key} className={`${styles.option} ${styles.selected}`} onClick={() => setPicked(picked.filter((x) => x.key !== p.key))} aria-pressed>
-            <span className={styles.optIcon}>?</span>
+            <CardArt name={p.name} />
             <span className={styles.optMain}><b>{p.name}</b><span>Other card</span></span>
             <span className={styles.check}><LuCheck /></span>
           </button>
@@ -300,7 +315,7 @@ function Balances({ picked, setPicked, onNext }: { picked: Picked[]; setPicked: 
           const cash = PROGRAMS[p.programId].type === 'cashback'
           return (
             <label key={p.key} className={styles.balanceRow}>
-              <span className={styles.optIcon}>{PROGRAMS[p.programId].short}</span>
+              <CardArt name={p.name} />
               <span className={styles.optMain}>
                 <b>{p.name}</b>
                 <span>{cash ? 'Cashback ($)' : PROGRAMS[p.programId].unit === 'miles' ? 'Miles' : 'Points'}</span>
@@ -373,7 +388,7 @@ function Done({ picked, goal, onFinish }: { picked: Picked[]; goal?: GoalId; onF
               : 'Estimates coming soon'
           return (
             <div key={p.key} className={styles.balanceRow}>
-              <span className={styles.optIcon}>{PROGRAMS[p.programId].short}</span>
+              <CardArt name={p.name} />
               <span className={styles.optMain}><b>{p.name}</b><span>{line}</span></span>
             </div>
           )
