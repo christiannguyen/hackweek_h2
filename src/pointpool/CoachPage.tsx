@@ -15,7 +15,9 @@ export function CoachPage({ balances, onEdit, compare }: Props) {
 
   return (
     <>
-      <div className={styles.pageTitle}>Card Coach</div>
+      <div className={styles.pageHead}>
+        <div className={styles.pageTitle}>Card Coach</div>
+      </div>
 
       <div className={styles.card}>
         <CardCompare {...compare} variant="full" />

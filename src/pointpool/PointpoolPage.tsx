@@ -18,7 +18,7 @@ interface Props {
 export function PointpoolPage({ balances, onEdit }: Props) {
   return (
     <>
-      <div className={styles.cardHead} style={{ margin: '4px 2px 0' }}>
+      <div className={styles.pageHead}>
         <div className={styles.pageTitle}>Pointpool</div>
         <button className={`${styles.btnText} ${styles.add}`} onClick={() => onEdit()}>
           + Add

@@ -13,9 +13,11 @@ export function RedeemPage({ balances, onEdit }: { balances: Balance[]; onEdit: 
   const selected = balances.find((b) => b.id === selectedId) ?? [...balances].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0]
   return (
     <>
-      <div>
-        <h1 className={styles.pageTitle}>{selected && isCash(selected) ? 'Use your cashback' : 'Use your points'}</h1>
-        <p className={styles.pageSub}>Put your rewards toward everyday expenses.</p>
+      <div className={styles.pageHead}>
+        <div>
+          <h1 className={styles.pageTitle}>{selected && isCash(selected) ? 'Use your cashback' : 'Use your points'}</h1>
+          <p className={styles.pageSub}>Put your rewards toward everyday expenses.</p>
+        </div>
       </div>
       {!selected ? (
         <div className={`${styles.card} ${styles.rewardsWelcome}`}>
