@@ -47,7 +47,6 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
   const gain = suggested ? Math.round((suggested.net - (selected?.net ?? 0)) * 100) / 100 : 0
   const spend = SPEND[category]
   const categoryLabel = TOP_CATEGORIES.find((c) => c.id === category)?.label ?? catName(category)
-  const tier = CREDIT_TIERS.find((t) => t.id === CREDIT)!
   const [focus] = useState(() => (full ? routeParam() : ''))
   useEffect(() => {
     if (focus) document.getElementById(rowId(focus))?.scrollIntoView({ block: 'center' })
@@ -59,12 +58,6 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
 
   return (
     <>
-      <div className={styles.scoreLine}>
-        <h3>Your credit score</h3>
-        <span className={styles.scoreValue}>
-          {CREDIT_SCORE}<span className={`${styles.tag} ${styles.sm} ${styles.gray}`}>{tier.label}</span>
-        </span>
-      </div>
       <h3 className={styles.groupHead}>Your top {TOP_CATEGORIES.length} categories</h3>
       <div className={styles.catTabs} role="group" aria-label="Category">
         {TOP_CATEGORIES.map((c) => {
