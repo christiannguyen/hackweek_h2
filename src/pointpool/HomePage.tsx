@@ -9,32 +9,31 @@ import {
   PROGRAMS,
   SPEND,
   type Balance,
-  type CategoryId,
 } from './data'
+import { CardCompare, ScoreGoal, type CompareProps } from './CardCompare'
 import { Disclaimer, FreshnessTag } from './shared'
-import { SpendCoach } from './SpendCoach'
 import styles from './pointpool.module.css'
 
 interface Props {
   balances: Balance[]
-  category: CategoryId
-  onCategory: (c: CategoryId) => void
   onEdit: (id?: number) => void
+  compare: CompareProps
 }
 
-export function HomePage({ balances, category, onCategory, onEdit }: Props) {
+export function HomePage({ balances, onEdit, compare }: Props) {
   const market = marketplaceCategory(balances)
 
   return (
     <>
       <div className={styles.pageTitle}>Pointpool</div>
 
-      {/* Card Coach leads: personal, built from the user's (sample) spending */}
+      {/* Leads the page: what the user's (sample) spend in their top categories earns now vs. on cards they could get */}
       <div className={`${styles.card} ${styles.coachHero}`}>
-        <h2>Card Coach</h2>
-        <SpendCoach balances={balances} category={category} onCategory={onCategory} onEdit={onEdit} />
+        <h2>Earn more on your spending</h2>
+        <CardCompare {...compare} />
+        <ScoreGoal balances={compare.balances} category={compare.category} />
         <a className={styles.moreLink} href="#coach">
-          See full breakdown ›
+          See all cards and the math ›
         </a>
       </div>
 
@@ -55,7 +54,7 @@ export function HomePage({ balances, category, onCategory, onEdit }: Props) {
 
       <div className={styles.card} style={{ paddingTop: 4, paddingBottom: 4 }}>
         <a className={styles.row} href="#redeem">
-          <div className={`${styles.rowIcon} ${styles.gray}`}>🎯</div>
+          <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>🎯</div>
           <div className={styles.rowMain}>
             <div className={styles.rowTitle}>Ways to use your points</div>
             <div className={styles.rowSub}>What they could cover on a trip, everyday buys or as cash</div>
@@ -63,7 +62,7 @@ export function HomePage({ balances, category, onCategory, onEdit }: Props) {
           <span className={styles.chev}>›</span>
         </a>
         <a className={styles.row} href="#learn">
-          <div className={`${styles.rowIcon} ${styles.gray}`}>📘</div>
+          <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>📘</div>
           <div className={styles.rowMain}>
             <div className={styles.rowTitle}>Rewards 101</div>
             <div className={styles.rowSub}>How points and cashback work, in 2 minutes</div>

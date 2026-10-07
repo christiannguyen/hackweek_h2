@@ -68,7 +68,7 @@ export function BalanceSheet({ open, balance, onClose, onSave, onRemove }: Props
                   <Input
                     value={cardName}
                     onChange={(e) => setCardName(e.currentTarget.value)}
-                    placeholder="e.g. Sapphire Preferred"
+                    placeholder="e.g. Discover it Secured"
                     rounded="12px"
                   />
                 </Field.Root>

@@ -2,7 +2,7 @@
 import transactions from './transactions.json'
 
 export type GoalId = 'travel' | 'everyday' | 'cashback'
-export type ProgramId = 'amex_mr' | 'chase_ur' | 'citi_typ' | 'capone' | 'discover' | 'other'
+export type ProgramId = 'amex_mr' | 'chase_ur' | 'citi_typ' | 'capone' | 'discover' | 'creditone' | 'other'
 
 export interface Program {
   name: string
@@ -27,7 +27,8 @@ export const PROGRAMS: Record<ProgramId, Program> = {
   chase_ur: { name: 'Chase Ultimate Rewards', short: 'CH', brand: 'Chase', unit: 'points', type: 'points', supported: true, cpp: { travel: 1.25, everyday: 1.0, cashback: 1.0 } },
   citi_typ: { name: 'Citi ThankYou Points', short: 'CI', brand: 'Citi', unit: 'points', type: 'points', supported: true, cpp: { travel: 1.0, everyday: 1.0, cashback: 1.0 } },
   capone: { name: 'Capital One Miles', short: 'C1', brand: 'Capital One', unit: 'miles', type: 'points', supported: true, cpp: { travel: 1.0, everyday: 0.5, cashback: 0.5 } },
-  discover: { name: 'Discover Cashback Bonus', short: '$', brand: 'Discover', unit: 'cashback', type: 'cashback', supported: true },
+  discover: { name: 'Discover Cashback Bonus', short: 'DI', brand: 'Discover', unit: 'cashback', type: 'cashback', supported: true },
+  creditone: { name: 'Credit One Cash Back Rewards', short: 'CO', brand: 'Credit One', unit: 'cashback', type: 'cashback', supported: true },
   other: { name: 'Other program', short: '?', brand: 'program', unit: 'points', type: 'points', supported: false },
 }
 
@@ -55,9 +56,10 @@ export const STALE_DAYS = 30
 
 const daysAgo = (n: number) => new Date(Date.now() - n * 864e5).toISOString()
 
+// SAMPLE wallet: cards a Kikoff user building credit is likely to have, a secured card and a fair-credit card.
 export const SEED: Balance[] = [
-  { id: 1, programId: 'chase_ur', cardName: 'Sapphire Preferred', amount: 50000, updatedAt: daysAgo(12) },
-  { id: 2, programId: 'discover', cardName: 'Discover it', amount: 42.18, updatedAt: daysAgo(1) },
+  { id: 1, programId: 'discover', cardName: 'Discover it Secured', amount: 18.4, updatedAt: daysAgo(3) },
+  { id: 2, programId: 'creditone', cardName: 'Credit One Platinum Visa', amount: 9.15, updatedAt: daysAgo(12) },
 ]
 
 const cents = (n: number) => Math.round(n * 100) / 100
@@ -83,17 +85,16 @@ export const fmtBalance = (b: Balance) => {
 
 // ---- Spending ----
 
-export type CategoryId = 'dining' | 'groceries' | 'gas' | 'travel' | 'online' | 'other'
+// The categories most Kikoff users spend in that cards actually reward. Loan payments, bank fees, transfers and
+// rent are left out: cards don't earn there.
+export type CategoryId = 'food' | 'shopping' | 'transport'
 export type Spend = Record<CategoryId, number>
 
-// label = chip text; noun = how the category reads in running copy ("on online shopping").
+// label = tab text; noun = how the category reads in running copy ("on gas & transit").
 export const CATEGORIES: { id: CategoryId; label: string; noun: string; emoji: string }[] = [
-  { id: 'dining', label: 'Dining', noun: 'dining', emoji: '🍽️' },
-  { id: 'groceries', label: 'Groceries', noun: 'groceries', emoji: '🛒' },
-  { id: 'gas', label: 'Gas', noun: 'gas', emoji: '⛽' },
-  { id: 'travel', label: 'Travel', noun: 'travel', emoji: '✈️' },
-  { id: 'online', label: 'Online', noun: 'online shopping', emoji: '📦' },
-  { id: 'other', label: 'Everything else', noun: 'everything else', emoji: '💳' },
+  { id: 'food', label: 'Food & drink', noun: 'food & drink', emoji: '🍔' },
+  { id: 'shopping', label: 'Shopping', noun: 'shopping', emoji: '🛍️' },
+  { id: 'transport', label: 'Gas & transit', noun: 'gas & transit', emoji: '⛽' },
 ]
 
 export const catName = (id: CategoryId) => CATEGORIES.find((c) => c.id === id)?.noun ?? id
@@ -109,62 +110,87 @@ export interface Transaction {
 // SAMPLE data: made-up transactions with fake merchants, standing in for the spend data Kikoff already has.
 export const TRANSACTIONS = transactions as Transaction[]
 
-const monthsIn = (txns: Transaction[]) => [...new Set(txns.map((t) => t.date.slice(0, 7)))].sort()
-
-// Average monthly spend per category: total per category ÷ number of distinct months, rounded to cents.
-export function monthlySpend(txns: Transaction[]): Spend {
-  const months = monthsIn(txns).length || 1
+// Spend per category in the 30 days up to and including `asOf` (yyyy-mm-dd), rounded to cents. A rolling 30 days, like
+// most spending-insight views, rather than the calendar month, which is nearly empty in its first week.
+export function last30DaysSpend(txns: Transaction[], asOf: string): Spend {
+  const from = new Date(new Date(`${asOf}T12:00:00Z`).getTime() - 29 * 864e5).toISOString().slice(0, 10)
   const totals = Object.fromEntries(CATEGORIES.map((c) => [c.id, 0])) as Spend
-  for (const t of txns) if (t.category in totals) totals[t.category] += t.amount
-  for (const c of CATEGORIES) totals[c.id] = cents(totals[c.id] / months)
+  for (const t of txns) if (t.date >= from && t.date <= asOf && t.category in totals) totals[t.category] += t.amount
+  for (const c of CATEGORIES) totals[c.id] = cents(totals[c.id])
   return totals
 }
 
-export const SPEND = monthlySpend(TRANSACTIONS)
+// SAMPLE: counted back from the newest sample transaction rather than today, so the demo doesn't run empty.
+const SAMPLE_AS_OF = TRANSACTIONS.reduce((d, t) => (t.date > d ? t.date : d), '')
+export const SPEND = last30DaysSpend(TRANSACTIONS, SAMPLE_AS_OF)
 
 export const categoriesBySpend = (spend: Spend = SPEND) => [...CATEGORIES].sort((a, b) => spend[b.id] - spend[a.id])
 
-export const TOP_CATEGORY: CategoryId = categoriesBySpend(SPEND)[0].id
+// The user's top 3 categories by spend, the ones we compare cards for.
+export const TOP_CATEGORIES = categoriesBySpend(SPEND)
+  .filter((c) => SPEND[c.id] > 0)
+  .slice(0, 3)
 
-const monthName = (ym: string) => new Date(`${ym}-15T12:00:00`).toLocaleDateString(undefined, { month: 'short' })
-const sampleMonths = monthsIn(TRANSACTIONS)
-// e.g. "Jul–Sep"
-export const SAMPLE_PERIOD =
-  sampleMonths.length > 1
-    ? `${monthName(sampleMonths[0])}–${monthName(sampleMonths[sampleMonths.length - 1])}`
-    : sampleMonths.map(monthName).join('')
+export const TOP_CATEGORY: CategoryId = TOP_CATEGORIES[0]?.id ?? 'food'
 
-// ---- Card Coach ----
+// ---- Earn more on your spending: rewards per card ----
 // Earn rates are ILLUSTRATIVE for the demo — real rates, caps and categories change; the issuer has the latest.
+// Each card gets one rate per category, for the main part of it: grocery stores for food & drink, gas stations for
+// gas & transit, general and online stores for shopping. Notes cover the rest (like a higher rate at restaurants).
+
+interface CategoryRate {
+  rate: number
+  cap?: { amount: number; per: 'month' | 'quarter' | 'year' } // spend that earns `rate`; after it, the base rate
+  quarters?: number // rotating categories: quarters a year it's featured (the rest of the year earns the base rate)
+  needs?: string // an extra step the rate depends on ("pay with Apple Pay"). Market cards are counted without it.
+  note?: string
+}
 
 interface CardRule {
-  rates: Partial<Record<CategoryId, number>>
-  notes?: Partial<Record<CategoryId, string>>
+  base?: number // the rate everywhere else, 1 when not set
+  rates: Partial<Record<CategoryId, CategoryRate>>
 }
+
+const ROTATING = 'Rotating 5% category: featured one quarter a year, up to $1,500, once you activate it. 1% the rest of the year.'
 
 export const CARD_RULES: Record<string, CardRule> = {
   'Amex Gold': {
-    rates: { dining: 4, groceries: 4, travel: 3 },
-    notes: { groceries: 'At US supermarkets, up to a yearly cap', travel: 'Flights booked direct or through Amex Travel' },
+    rates: { food: { rate: 4, note: 'Restaurants, plus US supermarkets up to $25,000 a year.' } },
   },
   'Sapphire Preferred': {
-    rates: { dining: 3, online: 3, travel: 2 },
-    notes: { online: 'Online grocery orders count here' },
-  },
-  'Citi Premier': { rates: { dining: 3, groceries: 3, gas: 3, travel: 3 } },
-  'Discover it': {
-    rates: { gas: 5, online: 5 },
-    notes: {
-      gas: 'Rotating 5% category — earns 5% in quarters when it is featured, once activated; a quarterly cap applies',
-      online: 'Rotating 5% category — earns 5% in quarters when it is featured, once activated; a quarterly cap applies',
+    rates: {
+      food: { rate: 1, note: '3× at restaurants and on online grocery orders.' },
+      transport: { rate: 1, note: '2× on transit, rideshare, parking and tolls.' },
     },
   },
+  'Citi Premier': {
+    rates: {
+      food: { rate: 3, note: 'Supermarkets and restaurants.' },
+      transport: { rate: 3, note: 'Gas stations and EV charging.' },
+    },
+  },
+  'Discover it': {
+    rates: {
+      shopping: { rate: 5, cap: { amount: 1500, per: 'quarter' }, quarters: 1, note: ROTATING },
+      transport: { rate: 5, cap: { amount: 1500, per: 'quarter' }, quarters: 1, note: ROTATING },
+    },
+  },
+}
+
+// A card's terms by name: the sample rules first, then the market list ("Platinum Visa" or "Credit One Platinum Visa").
+export function ruleFor(cardName: string): CardRule | undefined {
+  const rule = Object.entries(CARD_RULES).find(([name]) => sameName(name, cardName))?.[1]
+  if (rule) return rule
+  const c = ALL_CARDS.find((m) => isCard(cardName, m))
+  return c && { base: c.base, rates: c.rates }
 }
 
 export interface CardEarning {
   balance: Balance
   program: Program
+  base: number
   rate: number
+  terms?: CategoryRate // the card's terms in this category, as counted (a rate that needs an extra step isn't)
   known: boolean // false = card not in the sample rules, estimated at the base 1× / 1%
   note?: string
   monthly: number // points a month, or dollars a month for cashback cards
@@ -172,7 +198,7 @@ export interface CardEarning {
   value: Record<GoalId, number> // estimated $ a month for each way to use it
 }
 
-export const earnRateLabel = (e: Pick<CardEarning, 'program' | 'rate'>) => (e.program.type === 'cashback' ? `${e.rate}%` : `${e.rate}×`)
+export const earnRateLabel = (e: Pick<CardEarning, 'program' | 'rate'>) => fmtRate(e.program.type, e.rate)
 
 // What a month of spending in one category could earn on each card. Wallet order, no sorting.
 export function cardEarnings(balances: Balance[], cat: CategoryId, spend: Spend = SPEND): CardEarning[] {
@@ -181,15 +207,20 @@ export function cardEarnings(balances: Balance[], cat: CategoryId, spend: Spend 
   for (const balance of balances) {
     const program = PROGRAMS[balance.programId]
     if (!hasEstimates(program)) continue
-    const rule = CARD_RULES[balance.cardName]
-    const rate = rule?.rates[cat] ?? 1
+    const rule = ruleFor(balance.cardName)
+    const base = rule?.base ?? 1
+    const listed = rule?.rates[cat]
+    // Like market cards, a rate that needs an extra step (a way to pay, a category to pick) counts at the base rate.
+    const terms = listed?.needs ? undefined : listed
+    const rate = terms?.rate ?? base
+    const note = listed?.needs ? `${fmtRate(program.type, listed.rate)} if you ${listed.needs}. Counted at ${fmtRate(program.type, base)}.` : listed?.note
     const cash = program.type === 'cashback'
     const monthly = cash ? cents((amount * rate) / 100) : Math.round(amount * rate)
     const yearly = cash ? cents((amount * rate * 12) / 100) : Math.round(amount * rate * 12)
     const value = Object.fromEntries(
       GOAL_IDS.map((g) => [g, cash ? monthly : cents((monthly * (program.cpp?.[g] ?? 0)) / 100)]),
     ) as Record<GoalId, number>
-    out.push({ balance, program, rate, known: !!rule, note: rule?.notes?.[cat], monthly, yearly, value })
+    out.push({ balance, program, base, rate, terms, known: !!rule, note, monthly, yearly, value })
   }
   return out
 }
@@ -232,13 +263,12 @@ const toHalf = (n: number) => Math.round(n * 2) / 2
 const count = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
 // Categories that read naturally as "N weeks of your ___"
 const TIE_NOUN: Partial<Record<CategoryId, string>> = {
-  groceries: 'groceries',
-  dining: 'dining out',
-  gas: 'gas',
-  online: 'online shopping',
+  food: 'food & drink',
+  shopping: 'shopping',
+  transport: 'gas & transit',
 }
 
-// e.g. "about 4.5 weeks of your groceries", "about 1.5 weeks of your gas". Null when there's no meaningful tie.
+// e.g. "about 4.5 weeks of your food & drink", "about 1.5 weeks of your gas & transit". Null when there's no meaningful tie.
 export function lifestyleTie(dollars: number, spend: Spend = SPEND): string | null {
   if (!(dollars > 0)) return null
   const cats = categoriesBySpend(spend).filter((c) => TIE_NOUN[c.id] && spend[c.id] > 0)
@@ -261,7 +291,7 @@ export function lifestyleTie(dollars: number, spend: Spend = SPEND): string | nu
 
 export interface CoachTip {
   id: string // unique per tip, safe as a React key
-  kind: 'bonus' | 'uses' | 'rotating' | 'stale'
+  kind: 'payoff' | 'bonus' | 'uses' | 'rotating' | 'stale'
   icon: string
   text: string
   href: string
@@ -276,20 +306,32 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
   const tips: CoachTip[] = []
   const cards = balances.filter((b) => hasEstimates(PROGRAMS[b.programId]))
 
+  // Always first: every rewards number on this page assumes the balance is paid in full
+  tips.push({
+    id: 'payoff',
+    kind: 'payoff',
+    icon: '✅',
+    text: 'Pay your full balance each month. Card interest is often 25% a year or more — far more than any card earns back.',
+    href: '#coach',
+  })
+
   // 1. A bonus earn rate on the highest-spend category that has one
   for (const c of categoriesBySpend(spend)) {
     if (!(spend[c.id] > 0)) continue
     const bonus = cardEarnings(cards, c.id, spend).filter((e) => e.known && e.rate > 1)
     if (bonus.length === 0) continue
     for (const e of bonus) {
-      const rotating = e.note?.startsWith('Rotating')
+      const rotating = !!e.terms?.quarters
       const earned = e.program.type === 'cashback' ? fmtMoney(e.monthly) : `≈${fmtMoney(e.value.travel)} travel`
+      // Featured months still stop at the cap (e.g. $1,500 a quarter is $500 a month)
+      const cap = e.terms?.cap
+      const featured = cap ? Math.min(spend[c.id], cap.amount / { month: 1, quarter: 3, year: 12 }[cap.per]) : spend[c.id]
       tips.push({
         id: `bonus-${e.balance.id}`,
         kind: 'bonus',
         icon: '✨',
         text: rotating
-          ? `${e.balance.cardName}: up to ${earnRateLabel(e)} on ${catName(c.id)} — ${fmtMoney(e.monthly)}/mo in featured quarters.`
+          ? `${e.balance.cardName}: up to ${earnRateLabel(e)} on ${catName(c.id)} — ${fmtMoney(cents((featured * e.rate) / 100))}/mo in featured quarters.`
           : `${e.balance.cardName}: ${earnRateLabel(e)} on ${catName(c.id)} — ${earned}/mo.`,
         href: '#coach',
       })
@@ -314,26 +356,25 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
     })
   }
 
-  // 3. Discover's quarterly bonus categories
-  const discover = cards.find((b) => b.programId === 'discover')
-  if (discover) {
-    const rule = CARD_RULES[discover.cardName]
-    const bonus = rule ? CATEGORIES.filter((c) => (rule.rates[c.id] ?? 0) > 1) : []
-    if (rule && bonus.length > 0) {
-      const rate = Math.max(...bonus.map((c) => rule.rates[c.id] ?? 0))
+  // 3. Quarterly bonus categories, on cards that rotate them (Discover cards we don't know might)
+  for (const b of cards) {
+    const rule = ruleFor(b.cardName)
+    const bonus = rule ? CATEGORIES.filter((c) => rule.rates[c.id]?.quarters) : []
+    if (bonus.length > 0) {
+      const rate = Math.max(...bonus.map((c) => rule!.rates[c.id]?.rate ?? 0))
       tips.push({
-        id: `rotating-${discover.id}`,
+        id: `rotating-${b.id}`,
         kind: 'rotating',
         icon: '🔁',
-        text: `Discover rotates ${rate}% categories quarterly — currently ${joinAnd(bonus.map((c) => catName(c.id)))}.`,
+        text: `${b.cardName} rotates ${rate}% categories each quarter, including ${joinAnd(bonus.map((c) => catName(c.id)))}. Activate each one to earn it.`,
         href: '#coach',
       })
-    } else {
+    } else if (!rule && b.programId === 'discover') {
       tips.push({
-        id: `rotating-${discover.id}`,
+        id: `rotating-${b.id}`,
         kind: 'rotating',
         icon: '🔁',
-        text: 'Discover rotates bonus categories quarterly — activate to earn extra cashback.',
+        text: 'Some Discover cards rotate bonus categories quarterly — activate them to earn extra cashback.',
         href: '#coach',
       })
     }
@@ -355,12 +396,370 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
 }
 
 // Highest-spend category where every card earns the base rate — a spot Marketplace cards could add to.
-// "Everything else" counts only when it's the sole match.
 export function marketplaceCategory(balances: Balance[], spend: Spend = SPEND): CategoryId | null {
   const cards = balances.filter((b) => hasEstimates(PROGRAMS[b.programId]))
   if (cards.length === 0) return null
   const gaps = categoriesBySpend(spend).filter(
     (c) => spend[c.id] > 0 && cardEarnings(cards, c.id, spend).every((e) => e.rate <= 1),
   )
-  return (gaps.find((c) => c.id !== 'other') ?? gaps[0])?.id ?? null
+  return gaps[0]?.id ?? null
+}
+
+// ---- Card comparison: your cards vs cards on the market, for one category ----
+// A year of rewards from the user's spend in the category, minus the annual fee for cards they don't have yet.
+// EXAMPLE cards for the demo. Terms are typical of each card but weren't checked against the issuers, and they
+// change, so the issuer's page has the latest. The list leans toward cards made for fair credit or while
+// building credit, since that's who uses Kikoff.
+
+export type CreditTier = 'building' | 'fair' | 'good'
+
+// SAMPLE: the user's score, which Kikoff already has from their credit report. Fixed for the demo, in the fair range
+// where most Kikoff users are.
+export const CREDIT_SCORE = 640
+// Ordered loosest → strictest. A card shows for its tier and every stricter one; secured cards only for building.
+export const CREDIT_TIERS: { id: CreditTier; label: string; range: string; min: number }[] = [
+  { id: 'building', label: 'Building', range: 'New or under 580', min: 300 },
+  { id: 'fair', label: 'Fair', range: '580–669', min: 580 },
+  { id: 'good', label: 'Good', range: '670+', min: 670 },
+]
+export const tierFor = (score: number): CreditTier => [...CREDIT_TIERS].reverse().find((t) => score >= t.min)?.id ?? 'building'
+export const CREDIT = tierFor(CREDIT_SCORE)
+const tierRank = (t: CreditTier) => CREDIT_TIERS.findIndex((c) => c.id === t)
+export const creditLabel = (t: CreditTier) => {
+  const c = CREDIT_TIERS.find((x) => x.id === t)!
+  return t === 'building' ? 'For building credit' : `Usually for ${c.label.toLowerCase()} credit (${c.range})`
+}
+
+export interface MarketCard {
+  name: string
+  issuer: string
+  short: string
+  type: 'points' | 'cashback'
+  cpp?: number // cash value of a point, in cents (points cards only)
+  base: number
+  rates: Partial<Record<CategoryId, CategoryRate>>
+  annualFee: number
+  feeNote?: string
+  deposit?: number // secured cards: the smallest refundable deposit
+  credit: CreditTier
+  note?: string
+  inApp?: boolean // offered in the Kikoff app
+  url: string
+}
+
+const SUPERMARKETS = 'At US supermarkets. Superstores and warehouse clubs don’t count.'
+const CUSTOM_CASH = 'Only on your top eligible category each month.'
+// Some cards share terms across versions (secured and not), so their rates are written once.
+const BOFA: MarketCard['rates'] = {
+  food: { rate: 2, cap: { amount: 2500, per: 'quarter' }, note: 'At grocery stores and warehouse clubs. The $2,500 a quarter is shared with your 3% category.' },
+  shopping: { rate: 3, cap: { amount: 2500, per: 'quarter' }, needs: 'pick online shopping as your 3% category' },
+  transport: { rate: 3, cap: { amount: 2500, per: 'quarter' }, needs: 'pick gas as your 3% category' },
+}
+const ALTITUDE_GO: MarketCard['rates'] = {
+  food: { rate: 2, note: '4× at restaurants. Superstores and warehouse clubs don’t count.' },
+  transport: { rate: 2, note: 'At gas stations and EV charging.' },
+}
+const CASH_PLUS: MarketCard['rates'] = {
+  food: { rate: 2, needs: 'pick grocery stores as your 2% category each quarter' },
+  shopping: { rate: 5, cap: { amount: 2000, per: 'quarter' }, needs: 'pick department and electronics stores each quarter' },
+  transport: { rate: 2, needs: 'pick gas as your 2% category each quarter', note: 'Transit and rideshare can earn 5%.' },
+}
+const APPLE_PAY: CategoryRate = { rate: 2, needs: 'pay with Apple Pay' }
+
+export const MARKET_CARDS: MarketCard[] = [
+  // Building credit
+  { name: 'Quicksilver Secured', issuer: 'Capital One', short: 'C1', type: 'cashback', base: 1.5, rates: {}, annualFee: 0, deposit: 200, credit: 'building', inApp: true, url: 'https://www.capitalone.com/credit-cards/quicksilver-secured/' },
+  { name: 'Discover it Secured', issuer: 'Discover', short: 'DI', type: 'cashback', base: 1, rates: { food: { rate: 1, note: '2% at restaurants.' }, transport: { rate: 2, cap: { amount: 1000, per: 'quarter' }, note: 'At gas stations. The $1,000 a quarter is shared with restaurants.' } }, annualFee: 0, deposit: 200, credit: 'building', url: 'https://www.discover.com/credit-cards/secured/' },
+  { name: 'Customized Cash Rewards Secured', issuer: 'Bank of America', short: 'BA', type: 'cashback', base: 1, rates: BOFA, annualFee: 0, deposit: 200, credit: 'building', url: 'https://www.bankofamerica.com/credit-cards/products/secured-cash-back-credit-card/' },
+  { name: 'Unlimited Cash Rewards Secured', issuer: 'Bank of America', short: 'BA', type: 'cashback', base: 1.5, rates: {}, annualFee: 0, deposit: 200, credit: 'building', url: 'https://www.bankofamerica.com/credit-cards/products/unlimited-cash-back-secured-credit-card/' },
+  { name: 'Altitude Go Secured', issuer: 'U.S. Bank', short: 'US', type: 'points', cpp: 1, base: 1, rates: ALTITUDE_GO, annualFee: 0, deposit: 300, credit: 'building', url: 'https://www.usbank.com/credit-cards/altitude-go-secured-visa-credit-card.html' },
+  { name: 'Cash+ Secured', issuer: 'U.S. Bank', short: 'US', type: 'cashback', base: 1, rates: CASH_PLUS, annualFee: 0, deposit: 300, credit: 'building', url: 'https://www.usbank.com/credit-cards/cash-plus-secured-visa-credit-card.html' },
+  { name: 'Freedom Rise', issuer: 'Chase', short: 'CH', type: 'cashback', base: 1.5, rates: {}, annualFee: 0, credit: 'building', note: 'Made for people new to credit. Having a Chase checking account may help.', url: 'https://creditcards.chase.com/cash-back-credit-cards/freedom/rise' },
+
+  // Fair credit
+  { name: 'Platinum X5', issuer: 'Credit One', short: 'CO', type: 'points', cpp: 1, base: 1, rates: { food: { rate: 5, cap: { amount: 5000, per: 'year' }, note: 'At grocery stores. Restaurants earn 1×. The $5,000 a year is shared with gas, phone, internet and streaming.' }, transport: { rate: 5, cap: { amount: 5000, per: 'year' }, note: 'At gas stations. The $5,000 a year is shared with groceries, phone, internet and streaming.' } }, annualFee: 95, credit: 'fair', inApp: true, url: 'https://www.creditonebank.com/credit-cards/platinum-x5-visa' },
+  { name: 'Platinum Visa', issuer: 'Credit One', short: 'CO', type: 'cashback', base: 0, rates: { food: { rate: 1, note: 'At grocery stores.' }, transport: { rate: 1, note: 'At gas stations.' } }, annualFee: 75, feeNote: 'then $99 a year', credit: 'fair', note: 'Earns only on groceries, gas, phone and internet. Fees vary by offer.', url: 'https://www.creditonebank.com/credit-cards/platinum-visa' },
+  { name: 'QuicksilverOne', issuer: 'Capital One', short: 'C1', type: 'cashback', base: 1.5, rates: {}, annualFee: 39, credit: 'fair', inApp: true, url: 'https://www.capitalone.com/credit-cards/quicksilverone/' },
+  { name: 'Apple Card', issuer: 'Apple', short: 'AP', type: 'cashback', base: 1, rates: { food: APPLE_PAY, shopping: APPLE_PAY, transport: APPLE_PAY }, annualFee: 0, credit: 'fair', url: 'https://www.apple.com/apple-card/' },
+  { name: 'Cash Rewards Visa', issuer: 'Upgrade', short: 'UP', type: 'cashback', base: 1.5, rates: {}, annualFee: 0, credit: 'fair', note: 'Cash back posts as you pay your bill.', url: 'https://www.upgrade.com/card/' },
+  { name: 'Petal 2 Visa', issuer: 'Petal', short: 'PE', type: 'cashback', base: 1, rates: {}, annualFee: 0, credit: 'fair', note: 'Rises to 1.5% after 12 on-time payments.', url: 'https://www.petalcard.com/' },
+  { name: 'Cash Back Visa', issuer: 'Mission Lane', short: 'ML', type: 'cashback', base: 1, rates: {}, annualFee: 59, feeNote: 'some offers are $0', credit: 'fair', note: 'Some offers earn 1.5%.', url: 'https://www.missionlane.com/credit-cards' },
+
+  // Good credit
+  { name: 'Blue Cash Preferred', issuer: 'American Express', short: 'AX', type: 'cashback', base: 1, rates: { food: { rate: 6, cap: { amount: 6000, per: 'year' }, note: `${SUPERMARKETS} Restaurants earn 1%.` }, transport: { rate: 3, note: 'Gas stations and transit.' } }, annualFee: 95, feeNote: '$0 the first year', credit: 'good', url: 'https://www.americanexpress.com/us/credit-cards/card/blue-cash-preferred/' },
+  { name: 'Blue Cash Everyday', issuer: 'American Express', short: 'AX', type: 'cashback', base: 1, rates: { food: { rate: 3, cap: { amount: 6000, per: 'year' }, note: SUPERMARKETS }, shopping: { rate: 3, cap: { amount: 6000, per: 'year' }, note: 'US online retail.' }, transport: { rate: 3, cap: { amount: 6000, per: 'year' }, note: 'US gas stations.' } }, annualFee: 0, credit: 'good', url: 'https://www.americanexpress.com/us/credit-cards/card/blue-cash-everyday/' },
+  { name: 'Custom Cash', issuer: 'Citi', short: 'CI', type: 'cashback', base: 1, rates: { food: { rate: 5, cap: { amount: 500, per: 'month' }, note: CUSTOM_CASH }, transport: { rate: 5, cap: { amount: 500, per: 'month' }, needs: 'spend more on gas than on anything else each month' } }, annualFee: 0, credit: 'good', url: 'https://www.citi.com/credit-cards/citi-custom-cash-credit-card' },
+  { name: 'Savor', issuer: 'Capital One', short: 'C1', type: 'cashback', base: 1, rates: { food: { rate: 3, note: 'Grocery stores and restaurants. Superstores like Walmart and Target don’t count.' } }, annualFee: 0, credit: 'good', inApp: true, url: 'https://www.capitalone.com/credit-cards/savor/' },
+  { name: 'Customized Cash Rewards', issuer: 'Bank of America', short: 'BA', type: 'cashback', base: 1, rates: BOFA, annualFee: 0, credit: 'good', url: 'https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/' },
+  { name: 'Altitude Go', issuer: 'U.S. Bank', short: 'US', type: 'points', cpp: 1, base: 1, rates: ALTITUDE_GO, annualFee: 0, credit: 'good', url: 'https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html' },
+  { name: 'Cash+', issuer: 'U.S. Bank', short: 'US', type: 'cashback', base: 1, rates: CASH_PLUS, annualFee: 0, credit: 'good', url: 'https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html' },
+  { name: 'Active Cash', issuer: 'Wells Fargo', short: 'WF', type: 'cashback', base: 2, rates: {}, annualFee: 0, credit: 'good', url: 'https://creditcards.wellsfargo.com/active-cash-credit-card/' },
+  { name: 'Double Cash', issuer: 'Citi', short: 'CI', type: 'cashback', base: 2, rates: {}, annualFee: 0, credit: 'good', note: '1% when you buy and 1% when you pay.', url: 'https://www.citi.com/credit-cards/citi-double-cash-credit-card' },
+  { name: 'Quicksilver', issuer: 'Capital One', short: 'C1', type: 'cashback', base: 1.5, rates: {}, annualFee: 0, credit: 'good', inApp: true, url: 'https://www.capitalone.com/credit-cards/quicksilver/' },
+  { name: 'Freedom Unlimited', issuer: 'Chase', short: 'CH', type: 'cashback', base: 1.5, rates: { food: { rate: 1.5, note: '3% at restaurants.' } }, annualFee: 0, credit: 'good', url: 'https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited' },
+  { name: 'Unlimited Cash Rewards', issuer: 'Bank of America', short: 'BA', type: 'cashback', base: 1.5, rates: {}, annualFee: 0, credit: 'good', url: 'https://www.bankofamerica.com/credit-cards/products/unlimited-cash-back-credit-card/' },
+  { name: 'PayPal Cashback Mastercard', issuer: 'PayPal', short: 'PP', type: 'cashback', base: 1.5, rates: { shopping: { rate: 3, needs: 'check out with PayPal' } }, annualFee: 0, credit: 'good', url: 'https://www.paypal.com/us/digital-wallet/manage-money/paypal-cashback-mastercard' },
+  { name: 'Freedom Flex', issuer: 'Chase', short: 'CH', type: 'cashback', base: 1, rates: { food: { rate: 1, note: '3% at restaurants. Groceries is sometimes a 5% category for a quarter.' } }, annualFee: 0, credit: 'good', url: 'https://creditcards.chase.com/cash-back-credit-cards/freedom/flex' },
+]
+
+// More cards the Kikoff app offers, on top of the popular ones marked inApp above. Its student cards are left out,
+// since they're only for students.
+const MORE_APP_CARDS: MarketCard[] = [
+  { name: 'Platinum Rewards Visa', issuer: 'Credit One', short: 'CO', type: 'cashback', base: 1, rates: { food: { rate: 5, cap: { amount: 5000, per: 'year' }, note: 'At grocery stores. Restaurants earn 1%. The $5,000 a year is shared with gas, phone, internet and TV.' }, transport: { rate: 5, cap: { amount: 5000, per: 'year' }, note: 'At gas stations. The $5,000 a year is shared with groceries, phone, internet and TV.' } }, annualFee: 95, credit: 'fair', inApp: true, url: 'https://www.creditonebank.com/credit-cards/platinum-rewards-visa' },
+  { name: 'Platinum Rewards, No Fee', issuer: 'Credit One', short: 'CO', type: 'cashback', base: 1, rates: { food: { rate: 2, note: 'At grocery stores. Restaurants earn 1%.' }, transport: { rate: 2, note: 'At gas stations.' } }, annualFee: 0, credit: 'fair', inApp: true, url: 'https://www.creditonebank.com/credit-cards/platinum-rewards-visa-no-annual-fee' },
+  { name: 'Wander Amex', issuer: 'Credit One', short: 'CO', type: 'points', cpp: 1, base: 1, rates: { food: { rate: 1, note: '5× at restaurants.' }, transport: { rate: 5, note: 'At gas stations.' } }, annualFee: 95, credit: 'fair', inApp: true, url: 'https://www.creditonebank.com/credit-cards/wander-card' },
+  { name: 'Aspire Cash Back Rewards', issuer: 'Aspire', short: 'AS', type: 'cashback', base: 1, rates: { food: { rate: 3, note: 'At grocery stores.' }, transport: { rate: 3, note: 'At gas stations.' } }, annualFee: 99, feeNote: 'varies by offer, and a monthly fee starts in year two', credit: 'building', inApp: true, url: 'https://www.aspirecreditcard.com/' },
+  { name: 'Fortiva Cash Back Rewards', issuer: 'Fortiva', short: 'FO', type: 'cashback', base: 1, rates: { food: { rate: 3, note: 'At grocery stores.' }, transport: { rate: 3, note: 'At gas stations.' } }, annualFee: 99, feeNote: 'varies by offer, and a monthly fee starts in year two', credit: 'building', inApp: true, url: 'https://www.fortivacreditcard.com/' },
+  { name: 'Bilt Mastercard', issuer: 'Bilt', short: 'BI', type: 'points', cpp: 1, base: 1, rates: { food: { rate: 1, note: '3× at restaurants, in months with 5 or more purchases.' } }, annualFee: 0, credit: 'good', note: 'Also earns on rent, with no fee.', inApp: true, url: 'https://www.biltrewards.com/card' },
+]
+
+const ALL_CARDS = [...MARKET_CARDS, ...MORE_APP_CARDS]
+// Food & drink compares only cards in the Kikoff app; shopping and gas compare the popular cards.
+const cardsFor = (cat: CategoryId) => (cat === 'food' ? ALL_CARDS.filter((c) => c.inApp) : MARKET_CARDS)
+
+export const fmtRate = (type: Program['type'], rate: number) => (type === 'cashback' ? `${rate}%` : `${rate}×`)
+// Whole dollars, for yearly estimates: "$180", "−$12".
+export const fmtDollars = (n: number) =>
+  `${n < -0.5 ? '−' : ''}${Math.abs(Math.round(n)).toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}`
+
+// A year of spend at one rate, e.g. "First $6,000 a year at 6%" → $360.
+export interface EarnStep {
+  label: string
+  spend: number
+  rate: number
+  earned: number // points, or dollars for cashback cards
+  value: number // $ (points at their cash value)
+}
+
+export interface CardOption {
+  key: string
+  name: string
+  issuer?: string
+  short: string
+  type: Program['type']
+  unit: string
+  yours: boolean
+  known: boolean // false = your card isn't in the sample rules, estimated at the base rate
+  rate: number // the category rate, before any cap
+  monthlyEarn: number // points a month, or dollars a month for cashback cards (averaged over the year)
+  steps: EarnStep[]
+  rewards: number // $ a year
+  fee: number // annual fee counted against it — 0 for cards you already have
+  feeNote?: string
+  net: number // rewards − fee
+  gain: number // net − your best card's net (or net, when you have no cards)
+  deposit?: number
+  credit?: CreditTier
+  worth: boolean // market cards: adds at least MIN_GAIN a month on today's spending, with nothing else changed
+  why?: string // market cards that aren't worth it: the short reason
+  whyKind?: WhyKind
+  notes: string[]
+  url?: string
+}
+
+// Why a card isn't worth it. The first three are close calls, worth a line each: it would pay off with an extra step
+// or more spending, or it adds a little. 'fee' and 'less' don't come close.
+export type WhyKind = 'step' | 'spend' | 'small' | 'fee' | 'less'
+const CLOSE_KINDS: WhyKind[] = ['step', 'spend', 'small']
+const CLOSE_LIMIT = 3
+
+export interface CardComparison {
+  yours: CardOption[] // highest-earning first
+  best?: CardOption // the baseline the market cards are measured against
+  worth: CardOption[] // market cards for the user's credit that are worth getting, most extra first
+  close: CardOption[] // not worth it, but close: up to CLOSE_LIMIT, most extra first
+  rest: CardOption[] // every other card that isn't worth it, most extra first
+}
+
+// A new card is worth it only when it adds at least this much a month on what the user spends now. Less isn't worth a
+// hard credit check, a new bill to track and a new card to carry.
+export const MIN_GAIN = 2
+
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
+// A card name as a user might type it, with or without the issuer.
+const isCard = (cardName: string, c: MarketCard) => sameName(cardName, c.name) || sameName(cardName, `${c.issuer} ${c.name}`)
+// The name people know a card by, issuer first ("Credit One Platinum X5"), unless the name already starts with it.
+const BRAND: Record<string, string> = { 'American Express': 'Amex' }
+const fullName = (c: MarketCard) => {
+  const brand = BRAND[c.issuer] ?? c.issuer
+  return c.name.startsWith(brand.split(' ')[0]) ? c.name : `${brand} ${c.name}`
+}
+
+// The part of a year of spend that earns a rate's bonus: rotating categories only in their featured months, and only
+// up to the cap.
+function bonusSpend(yearSpend: number, r: CategoryRate) {
+  const months = (r.quarters ?? 4) * 3
+  const capYear = r.cap ? r.cap.amount * { month: months, quarter: months / 3, year: 1 }[r.cap.per] : Infinity
+  return Math.min((yearSpend * months) / 12, capYear)
+}
+
+// $ a year, unrounded, for trying other spend levels. cpp is the cash value per point in cents (1 for cashback).
+function yearValue(yearSpend: number, base: number, cpp: number, r?: CategoryRate) {
+  if (!r) return (yearSpend * base * cpp) / 100
+  const bonus = bonusSpend(yearSpend, r)
+  return ((bonus * r.rate + (yearSpend - bonus) * base) * cpp) / 100
+}
+
+function earnSteps(yearSpend: number, base: number, type: Program['type'], cpp: number, r?: CategoryRate): EarnStep[] {
+  const step = (label: string, spend: number, rate: number): EarnStep => {
+    const earned = type === 'cashback' ? cents((spend * rate) / 100) : Math.round(spend * rate)
+    return { label, spend, rate, earned, value: type === 'cashback' ? earned : cents((earned * cpp) / 100) }
+  }
+  const at = (rate: number) => fmtRate(type, rate)
+  if (!r) return [step(`${fmtDollars(yearSpend)} at ${at(base)}`, yearSpend, base)]
+  if (!r.cap && !r.quarters) return [step(`${fmtDollars(yearSpend)} at ${at(r.rate)}`, yearSpend, r.rate)]
+  const bonus = bonusSpend(yearSpend, r)
+  const label = r.quarters
+    ? `${fmtDollars(bonus)} in its featured ${r.quarters === 1 ? 'quarter' : 'quarters'} at ${at(r.rate)}`
+    : `First ${fmtDollars(r.cap!.amount)} a ${r.cap!.per} at ${at(r.rate)}`
+  const steps = [step(label, bonus, r.rate)]
+  if (yearSpend > bonus) steps.push(step(`Then ${fmtDollars(yearSpend - bonus)} at ${at(base)}`, yearSpend - bonus, base))
+  return steps
+}
+
+// What a year of the user's spend in one category earns on each of their cards, and on market cards for their credit.
+// New cards pay their annual fee out of these rewards; fees on cards you have are already paid. Market cards count as
+// if the user changed nothing but the card: same stores, same spending, no extra steps like a special way to pay.
+export function compareCards(balances: Balance[], cat: CategoryId, credit: CreditTier = CREDIT, spend: Spend = SPEND): CardComparison {
+  const monthSpend = spend[cat] ?? 0
+  const yearSpend = monthSpend * 12
+  const total = (steps: EarnStep[]) => cents(steps.reduce((s, x) => s + x.value, 0))
+  const perMonth = (type: Program['type'], steps: EarnStep[]) => {
+    const earned = steps.reduce((s, x) => s + x.earned, 0) / 12
+    return type === 'cashback' ? cents(earned) : Math.round(earned)
+  }
+
+  const earnings = cardEarnings(balances, cat, spend)
+  const yours: CardOption[] = earnings
+    .map((e) => {
+      const cpp = e.program.cpp?.cashback ?? 1
+      const steps = earnSteps(yearSpend, e.base, e.program.type, cpp, e.terms)
+      const rewards = total(steps)
+      return {
+        key: `yours-${e.balance.id}`,
+        name: e.balance.cardName,
+        short: e.program.short,
+        type: e.program.type,
+        unit: e.program.unit,
+        yours: true,
+        known: e.known,
+        rate: e.rate,
+        monthlyEarn: perMonth(e.program.type, steps),
+        steps,
+        rewards,
+        fee: 0,
+        net: rewards,
+        gain: 0,
+        worth: false,
+        notes: e.note ? [e.note] : [],
+      }
+    })
+    .sort((a, b) => b.net - a.net)
+
+  const best = yours[0]
+  const baseline = best?.net ?? 0
+  for (const o of yours) o.gain = cents(o.net - baseline)
+
+  // What the user's best card would earn on another month of spend, for finding where a card starts to be worth it.
+  const bestAt = (y: number) =>
+    Math.max(0, ...earnings.map((e) => yearValue(y, e.base, e.program.cpp?.cashback ?? 1, e.terms)))
+  const worthAt = (m: number, c: MarketCard, r?: CategoryRate) =>
+    (yearValue(m * 12, c.base, c.cpp ?? 1, r) - c.annualFee - bestAt(m * 12)) / 12 >= MIN_GAIN
+  // The lowest monthly spend, in $5 steps, where a card would be worth it. Undefined past $3,000 a month.
+  const breakEven = (c: MarketCard, r?: CategoryRate) => {
+    for (let m = 5; m <= 3000; m += 5) if (worthAt(m, c, r)) return m
+  }
+
+  const options: CardOption[] = cardsFor(cat).filter(
+    (c) =>
+      tierRank(c.credit) <= tierRank(credit) &&
+      (!c.deposit || credit === 'building') &&
+      !balances.some((b) => isCard(b.cardName, c)),
+  )
+    .map((c) => {
+      const r = c.rates[cat]
+      // A rate that needs an extra step is counted at the base rate.
+      const asIs = r?.needs ? undefined : r
+      const steps = earnSteps(yearSpend, c.base, c.type, c.cpp ?? 1, asIs)
+      const rewards = total(steps)
+      const net = cents(rewards - c.annualFee)
+      const gain = cents(net - baseline)
+      const worth = gain / 12 >= MIN_GAIN
+      const fee = fmtDollars(c.annualFee)
+      const at = (rate: number) => fmtRate(c.type, rate)
+      const even = c.annualFee > 0 ? breakEven(c, asIs) : undefined
+
+      const whyNot = (): [WhyKind, string] => {
+        if (r?.needs && worthAt(monthSpend, c, r)) return ['step', `${at(r.rate)} only if you ${r.needs}`]
+        const beatsBefore = rewards > baseline // earns more than your card, until the fee
+        if (c.annualFee > 0 && beatsBefore && even && even > monthSpend)
+          return ['spend', `Worth the ${fee} fee only if you spend ${fmtMoney(even)}+/mo`]
+        if (gain > 0) return ['small', 'Not enough extra to be worth a credit check']
+        if (c.annualFee > 0 && (beatsBefore || !best)) return ['fee', `The ${fee} fee is more than it adds`]
+        if (best) return ['less', `Your ${best.name} already earns ${Math.abs(gain) < 0.12 ? 'as much' : 'more'}`]
+        return ['less', 'Not enough to be worth a credit check']
+      }
+      const [whyKind, why] = worth ? [undefined, undefined] : whyNot()
+
+      const notes = [
+        worth && even && even <= monthSpend && `Worth the ${fee} fee from ${fmtMoney(even)} a month in ${catName(cat)}. You spend ${fmtMoney(monthSpend)}.`,
+        r?.needs && `${at(r.rate)} if you ${r.needs}. Counted at ${at(c.base)}, without the extra step.`,
+        r?.note,
+        c.note,
+        c.deposit && `Needs a refundable deposit of at least ${fmtDollars(c.deposit)}.`,
+      ].filter((n): n is string => !!n)
+
+      return {
+        key: `market-${c.name}`,
+        name: fullName(c),
+        issuer: c.issuer,
+        short: c.short,
+        type: c.type,
+        unit: c.type === 'cashback' ? 'cashback' : 'points',
+        yours: false,
+        known: true,
+        rate: asIs?.rate ?? c.base,
+        monthlyEarn: perMonth(c.type, steps),
+        steps,
+        rewards,
+        fee: c.annualFee,
+        feeNote: c.feeNote,
+        net,
+        gain,
+        deposit: c.deposit,
+        credit: c.credit,
+        worth,
+        why,
+        whyKind,
+        notes,
+        url: c.url,
+      }
+    })
+    .sort((a, b) => b.net - a.net)
+
+  const skip = options.filter((o) => !o.worth)
+  const close = skip.filter((o) => CLOSE_KINDS.includes(o.whyKind!)).slice(0, CLOSE_LIMIT)
+  return { yours, best, worth: options.filter((o) => o.worth), close, rest: skip.filter((o) => !close.includes(o)) }
+}
+
+// ---- Score goal: cards one credit tier up ----
+
+export interface ScoreGoal {
+  score: number // the next tier's lowest score
+  from: number // where the user's tier starts, for a progress bar
+  toGo: number
+  best?: CardOption // the user's best card in the category, what the extra is measured against
+  cards: CardOption[] // most extra first
+}
+
+// Cards usually made for the next credit tier that would earn more on this category than any card for the user's
+// tier today, counted the same way: today's spending, nothing else changed. Null at the top tier.
+export function scoreGoal(balances: Balance[], cat: CategoryId, score = CREDIT_SCORE, spend: Spend = SPEND): ScoreGoal | null {
+  const now = CREDIT_TIERS[tierRank(tierFor(score))]
+  const next = CREDIT_TIERS[tierRank(now.id) + 1]
+  if (!next) return null
+  const today = compareCards(balances, cat, now.id, spend)
+  const bar = Math.max(today.best?.net ?? 0, ...today.worth.map((o) => o.net))
+  const cards = compareCards(balances, cat, next.id, spend).worth.filter((o) => o.credit === next.id && o.net > bar)
+  return { score: next.min, from: now.min, toGo: next.min - score, best: today.best, cards }
 }

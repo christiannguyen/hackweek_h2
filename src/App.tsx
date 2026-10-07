@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { MobileShell } from '@/components/MobileShell'
 import { BalanceSheet } from '@/pointpool/BalanceSheet'
 import { CoachPage } from '@/pointpool/CoachPage'
+import type { CompareProps } from '@/pointpool/CardCompare'
 import { TOP_CATEGORY, type CategoryId } from '@/pointpool/data'
 import { HomePage } from '@/pointpool/HomePage'
 import { LearnPage } from '@/pointpool/LearnPage'
@@ -13,19 +14,24 @@ import styles from '@/pointpool/pointpool.module.css'
 function App() {
   const route = useHashRoute()
   const { balances, upsert, remove } = useBalances()
-  // Shared so the category picked on the home hero carries into the full Coach page.
-  // Starts on the user's highest-spend category from the sample transactions.
+  // Shared so the category picked on the home hero carries into the full Coach page. Starts on the user's
+  // highest-spend category.
   const [category, setCategory] = useState<CategoryId>(TOP_CATEGORY)
   const [sheet, setSheet] = useState<{ open: boolean; id?: number; key: number }>({ open: false, key: 0 })
 
   const openSheet = (id?: number) => setSheet((s) => ({ open: true, id, key: s.key + 1 }))
-  const coachProps = { balances, category, onCategory: setCategory, onEdit: openSheet }
+  const compare: CompareProps = {
+    balances,
+    category,
+    onCategory: setCategory,
+    onEdit: openSheet,
+  }
 
   return (
     <MobileShell>
       <main className={`${styles.root} ${styles.view}`}>
-        {route === 'home' && <HomePage {...coachProps} />}
-        {route === 'coach' && <CoachPage {...coachProps} />}
+        {route === 'home' && <HomePage balances={balances} onEdit={openSheet} compare={compare} />}
+        {route === 'coach' && <CoachPage balances={balances} onEdit={openSheet} compare={compare} />}
         {route === 'redeem' && <RedeemPage balances={balances} />}
         {route === 'learn' && <LearnPage />}
       </main>
