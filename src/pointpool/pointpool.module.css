@@ -295,9 +295,6 @@ a.row { text-decoration: none; color: inherit; }
   .cardPicker > span { font-size: 9px; }
   .catTab { padding: 8px 6px; }
 }
-.scoreLine { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 14px; }
-.scoreLine h3 { margin: 0; font-size: 13px; font-weight: 500; color: var(--muted); }
-.scoreValue { display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 500; }
 .groupHead { font-size: 13px; font-weight: 500; color: var(--muted); margin: 16px 0 2px; }
 /* A group heading with a note on the right ("Your cards ... Each on all $460") */
 .colHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 18px 0 2px; font-size: 12px; color: var(--muted); }
