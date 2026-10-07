@@ -34,7 +34,9 @@ export function LearnPage() {
   return (
     <>
       <BackLink />
-      <div className={styles.pageTitle}>Rewards 101</div>
+      <div className={styles.pageHead}>
+        <div className={styles.pageTitle}>Rewards 101</div>
+      </div>
       <div className={styles.card}>
         <Accordion.Root collapsible variant="plain">
           {TOPICS.map(([q, a], i) => (

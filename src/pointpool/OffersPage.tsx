@@ -193,7 +193,9 @@ export function OffersPage({ balances, onEdit }: Props) {
 
   return (
     <>
-      <div className={styles.pageTitle}>Offers</div>
+      <div className={styles.pageHead}>
+        <div className={styles.pageTitle}>Offers</div>
+      </div>
 
       {/* Location section */}
       <div className={styles.card}>
