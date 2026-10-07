@@ -92,7 +92,10 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
         </>
       ) : <div className={styles.compareGrid}>
         <div className={styles.compareColumn}>
-          <h4>{!selected ? 'Your wallet' : isBest ? 'Best in your wallet' : 'Your selected card'}</h4>
+          <h4>
+            <span className={styles.colEyebrow}>Now</span>
+            {!selected ? 'Your wallet' : isBest ? 'Best in your wallet' : 'Your selected card'}
+          </h4>
           {selected ? (
             <CompareTile option={selected} category={category} winner={!recommends && isBest}>
               {yours.length > 1 && (
@@ -113,7 +116,10 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
           )}
         </div>
         <div className={styles.compareColumn}>
-          <h4>{recommends ? 'Suggested' : 'New card comparison'}</h4>
+          <h4>
+            <span className={styles.colEyebrow}>If you apply</span>
+            {!suggested ? 'No options yet' : recommends ? 'Suggested new card' : 'Closest new card'}
+          </h4>
           {suggested ? <CompareTile option={suggested} category={category} winner={recommends} /> : (
             <div className={styles.compareEmpty}>No new cards to compare for this category.</div>
           )}
