@@ -42,5 +42,5 @@
   font-size: 10px; color: #737b6c; text-decoration: none; width: 60px;
 }
 .tab svg { width: 20px; height: 20px; color: #737b6c; }
-.active { color: #9d3c12; font-weight: 600; }
-.active svg { color: #9d3c12; background: #ffe2cb; box-shadow: 0 0 0 4px #ffe2cb; border-radius: 5px; }
+.active { color: #196b36; font-weight: 600; }
+.active svg { color: #196b36; background: #e7f8e9; box-shadow: 0 0 0 4px #e7f8e9; border-radius: 5px; }
