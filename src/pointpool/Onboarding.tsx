@@ -106,9 +106,8 @@ export function Onboarding({ onFinish }: { onFinish: (cards: Omit<Balance, 'id' 
 function Logo({ light }: { light?: boolean }) {
   return (
     <div className={`${styles.logo} ${light ? styles.logoLight : ''}`}>
-      <span className={styles.logoMark}>K</span>
-      Kikoff
-      <span className={styles.logoPlus}>× pointpool</span>
+      <img src="/favicon.svg" alt="" width="38" height="38" />
+      pointpool
     </div>
   )
 }

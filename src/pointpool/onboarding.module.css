@@ -27,11 +27,10 @@
 .progress span { flex: 1; height: 4px; border-radius: 999px; background: #eceeea; }
 .progress span.on { background: var(--green); }
 
-/* Logo */
-.logo { display: flex; align-items: center; gap: 8px; font-size: 28px; font-weight: 700; letter-spacing: -1px; }
-.logoMark { display: grid; place-items: center; width: 28px; height: 28px; background: var(--lime); color: #111; font-size: 16px; font-weight: 800; letter-spacing: 0; }
-.logoPlus { font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--muted); margin-left: 2px; align-self: flex-end; padding-bottom: 4px; }
-.logoLight .logoPlus { color: #b9c2b3; }
+/* Logo — same mark and wordmark as the app header */
+.logo { display: flex; align-items: center; gap: 9px; font-size: 28px; line-height: 1; font-weight: 700; letter-spacing: -1.2px; color: #111410; }
+.logo img { display: block; border-radius: 9px; }
+.logoLight { color: #fff; }
 
 /* Welcome */
 .welcome { position: relative; flex: 1; display: flex; flex-direction: column; padding: 28px 20px calc(24px + env(safe-area-inset-bottom)); }
