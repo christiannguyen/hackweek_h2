@@ -15,6 +15,8 @@ export function BalanceSheet({ open, balance, onClose, onSave, onRemove }: Props
   const [programId, setProgramId] = useState<ProgramId>(balance?.programId ?? 'chase_ur')
   const [cardName, setCardName] = useState(balance?.cardName ?? '')
   const [amount, setAmount] = useState(balance ? String(balance.amount) : '')
+  const [creditLimit, setCreditLimit] = useState(balance?.creditLimit ? String(balance.creditLimit) : '')
+  const [cardBalance, setCardBalance] = useState(balance?.cardBalance ? String(balance.cardBalance) : '')
 
   const cash = PROGRAMS[programId].type === 'cashback'
   const value = Number(amount)
@@ -22,7 +24,13 @@ export function BalanceSheet({ open, balance, onClose, onSave, onRemove }: Props
 
   const save = () => {
     if (!valid) return
-    onSave({ programId, cardName: cardName.trim(), amount: value }, balance?.id)
+    onSave({
+      programId,
+      cardName: cardName.trim(),
+      amount: value,
+      creditLimit: creditLimit ? Number(creditLimit) : undefined,
+      cardBalance: cardBalance ? Number(cardBalance) : undefined,
+    }, balance?.id)
     onClose()
   }
 
@@ -81,6 +89,30 @@ export function BalanceSheet({ open, balance, onClose, onSave, onRemove }: Props
                     value={amount}
                     onChange={(e) => setAmount(e.currentTarget.value)}
                     placeholder={cash ? '42.18' : '50000'}
+                    rounded="12px"
+                  />
+                </Field.Root>
+                <Field.Root>
+                  <Field.Label fontSize="13px">Credit limit ($)</Field.Label>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    value={creditLimit}
+                    onChange={(e) => setCreditLimit(e.currentTarget.value)}
+                    placeholder="500"
+                    rounded="12px"
+                  />
+                </Field.Root>
+                <Field.Root>
+                  <Field.Label fontSize="13px">Current balance ($)</Field.Label>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    value={cardBalance}
+                    onChange={(e) => setCardBalance(e.currentTarget.value)}
+                    placeholder="142.50"
                     rounded="12px"
                   />
                   <Field.HelperText fontSize="12px">Saved privately in this browser — your card account stays separate.</Field.HelperText>

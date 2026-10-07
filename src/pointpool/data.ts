@@ -19,6 +19,8 @@ export interface Balance {
   programId: ProgramId
   cardName: string
   amount: number
+  creditLimit?: number
+  cardBalance?: number
   updatedAt: string
 }
 
@@ -58,8 +60,8 @@ const daysAgo = (n: number) => new Date(Date.now() - n * 864e5).toISOString()
 
 // SAMPLE wallet: cards a Kikoff user building credit is likely to have, a secured card and a fair-credit card.
 export const SEED: Balance[] = [
-  { id: 1, programId: 'discover', cardName: 'Discover it Secured', amount: 18.4, updatedAt: daysAgo(3) },
-  { id: 2, programId: 'creditone', cardName: 'Credit One Platinum Visa', amount: 9.15, updatedAt: daysAgo(12) },
+  { id: 1, programId: 'discover', cardName: 'Discover it Secured', amount: 18.4, creditLimit: 500, cardBalance: 142.5, updatedAt: daysAgo(3) },
+  { id: 2, programId: 'creditone', cardName: 'Credit One Platinum Visa', amount: 9.15, creditLimit: 300, cardBalance: 87.23, updatedAt: daysAgo(12) },
 ]
 
 const cents = (n: number) => Math.round(n * 100) / 100
@@ -74,6 +76,7 @@ export const fmtMoney = (n: number) => {
 }
 export const ageDays = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 864e5)
 export const isCash = (b: Balance) => PROGRAMS[b.programId].type === 'cashback'
+export const utilization = (b: Balance) => b.creditLimit && b.creditLimit > 0 ? (b.cardBalance ?? 0) / b.creditLimit : null
 export const isStale = (b: Balance) => ageDays(b.updatedAt) > STALE_DAYS
 // A program has estimates when it's supported and has a value per point (cashback is always $1 = $1).
 export const hasEstimates = (p: Program) => p.supported && (p.type === 'cashback' || !!p.cpp)
