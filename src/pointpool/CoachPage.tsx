@@ -1,17 +1,151 @@
-import { CardCompare, ScoreGoal, type CompareProps } from "./CardCompare";
-import { coachTips, type Balance } from "./data";
-import { PointsUses } from "./PointsUses";
-import { Disclaimer } from "./shared";
-import styles from "./pointpool.module.css";
+import {
+  cardEarnings,
+  CATEGORIES,
+  catName,
+  coachTips,
+  earnRateLabel,
+  fmtMoney,
+  hasEstimates,
+  PROGRAMS,
+  ruleFor,
+  SPEND,
+  TRANSACTIONS,
+  type Balance,
+  type CardEarning,
+  type CategoryId,
+  type Spend,
+} from './data'
+import { Disclaimer } from './shared'
+import styles from './pointpool.module.css'
 
 interface Props {
-  balances: Balance[];
-  onEdit: (id?: number) => void;
-  compare: CompareProps;
+  balances: Balance[]
+  onEdit: (id?: number) => void
 }
 
-export function CoachPage({ balances, onEdit, compare }: Props) {
-  const tips = coachTips(balances);
+// --- Analysis helpers ---
+
+interface CategoryInsight {
+  id: CategoryId
+  label: string
+  emoji: string
+  spend: number
+  bestCard: CardEarning | null
+  bestRate: string
+  monthlyReward: number
+}
+
+function analyzeSpending(balances: Balance[], spend: Spend): CategoryInsight[] {
+  const cards = balances.filter((b) => hasEstimates(PROGRAMS[b.programId]))
+  return CATEGORIES
+    .filter((c) => spend[c.id] > 0)
+    .sort((a, b) => spend[b.id] - spend[a.id])
+    .map((c) => {
+      const earnings = cardEarnings(cards, c.id, spend)
+      const best = earnings.length > 0
+        ? earnings.reduce((a, b) => (a.value.cashback >= b.value.cashback ? a : b))
+        : null
+      return {
+        id: c.id,
+        label: c.label,
+        emoji: c.emoji,
+        spend: spend[c.id],
+        bestCard: best,
+        bestRate: best ? earnRateLabel(best) : '1×',
+        monthlyReward: best?.value.cashback ?? 0,
+      }
+    })
+}
+
+function walletScore(insights: CategoryInsight[]): number {
+  if (insights.length === 0) return 0
+  let totalSpend = 0
+  let weightedRate = 0
+  for (const i of insights) {
+    totalSpend += i.spend
+    const rate = i.bestCard?.rate ?? 1
+    const maxRate = Math.max(rate, 5)
+    weightedRate += i.spend * (rate / maxRate)
+  }
+  return totalSpend > 0 ? Math.round((weightedRate / totalSpend) * 100) : 0
+}
+
+interface SpendingAction {
+  id: string
+  icon: string
+  title: string
+  detail: string
+  tag?: string
+}
+
+function generateActions(balances: Balance[], insights: CategoryInsight[]): SpendingAction[] {
+  const actions: SpendingAction[] = []
+  const cards = balances.filter((b) => hasEstimates(PROGRAMS[b.programId]))
+
+  for (const i of insights) {
+    if (i.bestCard && i.bestCard.rate > 1) {
+      actions.push({
+        id: `use-${i.id}`,
+        icon: i.emoji,
+        title: `Use ${i.bestCard.balance.cardName} for ${catName(i.id)}`,
+        detail: `Earns ${i.bestRate} — about ${fmtMoney(i.monthlyReward)}/mo on your ${fmtMoney(i.spend)}/mo spend.`,
+        tag: i.bestCard.rate >= 4 ? 'Top earn' : undefined,
+      })
+    }
+  }
+
+  for (const i of insights) {
+    if (!i.bestCard || i.bestCard.rate <= 1) {
+      actions.push({
+        id: `gap-${i.id}`,
+        icon: '🔍',
+        title: `No bonus card for ${catName(i.id)}`,
+        detail: `You spend ${fmtMoney(i.spend)}/mo here at the base rate. A card with a bonus category here could earn more.`,
+        tag: 'Opportunity',
+      })
+    }
+  }
+
+  for (const b of cards) {
+    const rule = ruleFor(b.cardName)
+    const bonus = rule ? CATEGORIES.filter((c) => rule.rates[c.id]?.quarters) : []
+    if (bonus.length > 0) {
+      actions.push({
+        id: `rotate-${b.id}`,
+        icon: '🔁',
+        title: `Activate ${b.cardName} quarterly bonus`,
+        detail: `Rotating categories include ${bonus.map((c) => catName(c.id)).join(', ')}. Activate each quarter to earn the bonus rate.`,
+      })
+    }
+  }
+
+  for (const b of balances) {
+    if (b.creditLimit && b.cardBalance && b.cardBalance / b.creditLimit > 0.3) {
+      actions.push({
+        id: `util-${b.id}`,
+        icon: '💳',
+        title: `Lower your ${b.cardName} balance`,
+        detail: `${Math.round((b.cardBalance / b.creditLimit) * 100)}% utilization. Paying down below 30% helps your credit score and avoids interest eating into rewards.`,
+        tag: 'Credit tip',
+      })
+    }
+  }
+
+  return actions
+}
+
+// --- Component ---
+
+export function CoachPage({ balances, onEdit }: Props) {
+  const insights = analyzeSpending(balances, SPEND)
+  const score = walletScore(insights)
+  const actions = generateActions(balances, insights)
+  const tips = coachTips(balances)
+  const totalMonthlyRewards = insights.reduce((sum, i) => sum + i.monthlyReward, 0)
+  const totalYearlyRewards = totalMonthlyRewards * 12
+
+  const hasCards = balances.some((b) => hasEstimates(PROGRAMS[b.programId]))
+  const txnCount = TRANSACTIONS.length
 
   return (
     <>
@@ -19,31 +153,107 @@ export function CoachPage({ balances, onEdit, compare }: Props) {
         <div className={styles.pageTitle}>Card Coach</div>
       </div>
 
+      {/* Wallet score + reward summary */}
       <div className={styles.card}>
-        <CardCompare {...compare} variant="full" />
+        <div className={styles.coachScore}>
+          <div className={styles.scoreCircle}>
+            <svg viewBox="0 0 80 80" className={styles.scoreSvg}>
+              <circle cx="40" cy="40" r="35" fill="none" stroke="var(--line)" strokeWidth="6" />
+              <circle
+                cx="40" cy="40" r="35"
+                fill="none" stroke="var(--green)" strokeWidth="6"
+                strokeLinecap="round"
+                strokeDasharray={`${(score / 100) * 220} 220`}
+                transform="rotate(-90 40 40)"
+              />
+            </svg>
+            <div className={styles.scoreNum}>{score}</div>
+          </div>
+          <div>
+            <div className={styles.scoreTitle}>Rewards score</div>
+            <div className={styles.rowSub}>
+              {score >= 70 ? "Great — your cards are well-matched to your spending."
+                : score >= 40 ? 'Room to improve. Follow the tips below to earn more.'
+                : hasCards ? "Low — your spending categories don't match your card bonuses."
+                : 'Add your cards to get a personalized score.'}
+            </div>
+          </div>
+        </div>
+
+        {hasCards && (
+          <div className={styles.tileSection}>
+            <div className={styles.tileStat}>
+              <span className={styles.tileLabel}>Monthly rewards</span>
+              <span className={styles.tileValue}>{fmtMoney(totalMonthlyRewards)}</span>
+            </div>
+            <div className={styles.tileStat}>
+              <span className={styles.tileLabel}>Yearly estimate</span>
+              <span className={styles.tileValue}>{fmtMoney(totalYearlyRewards)}</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      <ScoreGoal
-        balances={compare.balances}
-        category={compare.category}
-        variant="full"
-      />
+      {/* Spending breakdown */}
+      {insights.length > 0 && (
+        <div className={styles.card}>
+          <h2>Your spending breakdown</h2>
+          <div className={styles.cardSub}>Based on {txnCount} transactions. Here's where your money goes and how each card earns.</div>
+          {insights.map((i) => (
+            <div key={i.id} className={styles.coachCatRow}>
+              <div className={styles.coachCatHead}>
+                <span>{i.emoji} {i.label}</span>
+                <span className={styles.coachCatSpend}>{fmtMoney(i.spend)}/mo</span>
+              </div>
+              {i.bestCard ? (
+                <div className={styles.coachCatDetail}>
+                  <span className={styles.coachCatCard}>
+                    Best: <b>{i.bestCard.balance.cardName}</b> at {i.bestRate}
+                  </span>
+                  <span className={styles.coachCatEarn}>
+                    ≈{fmtMoney(i.monthlyReward)}/mo
+                  </span>
+                </div>
+              ) : (
+                <div className={styles.coachCatDetail}>
+                  <span className={styles.rowSub}>No cards earn a bonus here</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
-      <PointsUses balances={balances} onEdit={onEdit} />
+      {/* Actions */}
+      {actions.length > 0 && (
+        <div className={styles.card}>
+          <h2>How to maximize your rewards</h2>
+          {actions.map((a) => (
+            <div key={a.id} className={styles.row}>
+              <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>{a.icon}</div>
+              <div className={styles.rowMain}>
+                <div className={styles.rowTitleLine}>
+                  <span className={styles.rowTitle}>{a.title}</span>
+                  {a.tag && <span className={`${styles.tag} ${styles.sm}`}>{a.tag}</span>}
+                </div>
+                <div className={styles.rowSub}>{a.detail}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
+      {/* Quick tips */}
       {tips.length > 0 && (
         <>
           <div className={styles.sectionHead}>
-            <span className={styles.sectionTitle}>Ideas for your points</span>
+            <span className={styles.sectionTitle}>More tips</span>
           </div>
           {tips.map((t) =>
-            // Tips that point back to this page read as plain banners — no link to the page you're on.
-            t.href === "#coach" && !t.balanceId ? (
+            t.href === '#coach' && !t.balanceId ? (
               <div key={t.id} className={styles.tip}>
                 <div className={styles.tipIcon}>{t.icon}</div>
-                <div className={`${styles.tipText} ${styles.tipMain}`}>
-                  {t.text}
-                </div>
+                <div className={`${styles.tipText} ${styles.tipMain}`}>{t.text}</div>
               </div>
             ) : (
               <a
@@ -52,17 +262,12 @@ export function CoachPage({ balances, onEdit, compare }: Props) {
                 href={t.href}
                 onClick={
                   t.balanceId
-                    ? (e) => {
-                        e.preventDefault();
-                        onEdit(t.balanceId);
-                      }
+                    ? (e) => { e.preventDefault(); onEdit(t.balanceId) }
                     : undefined
                 }
               >
                 <div className={styles.tipIcon}>{t.icon}</div>
-                <div className={`${styles.tipText} ${styles.tipMain}`}>
-                  {t.text}
-                </div>
+                <div className={`${styles.tipText} ${styles.tipMain}`}>{t.text}</div>
                 <span className={styles.chev}>›</span>
               </a>
             ),
@@ -70,7 +275,20 @@ export function CoachPage({ balances, onEdit, compare }: Props) {
         </>
       )}
 
+      {!hasCards && (
+        <div className={styles.card}>
+          <div className={styles.empty}>
+            Add your cards to get personalized coaching.
+            <div>
+              <button className={`${styles.btnText} ${styles.add}`} onClick={() => onEdit()}>
+                + Add a card
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Disclaimer />
     </>
-  );
+  )
 }
