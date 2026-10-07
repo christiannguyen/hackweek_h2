@@ -2,17 +2,26 @@ import { useEffect, useState } from 'react'
 import {
   LuArrowLeft,
   LuCheck,
+  LuCreditCard,
   LuEye,
   LuEyeOff,
+  LuGift,
   LuGraduationCap,
+  LuHeartHandshake,
+  LuHotel,
+  LuLandmark,
   LuLock,
   LuPlane,
   LuSearch,
   LuShoppingBag,
+  LuShoppingCart,
+  LuTicket,
+  LuUtensils,
   LuWallet,
   LuZap,
 } from 'react-icons/lu'
-import { balanceUses, fmtMoney, PROGRAMS, type Balance, type GoalId, type ProgramId } from './data'
+import type { IconType } from 'react-icons'
+import { balanceUses, fmtMoney, PROGRAMS, type Balance, type ProgramId } from './data'
 import { markOnboarded } from './useBalances'
 import styles from './onboarding.module.css'
 
@@ -47,10 +56,21 @@ function CardArt({ name }: { name: string }) {
   )
 }
 
-const GOAL_OPTIONS: { id: GoalId; label: string; sub: string; icon: typeof LuPlane }[] = [
-  { id: 'travel', label: 'Travel', sub: 'Flights and hotels', icon: LuPlane },
-  { id: 'everyday', label: 'Everyday buys', sub: 'Gift cards and shopping', icon: LuShoppingBag },
-  { id: 'cashback', label: 'Cash', sub: 'A statement credit or deposit', icon: LuWallet },
+// Places rewards could go. Each maps to the use whose estimate it reads from: `points` for points cards, `cash` for
+// cashback cards (cashback has no travel or gift-card rate, so most read as a statement credit).
+type UseId = 'travel' | 'everyday' | 'cashback' | 'deposit' | 'checkout'
+interface GoalOption { id: string; label: string; sub: string; icon: IconType; points: UseId; cash: UseId; phrase: string }
+const GOAL_OPTIONS: GoalOption[] = [
+  { id: 'flights', label: 'Flights', sub: 'Book with points', icon: LuPlane, points: 'travel', cash: 'cashback', phrase: 'toward flights' },
+  { id: 'hotels', label: 'Hotels', sub: 'Stays and resorts', icon: LuHotel, points: 'travel', cash: 'cashback', phrase: 'toward hotels' },
+  { id: 'dining', label: 'Dining out', sub: 'Restaurant gift cards', icon: LuUtensils, points: 'everyday', cash: 'cashback', phrase: 'toward dining out' },
+  { id: 'groceries', label: 'Groceries', sub: 'Offset the grocery bill', icon: LuShoppingCart, points: 'cashback', cash: 'cashback', phrase: 'toward groceries' },
+  { id: 'shopping', label: 'Online shopping', sub: 'Pay at checkout', icon: LuShoppingBag, points: 'everyday', cash: 'checkout', phrase: 'at checkout online' },
+  { id: 'gift', label: 'Gift cards', sub: 'For you or others', icon: LuGift, points: 'everyday', cash: 'cashback', phrase: 'in gift cards' },
+  { id: 'events', label: 'Experiences', sub: 'Concerts and events', icon: LuTicket, points: 'everyday', cash: 'cashback', phrase: 'toward experiences' },
+  { id: 'bill', label: 'My card bill', sub: 'A statement credit', icon: LuCreditCard, points: 'cashback', cash: 'cashback', phrase: 'off your card bill' },
+  { id: 'bank', label: 'Cash to my bank', sub: 'A direct deposit', icon: LuLandmark, points: 'cashback', cash: 'deposit', phrase: 'as a bank deposit' },
+  { id: 'charity', label: 'Charity', sub: 'Donate your rewards', icon: LuHeartHandshake, points: 'cashback', cash: 'cashback', phrase: 'to charity' },
 ]
 
 type Step = 'welcome' | 'account' | 'cards' | 'balances' | 'goal' | 'setup' | 'done'
@@ -68,7 +88,7 @@ const isEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim())
 export function Onboarding({ onFinish }: { onFinish: (cards: Omit<Balance, 'id' | 'updatedAt'>[]) => void }) {
   const [step, setStep] = useState<Step>('welcome')
   const [picked, setPicked] = useState<Picked[]>([])
-  const [goal, setGoal] = useState<GoalId>()
+  const [goals, setGoals] = useState<string[]>([])
 
   const go = (s: Step) => {
     setStep(s)
@@ -110,9 +130,9 @@ export function Onboarding({ onFinish }: { onFinish: (cards: Omit<Balance, 'id' 
         {step === 'account' && <Account onNext={() => go('cards')} />}
         {step === 'cards' && <Cards picked={picked} setPicked={setPicked} onNext={() => go('balances')} />}
         {step === 'balances' && <Balances picked={picked} setPicked={setPicked} onNext={() => go('goal')} />}
-        {step === 'goal' && <Goal goal={goal} setGoal={setGoal} onNext={() => go('setup')} />}
+        {step === 'goal' && <Goal goals={goals} setGoals={setGoals} onNext={() => go('setup')} />}
         {step === 'setup' && <Setup />}
-        {step === 'done' && <Done picked={picked} goal={goal} onFinish={finish} />}
+        {step === 'done' && <Done picked={picked} goals={goals} onFinish={finish} />}
       </div>
     </div>
   )
@@ -336,23 +356,32 @@ function Balances({ picked, setPicked, onNext }: { picked: Picked[]; setPicked: 
   )
 }
 
-function Goal({ goal, setGoal, onNext }: { goal?: GoalId; setGoal: (g: GoalId) => void; onNext: () => void }) {
+function Goal({ goals, setGoals, onNext }: { goals: string[]; setGoals: (g: string[]) => void; onNext: () => void }) {
+  const toggle = (id: string) => setGoals(goals.includes(id) ? goals.filter((g) => g !== id) : [...goals, id])
   return (
     <div className={styles.body}>
       <h1 className={styles.title}>Where would you like your rewards to go?</h1>
-      <p className={styles.sub}>We’ll show what your balances could cover there first. Every option stays one tap away.</p>
-      <div className={styles.list}>
-        {GOAL_OPTIONS.map(({ id, label, sub, icon: Icon }) => (
-          <button key={id} className={`${styles.option} ${goal === id ? styles.selected : ''}`} onClick={() => setGoal(id)} aria-pressed={goal === id}>
-            <span className={styles.optIcon}><Icon /></span>
-            <span className={styles.optMain}><b>{label}</b><span>{sub}</span></span>
-            <span className={styles.check}>{goal === id && <LuCheck />}</span>
-          </button>
-        ))}
+      <p className={styles.sub}>Pick as many as you like. We’ll show what your balances could cover there. Every option stays one tap away.</p>
+      <div className={styles.goalGrid}>
+        {GOAL_OPTIONS.map(({ id, label, sub, icon: Icon }) => {
+          const on = goals.includes(id)
+          return (
+            <button key={id} className={`${styles.goalTile} ${on ? styles.selected : ''}`} onClick={() => toggle(id)} aria-pressed={on}>
+              <span className={styles.goalTop}>
+                <span className={styles.optIcon}><Icon /></span>
+                <span className={styles.check}>{on && <LuCheck />}</span>
+              </span>
+              <b>{label}</b>
+              <span>{sub}</span>
+            </button>
+          )
+        })}
       </div>
       <div className={styles.footer}>
-        <button className={styles.primary} disabled={!goal} onClick={onNext}>Continue</button>
-        <button className={styles.ghost} onClick={() => { setGoal('cashback'); onNext() }}>Not sure yet</button>
+        <button className={styles.primary} disabled={goals.length === 0} onClick={onNext}>
+          {goals.length === 0 ? 'Pick at least one' : 'Continue'}
+        </button>
+        <button className={styles.ghost} onClick={() => { setGoals([]); onNext() }}>Not sure yet</button>
       </div>
     </div>
   )
@@ -368,8 +397,9 @@ function Setup() {
   )
 }
 
-function Done({ picked, goal, onFinish }: { picked: Picked[]; goal?: GoalId; onFinish: () => void }) {
-  const labels: Record<string, string> = { travel: 'in travel', everyday: 'in gift cards', cashback: 'as a statement credit' }
+function Done({ picked, goals, onFinish }: { picked: Picked[]; goals: string[]; onFinish: () => void }) {
+  // Up to two of the user's picks per card ("Not sure yet" shows a statement credit), side by side, no ranking.
+  const chosen = GOAL_OPTIONS.filter((o) => goals.includes(o.id))
   return (
     <div className={styles.body}>
       <div className={styles.doneBadge}><LuCheck /></div>
@@ -379,12 +409,18 @@ function Done({ picked, goal, onFinish }: { picked: Picked[]; goal?: GoalId; onF
         {picked.map((p) => {
           const b: Balance = { id: 0, programId: p.programId, cardName: p.name, amount: Number(p.amount) || 0, updatedAt: '' }
           const uses = balanceUses(b)
-          // Cashback has no travel or gift-card rate of its own, so it reads as a statement credit.
-          const use = uses.find((u) => u.id === goal) ?? uses.find((u) => u.id === 'cashback')
+          const cash = PROGRAMS[p.programId].type === 'cashback'
+          const parts = (chosen.length ? chosen : [GOAL_OPTIONS.find((o) => o.id === 'bill')!])
+            .map((o) => {
+              const use = uses.find((u) => u.id === (cash ? o.cash : o.points))
+              return use && `≈${fmtMoney(use.value)} ${o.phrase}`
+            })
+            .filter(Boolean)
+            .slice(0, 2)
           const line = !(b.amount > 0)
             ? 'Add a balance to see where it could go'
-            : use
-              ? `Could be ≈${fmtMoney(use.value)} ${labels[use.id]}`
+            : parts.length
+              ? `Could be ${parts.join(' or ')}`
               : 'Estimates coming soon'
           return (
             <div key={p.key} className={styles.balanceRow}>
