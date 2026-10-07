@@ -257,12 +257,12 @@ a.row { text-decoration: none; color: inherit; }
 .commitmentSummary::-webkit-details-marker { display: none; }
 .commitmentSummary > svg:first-child { flex: none; width: 17px; height: 17px; }
 .commitmentLabel { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
-.commitmentCost { margin-left: auto; font-size: 12px; font-weight: 650; color: var(--ink); }
-.commitmentChevron { flex: none; width: 15px; height: 15px; transition: transform 0.15s ease; }
+.commitmentChevron { flex: none; margin-left: auto; width: 15px; height: 15px; transition: transform 0.15s ease; }
 .cardCommitment[open] .commitmentChevron { transform: rotate(180deg); }
 .commitmentBody { padding: 0 14px 14px; }
+.commitmentFee { display: flex; align-items: baseline; gap: 7px; font-size: 22px; font-weight: 700; line-height: 1.2; color: var(--ink); }
+.commitmentFee span { font-size: 13px; font-weight: 500; }
 .cardCommitment p { margin: 9px 0 0; font-size: 12px; line-height: 1.5; color: #554332; }
-.commitmentBody p:first-child { margin-top: 0; }
 .cardCommitment strong { font-weight: 650; }
 .cardCommitment .commitmentTerms { color: var(--selection-ink); font-weight: 600; }
 .compareFootnote { font-size: 10px; line-height: 1.5; color: #626b5e; margin: 12px 0 0; }
