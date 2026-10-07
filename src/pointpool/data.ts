@@ -322,7 +322,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
     if (bonus.length === 0) continue
     for (const e of bonus) {
       const rotating = !!e.terms?.quarters
-      const earned = e.program.type === 'cashback' ? fmtMoney(e.monthly) : `≈${fmtMoney(e.value.travel)} travel`
+      const earned = e.program.type === 'cashback' ? fmtMoney(e.monthly) : `≈${fmtMoney(e.value.cashback)}`
       // Featured months still stop at the cap (e.g. $1,500 a quarter is $500 a month)
       const cap = e.terms?.cap
       const featured = cap ? Math.min(spend[c.id], cap.amount / { month: 1, quarter: 3, year: 12 }[cap.per]) : spend[c.id]
