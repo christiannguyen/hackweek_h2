@@ -174,21 +174,18 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
   )
 }
 
-// Collapsed by default to keep the comparison compact. The costs you'd actually owe — the annual fee and any deposit —
-// stay on the summary row, so the only thing behind the toggle is the explanation of them.
+// Collapsed by default to keep the comparison compact. The fee isn't repeated on the summary row — the tile above
+// already carries it twice, as a tag and as a line in the math — so it leads the panel instead.
 function NewCardCommitment({ option: o }: { option: CardOption }) {
-  const cost = [o.fee > 0 ? `${fmtDollars(o.fee)}/yr fee` : 'No annual fee', !!o.deposit && `${fmtDollars(o.deposit)} deposit`]
-    .filter(Boolean)
-    .join(' · ')
   return (
     <details className={styles.cardCommitment}>
       <summary className={styles.commitmentSummary}>
         <LuReceipt aria-hidden="true" />
         <span className={styles.commitmentLabel}>Before you apply</span>
-        <span className={styles.commitmentCost}>{cost}</span>
         <LuChevronDown className={styles.commitmentChevron} aria-hidden="true" />
       </summary>
       <div className={styles.commitmentBody}>
+        <div className={styles.commitmentFee}>{fmtDollars(o.fee)}<span>annual fee</span></div>
         {o.fee > 0 && <p>This is a yearly charge to your card, even if you earn no rewards. We subtract it in the estimate; rewards don’t automatically pay the fee.</p>}
         {o.feeNote && <p className={styles.commitmentTerms}>{o.feeNote}.</p>}
         {!!o.deposit && <p><strong>{fmtDollars(o.deposit)} refundable deposit also required.</strong> This is money you need up front.</p>}
