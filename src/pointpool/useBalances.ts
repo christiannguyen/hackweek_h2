@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { SEED, type Balance } from './data'
 
 // Balances live only in this browser's localStorage — nothing is sent anywhere.
-const STORE_KEY = 'pointpool.balances.v3'
+const STORE_KEY = 'pointpool.balances.v4'
 
 export function useBalances() {
   const [balances, setBalances] = useState<Balance[]>(() => {

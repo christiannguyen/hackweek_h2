@@ -147,6 +147,16 @@ a.row { text-decoration: none; color: inherit; }
 .assumptions { font-size: 11px; color: var(--muted); margin-top: 4px; }
 .steps { margin: 10px 0 0; padding-left: 18px; color: var(--text); line-height: 1.6; font-size: 13px; }
 
+/* Card tiles (Pointpool tab) */
+.tileSection {
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px;
+}
+.tileStat { display: flex; flex-direction: column; gap: 2px; min-width: 60px; }
+.tileLabel { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
+.tileValue { font-size: 16px; font-weight: 600; }
+.tileSection > .meterBar { width: 100%; margin-top: 4px; }
+
 .disclaimer { font-size: 11px; color: var(--muted); margin: 2px 2px 0; line-height: 1.4; }
 .empty { text-align: center; color: #666; padding: 18px 0; font-size: 13px; }
 .mt { margin-top: 8px; }
