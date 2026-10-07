@@ -121,10 +121,14 @@ function Welcome({ onStart, onLogin }: { onStart: () => void; onLogin: () => voi
   ]
   return (
     <div className={styles.welcome}>
+      {/* The logo's scene: a dark sky, the p's bowl, and a pool the cards float in. */}
+      <div className={styles.bowl} aria-hidden="true" />
       <Logo light />
-      <h1 className={styles.welcomeTitle}>Make the most of your card rewards</h1>
+      <h1 className={styles.welcomeTitle}>
+        Make the most of your <em>card rewards</em>
+      </h1>
       <div className={styles.perks}>
-        <div className={styles.chevron} aria-hidden="true" />
+        <Pool />
         {perks.map(({ icon: Icon, title, text }) => (
           <div key={title} className={styles.perk}>
             <Icon className={styles.perkIcon} aria-hidden="true" />
@@ -139,6 +143,25 @@ function Welcome({ onStart, onLogin }: { onStart: () => void; onLogin: () => voi
           Already have an account? <button onClick={onLogin}>Log in here</button>
         </p>
       </div>
+    </div>
+  )
+}
+
+// One wave period every 200 units; the SVG is two periods wide and slides one period, so the loop is seamless.
+const WAVE = 'M0 20 Q50 6 100 20 T200 20 T300 20 T400 20 V40 H0 Z'
+const SURFACE = 'M0 20 Q50 6 100 20 T200 20 T300 20 T400 20'
+
+function Pool() {
+  return (
+    <div className={styles.pool} aria-hidden="true">
+      <svg className={`${styles.wave} ${styles.waveBack}`} viewBox="0 0 400 40" preserveAspectRatio="none">
+        <path d={WAVE} />
+      </svg>
+      <svg className={styles.wave} viewBox="0 0 400 40" preserveAspectRatio="none">
+        <path d={WAVE} />
+        <path className={styles.surface} d={SURFACE} vectorEffect="non-scaling-stroke" />
+      </svg>
+      <div className={styles.water} />
     </div>
   )
 }
