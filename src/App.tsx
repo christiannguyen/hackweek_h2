@@ -49,7 +49,7 @@ function App() {
     <MobileShell>
       <main className={`${styles.root} ${styles.view}`}>
         {route === 'home' && <HomePage balances={balances} onEdit={openSheet} compare={compare} />}
-        {route === 'coach' && <CoachPage balances={balances} onEdit={openSheet} compare={compare} />}
+        {route === 'coach' && <CoachPage balances={balances} onEdit={openSheet} />}
         {route === 'pointpool' && <PointpoolPage balances={balances} onEdit={openSheet} />}
         {route === 'offers' && <OffersPage balances={balances} onEdit={openSheet} />}
         {route === 'redeem' && <RedeemPage balances={balances} onEdit={openRewardsSheet} />}
