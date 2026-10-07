@@ -25,9 +25,13 @@ export function HomePage({ balances, onEdit, compare }: Props) {
 
   return (
     <>
+      {/* Names the page, outside the card, like every other tab's title */}
+      <div className={styles.pageHead}>
+        <h1 className={styles.pageTitle}>Earn more on your spending</h1>
+      </div>
+
       {/* Leads the page: what the user's (sample) spend in their top categories earns now vs. on cards they could get */}
       <div className={`${styles.card} ${styles.coachHero}`}>
-        <h2>Earn more on your spending</h2>
         <CardCompare {...compare} />
         <ScoreGoal balances={compare.balances} category={compare.category} />
         <a className={styles.moreLink} href="#coach">
