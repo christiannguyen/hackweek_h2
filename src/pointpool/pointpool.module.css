@@ -251,7 +251,7 @@ a.row { text-decoration: none; color: inherit; }
 }
 .catTab.active { border-color: var(--selection-border); box-shadow: inset 0 0 0 1px var(--selection-border); background: var(--selection-tint); }
 .catTab.active .categoryIcon { color: var(--selection-ink); }
-.catLabel { max-width: 100%; font-size: 12px; font-weight: 600; color: var(--text); }
+.catLabel { max-width: 100%; font-size: 13px; font-weight: 700; color: var(--ink); }
 .catSpend { font-size: 16px; font-weight: 500; }
 .catSpend small { font-size: 10px; color: #626b5e; font-weight: 400; }
 .categoryIcon { color: #737b6c; width: 22px; height: 22px; margin: 2px 0 8px; }
