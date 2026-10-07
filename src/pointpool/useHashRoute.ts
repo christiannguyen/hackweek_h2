@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
-export type Route = 'home' | 'redeem' | 'learn' | 'coach' | 'pointpool' | 'offers'
-const ROUTES: Route[] = ['home', 'redeem', 'learn', 'coach', 'pointpool', 'offers']
+export type Route = 'home' | 'redeem' | 'learn' | 'coach' | 'pointpool' | 'offers' | 'welcome'
+const ROUTES: Route[] = ['home', 'redeem', 'learn', 'coach', 'pointpool', 'offers', 'welcome']
 
 // "#coach/market-Savor" is the coach route, opened at one card.
 const parse = (): Route => {

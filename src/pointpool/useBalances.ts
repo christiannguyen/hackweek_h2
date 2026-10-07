@@ -3,6 +3,10 @@ import { SEED, type Balance } from './data'
 
 // Balances live only in this browser's localStorage — nothing is sent anywhere.
 const STORE_KEY = 'pointpool.balances.v4'
+const ONBOARDED_KEY = 'pointpool.onboarded.v1'
+
+export const isOnboarded = () => localStorage.getItem(ONBOARDED_KEY) === '1'
+export const markOnboarded = () => localStorage.setItem(ONBOARDED_KEY, '1')
 
 export function useBalances() {
   const [balances, setBalances] = useState<Balance[]>(() => {
@@ -25,5 +29,11 @@ export function useBalances() {
 
   const remove = (id: number) => setBalances((prev) => prev.filter((b) => b.id !== id))
 
-  return { balances, upsert, remove }
+  // Onboarding swaps the sample wallet for the cards the user picked.
+  const replaceAll = (entries: Omit<Balance, 'id' | 'updatedAt'>[]) => {
+    const updatedAt = new Date().toISOString()
+    setBalances(entries.map((e, i) => ({ id: Date.now() + i, ...e, updatedAt })))
+  }
+
+  return { balances, upsert, remove, replaceAll }
 }

@@ -6,16 +6,19 @@ import type { CompareProps } from '@/pointpool/CardCompare'
 import { TOP_CATEGORY, type CategoryId } from '@/pointpool/data'
 import { HomePage } from '@/pointpool/HomePage'
 import { LearnPage } from '@/pointpool/LearnPage'
+import { Onboarding } from '@/pointpool/Onboarding'
 import { OffersPage } from '@/pointpool/OffersPage'
 import { PointpoolPage } from '@/pointpool/PointpoolPage'
 import { RedeemPage } from '@/pointpool/RedeemPage'
-import { useBalances } from '@/pointpool/useBalances'
+import { isOnboarded, useBalances } from '@/pointpool/useBalances'
 import { useHashRoute } from '@/pointpool/useHashRoute'
 import styles from '@/pointpool/pointpool.module.css'
 
 function App() {
   const route = useHashRoute()
-  const { balances, upsert, remove } = useBalances()
+  const { balances, upsert, remove, replaceAll } = useBalances()
+  // First visit (or "#welcome" to replay it) shows the simulated sign-up and card setup.
+  const [onboarding, setOnboarding] = useState(() => !isOnboarded() || window.location.hash === '#welcome')
   // Shared so the category picked on the home hero carries into the full Coach page. Starts on the user's
   // highest-spend category.
   const [category, setCategory] = useState<CategoryId>(TOP_CATEGORY)
@@ -28,6 +31,18 @@ function App() {
     category,
     onCategory: setCategory,
     onEdit: openSheet,
+  }
+
+  if (onboarding || route === 'welcome') {
+    return (
+      <Onboarding
+        onFinish={(cards) => {
+          replaceAll(cards)
+          setOnboarding(false)
+          window.location.hash = '#home'
+        }}
+      />
+    )
   }
 
   return (
