@@ -1,43 +1,46 @@
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { IconType } from 'react-icons'
-import { LuCreditCard, LuGauge, LuGift, LuHouse, LuShieldCheck, LuStar, LuUser, LuWallet } from 'react-icons/lu'
+import { LuCreditCard, LuGraduationCap, LuHouse, LuStar, LuWallet } from 'react-icons/lu'
 import styles from './MobileShell.module.css'
 
-// Mirrors the Kikoff app tab bar. Only Pointpool is wired up; the rest are placeholders.
-const TABS: { label: string; icon: IconType; href?: string }[] = [
-  { label: 'Home', icon: LuHouse },
-  { label: 'Debt', icon: LuWallet },
-  { label: 'Credit', icon: LuGauge },
-  { label: 'Pointpool', icon: LuStar, href: '#home' },
-  { label: 'Disputes', icon: LuShieldCheck },
-  { label: 'Offers', icon: LuCreditCard },
+const TABS: { label: string; icon: IconType; hash: string }[] = [
+  { label: 'Home', icon: LuHouse, hash: '#home' },
+  { label: 'Card Coach', icon: LuGraduationCap, hash: '#coach' },
+  { label: 'Pointpool', icon: LuWallet, hash: '#pointpool' },
+  { label: 'Offers', icon: LuCreditCard, hash: '#offers' },
 ]
 
 export function MobileShell({ children }: { children: ReactNode }) {
+  const [hash, setHash] = useState(window.location.hash || '#home')
+  useEffect(() => {
+    const onHash = () => setHash(window.location.hash || '#home')
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  const isTab = TABS.some((t) => t.hash === hash)
+
   return (
     <div className={styles.backdrop}>
       <div className={styles.phone}>
         <header className={styles.topbar}>
           <div className={styles.avatar}>
-            <LuUser />
+            <LuStar />
           </div>
           <div className={styles.pills}>
-            <span className={`${styles.pill} ${styles.pillGreen}`}>
-              <LuGift style={{ display: 'inline', verticalAlign: '-2px' }} /> Get $30
-            </span>
-            <span className={`${styles.pill} ${styles.pillBlue}`}>★ Ultimate perks</span>
+            <span className={`${styles.pill} ${styles.pillBlue}`}>★ Pointpool</span>
           </div>
         </header>
 
         {children}
 
         <nav className={styles.tabbar}>
-          {TABS.map(({ label, icon: Icon, href }) => (
+          {TABS.map(({ label, icon: Icon, hash: h }) => (
             <a
               key={label}
-              href={href ?? '#home'}
-              onClick={href ? undefined : (e) => e.preventDefault()}
-              className={`${styles.tab} ${href ? styles.active : ''}`}
+              href={h}
+              className={`${styles.tab} ${(isTab ? hash === h : h === '#home') ? styles.active : ''}`}
             >
               <Icon />
               {label}

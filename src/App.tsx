@@ -6,6 +6,8 @@ import type { CompareProps } from '@/pointpool/CardCompare'
 import { TOP_CATEGORY, type CategoryId } from '@/pointpool/data'
 import { HomePage } from '@/pointpool/HomePage'
 import { LearnPage } from '@/pointpool/LearnPage'
+import { OffersPage } from '@/pointpool/OffersPage'
+import { PointpoolPage } from '@/pointpool/PointpoolPage'
 import { RedeemPage } from '@/pointpool/RedeemPage'
 import { useBalances } from '@/pointpool/useBalances'
 import { useHashRoute } from '@/pointpool/useHashRoute'
@@ -32,6 +34,8 @@ function App() {
       <main className={`${styles.root} ${styles.view}`}>
         {route === 'home' && <HomePage balances={balances} onEdit={openSheet} compare={compare} />}
         {route === 'coach' && <CoachPage balances={balances} onEdit={openSheet} compare={compare} />}
+        {route === 'pointpool' && <PointpoolPage balances={balances} onEdit={openSheet} />}
+        {route === 'offers' && <OffersPage balances={balances} onEdit={openSheet} />}
         {route === 'redeem' && <RedeemPage balances={balances} />}
         {route === 'learn' && <LearnPage />}
       </main>
