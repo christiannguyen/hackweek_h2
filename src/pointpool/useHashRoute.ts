@@ -3,10 +3,14 @@ import { useEffect, useState } from 'react'
 export type Route = 'home' | 'redeem' | 'learn' | 'coach'
 const ROUTES: Route[] = ['home', 'redeem', 'learn', 'coach']
 
+// "#coach/market-Savor" is the coach route, opened at one card.
 const parse = (): Route => {
-  const h = window.location.hash.slice(1) as Route
+  const h = window.location.hash.slice(1).split('/')[0] as Route
   return ROUTES.includes(h) ? h : 'home'
 }
+
+// The part after the route, e.g. the card a home row links to.
+export const routeParam = () => decodeURIComponent(window.location.hash.split('/')[1] ?? '')
 
 // Tiny hash router — enough for a prototype, no extra dependency.
 export function useHashRoute() {

@@ -179,9 +179,13 @@ a.row { text-decoration: none; color: inherit; }
 .cmpSummary::-webkit-details-marker { display: none; }
 .cmpSummary .rowAmount::after { content: '›'; display: inline-block; margin-left: 6px; color: #9a9a9a; transition: transform 0.15s; }
 details[open] > .cmpSummary .rowAmount::after { transform: rotate(90deg); }
+/* Home rows link to their card on the full page */
+.cmpLink { color: inherit; text-decoration: none; }
+.cmpLink .rowAmount::after { content: '›'; margin-left: 6px; color: #9a9a9a; }
 
-/* Why a card isn't worth it, under its name */
+/* Why a card isn't worth it, or where a fee card starts to be, under its name */
 .why { display: block; margin-top: 4px; font-size: 12px; line-height: 1.35; color: var(--text); }
+.why.dim { color: var(--muted); }
 
 /* When no new card is worth it: keep what you have */
 .fitBox {
@@ -230,7 +234,7 @@ details[open] > .cmpSummary .rowAmount::after { transform: rotate(90deg); }
 .goalTip { font-size: 12px; color: var(--muted); margin-top: 12px; line-height: 1.4; }
 
 .catTab:focus-visible, .chip:focus-visible, .btnText:focus-visible, .moreLink:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
-.cmpSummary:focus-visible, .skip > summary:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
+.cmpSummary:focus-visible, .cmpLink:focus-visible, .skip > summary:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
 
 @media (prefers-reduced-motion: reduce) {
   .cmpSummary .rowAmount::after, .skip > summary::after { transition: none; }

@@ -541,6 +541,7 @@ export interface CardOption {
   yours: boolean
   known: boolean // false = your card isn't in the sample rules, estimated at the base rate
   rate: number // the category rate, before any cap
+  cpp: number // cash value of a point, in cents (1 for cashback)
   monthlyEarn: number // points a month, or dollars a month for cashback cards (averaged over the year)
   steps: EarnStep[]
   rewards: number // $ a year
@@ -550,6 +551,7 @@ export interface CardOption {
   gain: number // net − your best card's net (or net, when you have no cards)
   deposit?: number
   credit?: CreditTier
+  even?: number // cards with a fee: the monthly spend in the category where it starts to be worth it
   worth: boolean // market cards: adds at least MIN_GAIN a month on today's spending, with nothing else changed
   why?: string // market cards that aren't worth it: the short reason
   whyKind?: WhyKind
@@ -644,6 +646,7 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
         yours: true,
         known: e.known,
         rate: e.rate,
+        cpp,
         monthlyEarn: perMonth(e.program.type, steps),
         steps,
         rewards,
@@ -702,7 +705,6 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
       const [whyKind, why] = worth ? [undefined, undefined] : whyNot()
 
       const notes = [
-        worth && even && even <= monthSpend && `Worth the ${fee} fee from ${fmtMoney(even)} a month in ${catName(cat)}. You spend ${fmtMoney(monthSpend)}.`,
         r?.needs && `${at(r.rate)} if you ${r.needs}. Counted at ${at(c.base)}, without the extra step.`,
         r?.note,
         c.note,
@@ -719,6 +721,7 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
         yours: false,
         known: true,
         rate: asIs?.rate ?? c.base,
+        cpp: c.cpp ?? 1,
         monthlyEarn: perMonth(c.type, steps),
         steps,
         rewards,
@@ -728,6 +731,7 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
         gain,
         deposit: c.deposit,
         credit: c.credit,
+        even,
         worth,
         why,
         whyKind,
@@ -737,9 +741,23 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
     })
     .sort((a, b) => b.net - a.net)
 
+  // Two cards from one issuer with the same fee that earn about the same are one choice, not two: list one (cash back
+  // over points, it's simpler) and name the other in its notes.
+  const worth: CardOption[] = []
+  for (const o of options.filter((o) => o.worth)) {
+    const i = worth.findIndex((w) => w.issuer === o.issuer && w.fee === o.fee && Math.abs(w.net - o.net) < 1)
+    if (i < 0) {
+      worth.push(o)
+      continue
+    }
+    const [keep, drop] = worth[i].type !== 'cashback' && o.type === 'cashback' ? [o, worth[i]] : [worth[i], o]
+    keep.notes.push(`The ${drop.name} earns about the same, as ${drop.type === 'cashback' ? 'cash back' : 'points'}.`)
+    worth[i] = keep
+  }
+
   const skip = options.filter((o) => !o.worth)
   const close = skip.filter((o) => CLOSE_KINDS.includes(o.whyKind!)).slice(0, CLOSE_LIMIT)
-  return { yours, best, worth: options.filter((o) => o.worth), close, rest: skip.filter((o) => !close.includes(o)) }
+  return { yours, best, worth, close, rest: skip.filter((o) => !close.includes(o)) }
 }
 
 // ---- Score goal: cards one credit tier up ----

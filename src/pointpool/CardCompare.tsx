@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import {
   catName,
   compareCards,
@@ -18,6 +19,7 @@ import {
   type CategoryId,
 } from './data'
 import styles from './pointpool.module.css'
+import { routeParam } from './useHashRoute'
 
 export interface CompareProps {
   balances: Balance[]
@@ -33,11 +35,19 @@ const HOME_LIMIT = 3
 // What the last 30 days of spending in one of the user's top categories earns a month: on each of your cards now,
 // and what cards for your credit score would add after their annual fees, on the same spending. The full variant
 // opens each row into the math and adds the cards that aren't worth it: close calls with their reason, the rest
-// folded under one line.
+// folded under one line. Home rows link to their card on the full page.
 export function CardCompare({ balances, category, onCategory, onEdit, variant = 'condensed' }: CompareProps) {
   const full = variant === 'full'
   const { yours, best, worth, close, rest } = compareCards(balances, category)
   const shownWorth = full ? worth : worth.slice(0, HOME_LIMIT)
+  const spend = SPEND[category]
+  const topExtra = worth[0] ? perMonth(worth[0], best).extra : 0
+  // The card a home row linked to, read once: it starts open, in place of the top pick, and scrolls into view.
+  const [focus] = useState(() => (full ? routeParam() : ''))
+  const focused = [...yours, ...worth].some((o) => o.key === focus) ? focus : ''
+  useEffect(() => {
+    if (focus) document.getElementById(rowId(focus))?.scrollIntoView({ block: 'center' })
+  }, [focus])
   // When every folded card loses to your best one, the summary says so once instead of on each row.
   const beatsNone = !!best && rest.every((o) => o.gain <= 0)
   const one = rest.length === 1
@@ -46,7 +56,9 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
     : one
       ? 'isn’t worth it'
       : 'aren’t worth it'
-  const row = (o: CardOption, open?: boolean) => <OptionRow key={o.key} option={o} best={best} full={full} open={open} />
+  const row = (o: CardOption, open?: boolean) => (
+    <OptionRow key={o.key} option={o} best={best} full={full} open={open || o.key === focused} />
+  )
   const tier = CREDIT_TIERS.find((t) => t.id === CREDIT)!
 
   return (
@@ -76,7 +88,12 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
 
       <div className={styles.colHead}>
         <h3>Your cards</h3>
-        {yours.length > 0 && <span>Earns now</span>}
+        {/* "Each": every row is that card on all of the spending, not a share of it */}
+        {yours.length > 0 && (
+          <span>
+            {yours.length > 1 ? 'Each earns' : 'Earns'} on {fmtMoney(spend)}
+          </span>
+        )}
       </div>
       {yours.length === 0 ? (
         <div className={styles.empty}>
@@ -89,6 +106,23 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
         </div>
       ) : (
         yours.map((o) => row(o))
+      )}
+
+      {/* The takeaway before the list: what the same spending could add, and the one condition it depends on */}
+      {worth.length > 0 && (
+        <div className={styles.fitBox}>
+          <span className={styles.fitIcon} aria-hidden="true">
+            $
+          </span>
+          <span>
+            {best ? `Same ${fmtMoney(spend)}, just a different card: ` : `On your ${fmtMoney(spend)} a month: `}
+            <b>
+              {worth.length > 1 && 'up to '}
+              {fmtMoney(topExtra)} {best ? 'more ' : ''}a month
+            </b>
+            , about {fmtDollars(topExtra * 12)} a year. Pay in full each month so interest doesn’t eat into it.
+          </span>
+        </div>
       )}
 
       <div className={styles.colHead}>
@@ -112,7 +146,7 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
         </div>
       ) : (
         // On the full page the top pick starts open, so its math shows without a tap.
-        shownWorth.map((o, i) => row(o, full && i === 0))
+        shownWorth.map((o, i) => row(o, full && !focused && i === 0))
       )}
 
       {full && close.length + rest.length > 0 && (
@@ -160,7 +194,12 @@ const mo = (n: number) => `${fmtMoney(n)}/mo`
 const signed = (n: number) => `${n < 0 ? '−' : '+'}${mo(Math.abs(n))}`
 // "+$8.78/mo", "Same" or "−$2.10/mo" next to your cards; "$16.58/mo" when there's no card of yours to compare with.
 const extraLabel = (n: number, vs: boolean) => (!vs ? (n < 0 ? signed(n) : mo(n)) : Math.abs(n) < 0.01 ? 'Same' : signed(n))
-const kind = (o: CardOption) => `${fmtRate(o.type, o.rate)} ${o.type === 'cashback' ? 'cash back' : 'points'}`
+// "5% cash back", or "5× points (5% back)" so points read in the same terms.
+const kind = (o: CardOption) =>
+  o.type === 'cashback'
+    ? `${fmtRate(o.type, o.rate)} cash back`
+    : `${fmtRate(o.type, o.rate)} points (${+(o.rate * o.cpp).toFixed(2)}% back)`
+const rowId = (key: string) => `card-${key.replace(/\W+/g, '-')}`
 
 // A card's year as monthly amounts. Each line is rounded to cents first, so the math adds up to the row's number.
 function perMonth(o: CardOption, best?: CardOption) {
@@ -210,6 +249,9 @@ function OptionRow({ option: o, best, full, open, showWhy = true }: RowProps) {
           {!!o.deposit && <span className={`${styles.tag} ${styles.sm} ${styles.gray}`}>{fmtDollars(o.deposit)} deposit</span>}
         </span>
         {o.why && showWhy && <span className={styles.why}>{o.why}</span>}
+        {o.worth && !!o.even && (
+          <span className={`${styles.why} ${styles.dim}`}>Worth the fee at {fmtMoney(o.even)}+/mo</span>
+        )}
       </span>
       <span className={`${styles.rowAmount} ${o.worth ? styles.green : ''} ${!o.yours && !o.worth ? styles.dim : ''}`}>
         {value}
@@ -217,9 +259,18 @@ function OptionRow({ option: o, best, full, open, showWhy = true }: RowProps) {
     </span>
   )
 
-  if (!full) return <div className={styles.cmpRow}>{body}</div>
+  if (!full)
+    return (
+      <a
+        className={`${styles.cmpRow} ${styles.cmpLink}`}
+        href={`#coach/${encodeURIComponent(o.key)}`}
+        aria-label={`${o.name}: ${spoken}. See the math`}
+      >
+        {body}
+      </a>
+    )
   return (
-    <details className={styles.cmpRow} open={open}>
+    <details id={rowId(o.key)} className={styles.cmpRow} open={open}>
       <summary className={styles.cmpSummary} aria-label={`${o.name}: ${spoken}${verdict}. Show the math`}>
         {body}
       </summary>
@@ -276,7 +327,11 @@ function OptionMath({ option: o, best }: { option: CardOption; best?: CardOption
           {n}
         </div>
       ))}
-      {o.credit && <div className={styles.note}>{creditLabel(o.credit)}</div>}
+      {o.credit && (
+        <div className={styles.note}>
+          {creditLabel(o.credit)}. Applying means a credit check, and approval isn’t guaranteed.
+        </div>
+      )}
       {o.url && (
         <a className={styles.moreLink} href={o.url} target="_blank" rel="noreferrer">
           Terms from {o.issuer} ›
@@ -331,7 +386,8 @@ export function ScoreGoal({ balances, category, variant = 'condensed' }: GoalPro
         <div className={styles.goalMain}>
           <div className={styles.goalText}>
             <b>{top.name}</b> is usually for scores of {goal.score}+. It could {goal.best ? 'add' : 'earn'} {mo(extra)} on{' '}
-            {catName(category)}.
+            {catName(category)}
+            {top.fee === 0 && ', with no annual fee'}.
           </div>
           {meter}
         </div>
@@ -360,8 +416,8 @@ export function ScoreGoal({ balances, category, variant = 'condensed' }: GoalPro
         </>
       )}
       <div className={styles.goalTip}>
-        Paying on time and keeping card balances low move your score the most. A higher score can improve your odds, but
-        approval is never guaranteed.
+        Paying on time and keeping card balances low move your score the most. Each application is a credit check, so
+        applying for fewer cards helps too. A higher score can improve your odds, but approval is never guaranteed.
       </div>
     </div>
   )
