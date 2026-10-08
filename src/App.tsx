@@ -12,7 +12,6 @@ import { LearnPage } from '@/pointpool/LearnPage'
 import { Onboarding } from '@/pointpool/Onboarding'
 import { OffersPage } from '@/pointpool/OffersPage'
 import { PointpoolPage } from '@/pointpool/PointpoolPage'
-import { RedeemPage } from '@/pointpool/RedeemPage'
 import { isOnboarded, markLoggedOut, useBalances } from '@/pointpool/useBalances'
 import { useHashRoute } from '@/pointpool/useHashRoute'
 import styles from '@/pointpool/pointpool.module.css'
@@ -65,12 +64,11 @@ function App() {
   return (
     <MobileShell onAccount={() => setAccountOpen(Date.now())}>
       <main className={`${styles.root} ${styles.view}`}>
-        {route === 'home' && <HomePage balances={balances} onEdit={openSheet} compare={compare} />}
+        {route === 'home' && <HomePage balances={balances} compare={compare} />}
         {route === 'compare' && <ComparePage balances={balances} onEdit={openSheet} compare={compare} />}
         {route === 'coach' && <CoachPage balances={balances} onEdit={openSheet} />}
-        {route === 'pointpool' && <PointpoolPage balances={balances} onEdit={openSheet} />}
+        {route === 'pointpool' && <PointpoolPage balances={balances} onEdit={openSheet} onRewards={openRewardsSheet} />}
         {route === 'offers' && <OffersPage balances={balances} onEdit={openSheet} />}
-        {route === 'redeem' && <RedeemPage balances={balances} onEdit={openRewardsSheet} />}
         {route === 'learn' && <LearnPage />}
       </main>
       <AccountSheet
