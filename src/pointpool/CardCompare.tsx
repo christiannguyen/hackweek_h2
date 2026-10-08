@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { LuCheck, LuChevronDown, LuFuel, LuReceipt, LuShoppingBag, LuUtensils } from 'react-icons/lu'
 import {
   catName,
@@ -19,6 +19,7 @@ import {
   type CardOption,
   type CategoryId,
 } from './data'
+import { artFor } from './cardColors'
 import styles from './pointpool.module.css'
 import { routeParam } from './useHashRoute'
 
@@ -209,11 +210,7 @@ function FirstCardOpportunity({ option: o, category, recommended }: {
       <div className={styles.firstCardValue}>{fmtDollars(o.net)}<span>/ year</span></div>
       <p className={styles.firstCardMonthly}>About {fmtMoney(o.net / 12)}/mo{o.fee > 0 ? ' after the annual fee' : ''}</p>
       <div className={styles.firstCardProduct}>
-        <div className={`${styles.cardFace} ${styles.newCardFace}`}>
-          <span className={styles.cardIssuer}>{o.issuer ?? o.short}</span>
-          <strong>{o.name}</strong>
-          <span className={styles.cardOwnership}>New card</span>
-        </div>
+        <CardFace option={o} />
         <div>
           <div className={styles.compareRate}>{fmtRate(o.type, avgRate(o))}{o.steps.length > 1 && <small>*</small>}</div>
           <div className={styles.compareRateLabel}>{o.type === 'cashback' ? 'cashback' : 'points'} on {catName(category)}</div>
@@ -231,17 +228,29 @@ function FirstCardOpportunity({ option: o, category, recommended }: {
   )
 }
 
+// The card's face: brand-tinted art rather than issuer photography, matching the wallet tiles.
+function CardFace({ option: o }: { option: CardOption }) {
+  const art = artFor(o.short)
+  return (
+    <div
+      className={`${styles.cardFace} ${!o.yours ? styles.newCardFace : ''}`}
+      style={{ '--art-from': art.from, '--art-to': art.to } as CSSProperties}
+    >
+      <span className={styles.faceChip} aria-hidden="true" />
+      <span className={styles.cardIssuer}>{o.issuer}</span>
+      <strong>{o.name}</strong>
+      <span className={styles.cardOwnership}>{o.yours ? 'In your wallet' : 'New card'}</span>
+    </div>
+  )
+}
+
 function CompareTile({ option: o, category, winner, children }: {
   option: CardOption; category: CategoryId; winner: boolean; children?: ReactNode
 }) {
   return (
     <div className={`${styles.compareTile} ${winner ? styles.compareWinner : ''}`}>
       {winner && <span className={styles.winnerBadge}>{o.yours ? 'In your wallet' : 'Earns more here'}</span>}
-      <div className={`${styles.cardFace} ${!o.yours ? styles.newCardFace : ''}`}>
-        <span className={styles.cardIssuer}>{o.issuer ?? o.short}</span>
-        <strong>{o.name}</strong>
-        <span className={styles.cardOwnership}>{o.yours ? 'In your wallet' : 'New card'}</span>
-      </div>
+      <CardFace option={o} />
       <div className={styles.pickerSpace}>
         {children}
         {!o.yours && <span className={o.fee > 0 ? styles.cardFeeTag : styles.cardNoFeeTag}>{o.fee > 0 ? `${fmtDollars(o.fee)}/yr fee` : 'No annual fee'}</span>}
