@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { LuFuel, LuMapPin, LuShoppingBag, LuUtensils } from 'react-icons/lu'
 import {
   cardEarnings,
   fmtRate,
@@ -6,8 +7,10 @@ import {
   type CategoryId,
   type Spend,
 } from './data'
+import { OffersMap, type MapPin } from './OffersMap'
 import { Disclaimer } from './shared'
 import styles from './pointpool.module.css'
+import o from './offers.module.css'
 
 interface Props {
   balances: Balance[]
@@ -22,6 +25,9 @@ interface NearbyPlace {
   category: CategoryId
   kind: PlaceKind
   distance: string
+  /** Where the place sits on the map's 1040×820 world. */
+  x: number
+  y: number
 }
 
 // What kind of store a place is, since most bonus rates cover only part of a category (grocery stores, not
@@ -30,24 +36,26 @@ type PlaceKind = 'grocery' | 'restaurant' | 'online-grocery' | 'gas' | 'club-gas
 
 const PLACES_BY_AREA: Record<string, NearbyPlace[]> = {
   default: [
-    { name: 'Whole Foods Market', type: 'Grocery', category: 'food', kind: 'grocery', distance: '0.3 mi' },
-    { name: 'Chipotle', type: 'Restaurant', category: 'food', kind: 'restaurant', distance: '0.4 mi' },
-    { name: 'Trader Joe’s', type: 'Grocery', category: 'food', kind: 'grocery', distance: '0.6 mi' },
-    { name: 'Target', type: 'Retail', category: 'shopping', kind: 'store', distance: '0.5 mi' },
-    { name: 'Amazon Fresh', type: 'Online grocery', category: 'food', kind: 'online-grocery', distance: '0.8 mi' },
-    { name: 'Costco Gas', type: 'Gas station', category: 'transport', kind: 'club-gas', distance: '1.1 mi' },
-    { name: 'Shell', type: 'Gas station', category: 'transport', kind: 'gas', distance: '0.2 mi' },
-    { name: 'Sweetgreen', type: 'Restaurant', category: 'food', kind: 'restaurant', distance: '0.7 mi' },
-    { name: 'Best Buy', type: 'Electronics', category: 'shopping', kind: 'store', distance: '1.3 mi' },
-    { name: 'Uber / Lyft', type: 'Rideshare', category: 'transport', kind: 'rideshare', distance: 'Nearby' },
-    { name: 'Starbucks', type: 'Coffee', category: 'food', kind: 'restaurant', distance: '0.1 mi' },
-    { name: 'CVS Pharmacy', type: 'Drugstore', category: 'shopping', kind: 'store', distance: '0.3 mi' },
+    { name: 'Whole Foods Market', type: 'Grocery', category: 'food', kind: 'grocery', distance: '0.3 mi', x: 150, y: 190 },
+    { name: 'Chipotle', type: 'Restaurant', category: 'food', kind: 'restaurant', distance: '0.4 mi', x: 340, y: 110 },
+    { name: 'Trader Joe’s', type: 'Grocery', category: 'food', kind: 'grocery', distance: '0.6 mi', x: 520, y: 200 },
+    { name: 'Target', type: 'Retail', category: 'shopping', kind: 'store', distance: '0.5 mi', x: 800, y: 160 },
+    { name: 'Amazon Fresh', type: 'Online grocery', category: 'food', kind: 'online-grocery', distance: '0.8 mi', x: 250, y: 390 },
+    { name: 'Costco Gas', type: 'Gas station', category: 'transport', kind: 'club-gas', distance: '1.1 mi', x: 930, y: 420 },
+    { name: 'Shell', type: 'Gas station', category: 'transport', kind: 'gas', distance: '0.2 mi', x: 470, y: 470 },
+    { name: 'Sweetgreen', type: 'Restaurant', category: 'food', kind: 'restaurant', distance: '0.7 mi', x: 700, y: 560 },
+    { name: 'Best Buy', type: 'Electronics', category: 'shopping', kind: 'store', distance: '1.3 mi', x: 110, y: 590 },
+    { name: 'Uber / Lyft', type: 'Rideshare', category: 'transport', kind: 'rideshare', distance: 'Nearby', x: 330, y: 690 },
+    { name: 'Starbucks', type: 'Coffee', category: 'food', kind: 'restaurant', distance: '0.1 mi', x: 700, y: 70 },
+    { name: 'CVS Pharmacy', type: 'Drugstore', category: 'shopping', kind: 'store', distance: '0.3 mi', x: 880, y: 700 },
   ],
 }
 
 function getPlaces(_coords: { lat: number; lng: number } | null): NearbyPlace[] {
   return PLACES_BY_AREA.default
 }
+
+const CATEGORY_ICON = { food: LuUtensils, shopping: LuShoppingBag, transport: LuFuel }
 
 // --- Card bonus matching ---
 
@@ -137,123 +145,128 @@ function useLocation() {
 export function OffersPage({ balances, onEdit }: Props) {
   const { loc, detect, reset, setManual } = useLocation()
   const [zip, setZip] = useState('')
+  const [picked, setPicked] = useState<string | null>(null)
 
   const resolved = loc.status === 'resolved'
-  const places = resolved ? getPlaces(loc.coords) : []
+  const places = resolved ? getPlaces(loc.coords) : getPlaces(null)
   const nearbyOffers = resolved ? matchPlacesToCards(places, balances) : []
 
+  // Pins show every place; the ones your cards earn a bonus at carry the rate and light up.
+  const byPlace = new Map(nearbyOffers.map((offer) => [offer.place.name, offer]))
+  const pins: MapPin[] = places.map((p) => {
+    const offer = byPlace.get(p.name)
+    return {
+      id: p.name,
+      x: p.x,
+      y: p.y,
+      name: p.name,
+      type: p.type,
+      distance: p.distance,
+      category: p.category,
+      cardName: offer?.card.cardName,
+      rate: offer?.rate,
+    }
+  })
+
+  const onZip = (v: string) => {
+    const digits = v.replace(/\D/g, '').slice(0, 5)
+    setZip(digits)
+    if (digits.length === 5) setManual(digits)
+  }
+
   return (
-    <>
+    <div className={o.page}>
       <div className={styles.pageHead}>
         <h1 className={styles.pageTitle}>Offers</h1>
       </div>
 
-      {/* Location section */}
-      <div className={`${styles.card} ${styles.darkCard}`}>
-        <h2>Nearby offers</h2>
-        <div className={styles.cardSub}>Places where your cards could earn bonus rewards. Sample places for this demo.</div>
-
-        {loc.status === 'idle' && (
-          <div className={styles.locActions}>
-            <button className={styles.locBtn} onClick={detect}>
-              📍 Use my location
+      <OffersMap pins={pins} selectedId={picked} onSelect={setPicked} locked={!resolved}>
+        {resolved ? (
+          <div className={o.where}>
+            <LuMapPin aria-hidden="true" /> {loc.label}
+            <button className={o.whereBtn} onClick={() => { setZip(''); setPicked(null); reset() }}>
+              Change
             </button>
-            <div className={styles.locOr}>or</div>
-            <div className={styles.locZip}>
-              <input
-                className={styles.locInput}
-                type="text"
-                inputMode="numeric"
-                maxLength={5}
-                placeholder="Enter ZIP code"
-                value={zip}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/\D/g, '').slice(0, 5)
-                  setZip(v)
-                  if (v.length === 5) setManual(v)
-                }}
-              />
+          </div>
+        ) : (
+          <div className={o.gate}>
+            <div className={o.gateTitle}>Nearby offers</div>
+            <div className={o.gateSub}>
+              See the places around you where your cards earn bonus rewards. Sample places for this demo.
             </div>
+            {loc.status === 'detecting' ? (
+              <div className={o.gateSub}>Finding your location…</div>
+            ) : (
+              <>
+                {loc.status === 'error' && <div className={o.gateErr}>{loc.message}</div>}
+                <button className={o.gateBtn} onClick={detect}>
+                  <LuMapPin aria-hidden="true" /> Use my location
+                </button>
+                <div className={o.gateOr}>or</div>
+                <input
+                  className={o.gateInput}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={5}
+                  placeholder="Enter ZIP code"
+                  value={zip}
+                  onChange={(e) => onZip(e.target.value)}
+                />
+              </>
+            )}
           </div>
         )}
+      </OffersMap>
 
-        {loc.status === 'detecting' && (
-          <div className={styles.locStatus}>Finding your location…</div>
-        )}
-
-        {loc.status === 'error' && (
-          <div className={styles.locActions}>
-            <div className={styles.locStatus} style={{ color: 'var(--orange)' }}>{loc.message}</div>
-            <div className={styles.locZip}>
-              <input
-                className={styles.locInput}
-                type="text"
-                inputMode="numeric"
-                maxLength={5}
-                placeholder="Enter ZIP code instead"
-                value={zip}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/\D/g, '').slice(0, 5)
-                  setZip(v)
-                  if (v.length === 5) setManual(v)
-                }}
-              />
-            </div>
+      {resolved && (
+        <>
+          <div className={o.listHead}>
+            <span className={o.listTitle}>Bonus rewards near you</span>
+            {nearbyOffers.length > 0 && <span className={o.listMeta}>{nearbyOffers.length} places</span>}
           </div>
-        )}
 
-        {resolved && (
-          <>
-            <div className={styles.locResolved}>
-              <span className={styles.locLabel}>📍 {loc.label}</span>
-              <button
-                className={styles.btnText}
-                onClick={() => { setZip(''); reset() }}
-              >
-                Change
-              </button>
+          {balances.length === 0 && (
+            <div className={o.empty}>
+              Add a card to see nearby offers.
+              <div>
+                <button className={`${styles.btnText} ${styles.add}`} onClick={() => onEdit()}>
+                  + Add a card
+                </button>
+              </div>
             </div>
+          )}
 
-            {balances.length === 0 && (
-              <div className={styles.empty}>
-                Add a card to see nearby offers.
-                <div>
-                  <button className={`${styles.btnText} ${styles.add}`} onClick={() => onEdit()}>
-                    + Add a card
-                  </button>
-                </div>
-              </div>
-            )}
+          {nearbyOffers.length === 0 && balances.length > 0 && (
+            <div className={o.empty}>No bonus-earning places found nearby for your cards.</div>
+          )}
 
-            {nearbyOffers.length === 0 && balances.length > 0 && (
-              <div className={styles.locStatus}>No bonus-earning places found nearby for your cards.</div>
-            )}
-
-            {nearbyOffers.map((o) => (
-              <div key={`${o.place.name}-${o.card.id}`} className={styles.row}>
-                <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>
-                  {o.place.category === 'food' ? '🍽️' : o.place.category === 'transport' ? '⛽' : '🛍️'}
-                </div>
-                <div className={styles.rowMain}>
-                  <div className={styles.rowTitleLine}>
-                    <span className={styles.rowTitle}>{o.place.name}</span>
-                  </div>
-                  <div className={styles.rowSub}>
-                    {o.place.type} · {o.place.distance}
-                  </div>
-                  <div className={styles.rowSub}>
-                    <b>{o.card.cardName}</b> could earn <b>{o.rate}</b>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </>
-        )}
-      </div>
-
-      {/* "Ways to use your rewards" lives on the Use rewards tab; Offers is about where to earn. */}
+          <div className={o.list}>
+            {nearbyOffers.map((offer) => {
+              const Icon = CATEGORY_ICON[offer.place.category]
+              const on = picked === offer.place.name
+              return (
+                <button
+                  key={`${offer.place.name}-${offer.card.id}`}
+                  type="button"
+                  className={`${o.place} ${on ? o.placeOn : ''}`}
+                  aria-pressed={on}
+                  onClick={() => setPicked(on ? null : offer.place.name)}
+                >
+                  <span className={o.placeIcon}><Icon aria-hidden="true" /></span>
+                  <span className={o.placeMain}>
+                    <span className={o.placeName}>{offer.place.name}</span>
+                    <span className={o.placeMeta}>{offer.place.type} · {offer.place.distance}</span>
+                    <span className={o.placeCard}>Use <strong>{offer.card.cardName}</strong></span>
+                  </span>
+                  <span className={o.placeRate}>{offer.rate}</span>
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
 
       <Disclaimer />
-    </>
+    </div>
   )
 }
