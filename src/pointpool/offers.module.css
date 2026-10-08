@@ -1,0 +1,152 @@
+/* Offers — the map is the page. It fills what's left of the viewport under the header so the tab
+   doesn't bottom out in empty background, and the list of places sits under it. */
+
+.page { display: flex; flex-direction: column; gap: 12px; }
+
+/* Frame: dark like the app's other "something of yours" surfaces, and tall enough to fill the screen.
+   Height is viewport-relative rather than fixed, so a short phone still sees list rows below it. */
+.frame {
+  position: relative;
+  height: clamp(300px, calc(100svh - 330px), 460px);
+  border-radius: var(--radius);
+  overflow: clip;
+  background: #1a211a;
+  box-shadow: var(--shadow);
+}
+.viewport {
+  position: absolute; inset: 0;
+  /* clip, not hidden: `hidden` makes this a scroll container, and tapping a pin that sits deep in the
+     world would scroll it out from under the pan instead of leaving the transform in charge. */
+  overflow: clip;
+  cursor: grab;
+  touch-action: none; /* the pan is ours, so the browser shouldn't scroll the page instead */
+}
+.viewport:active { cursor: grabbing; }
+/* Gated: the map is backdrop, so it fills the page and nothing under the gate is reachable. */
+.frameTall { height: calc(100svh - 278px); }
+.viewportLocked { cursor: default; pointer-events: none; }
+.world { position: absolute; top: 0; left: 0; will-change: transform; }
+.art { display: block; }
+
+/* Pins. A place one of your cards earns a bonus at is lime; the rest stay quiet so the lit ones read
+   as the answer. The label only appears on the selected pin, or the map turns into a wall of text. */
+.pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex; align-items: center; gap: 6px;
+  border: 0; padding: 0; background: none; cursor: pointer; font-family: inherit;
+  white-space: nowrap;
+}
+.pinDot {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center; font-size: 14px;
+  background: var(--dark-raised); color: var(--dark-muted);
+  border: 2px solid #46543f;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.pinHot .pinDot { background: var(--lime); color: var(--lime-ink); border-color: #cdff8c; }
+.pinOn .pinDot { transform: scale(1.14); box-shadow: 0 0 0 5px rgba(178, 255, 74, 0.22), 0 2px 8px rgba(0, 0, 0, 0.4); }
+.pinLabel {
+  display: none;
+  font-size: 11px; font-weight: 600; color: var(--dark-text);
+  padding: 4px 9px; border-radius: 999px;
+  background: rgba(20, 26, 19, 0.92); border: 1px solid var(--dark-line);
+}
+.pinLabel b { color: var(--lime); }
+.pinOn .pinLabel { display: block; }
+.pin:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; border-radius: 999px; }
+
+/* Hint and the selected-place sheet both float over the map, bottom-anchored. */
+.hint {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
+  pointer-events: none;
+  font-size: 11px; font-weight: 600; color: var(--dark-muted);
+  padding: 6px 12px; border-radius: 999px;
+  background: rgba(20, 26, 19, 0.82); border: 1px solid var(--dark-line);
+}
+.sheet {
+  position: absolute; left: 10px; right: 10px; bottom: 10px;
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; border-radius: 14px;
+  background: rgba(24, 31, 23, 0.95); border: 1px solid var(--dark-line);
+  backdrop-filter: blur(6px);
+}
+.sheetMain { flex: 1; min-width: 0; }
+.sheetName { font-size: 14px; font-weight: 650; color: #fff; }
+.sheetMeta { font-size: 11px; color: var(--dark-muted); margin-top: 2px; }
+.sheetCard { font-size: 12px; color: var(--dark-text); margin-top: 6px; }
+.sheetCard strong { color: #fff; }
+.sheetCard b { color: var(--lime); }
+.sheetFlat { font-size: 12px; color: var(--dark-muted); margin-top: 6px; }
+.sheetClose {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--dark-line); background: var(--dark-raised);
+  color: var(--dark-text); font-size: 17px; line-height: 1; font-family: inherit;
+}
+
+/* The location gate, over a dimmed map rather than in place of it — the page looks like Offers
+   before you've granted anything. */
+.gate {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; flex-direction: column; justify-content: center; gap: 10px;
+  padding: 22px;
+  background: linear-gradient(180deg, rgba(18, 23, 17, 0.55), rgba(18, 23, 17, 0.88));
+}
+.gateTitle { font-size: 17px; font-weight: 650; color: #fff; }
+.gateSub { font-size: 12px; color: var(--dark-muted); line-height: 1.45; }
+.gateBtn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 4px; padding: 13px; width: 100%;
+  border: 0; border-radius: 14px; cursor: pointer; font-family: inherit;
+  font-size: 14px; font-weight: 650; color: var(--lime-ink); background: var(--lime);
+}
+.gateOr { font-size: 11px; color: var(--dark-muted); text-align: center; }
+.gateInput {
+  width: 100%; box-sizing: border-box; padding: 12px 14px;
+  border: 1px solid var(--dark-line); border-radius: 14px;
+  background: var(--dark-raised); color: #fff; font-family: inherit; font-size: 14px;
+}
+.gateInput::placeholder { color: var(--dark-muted); }
+.gateErr { font-size: 12px; color: var(--dark-warn-ink); }
+
+/* The resolved-location chip, over the top-left of the map. */
+.where {
+  position: absolute; top: 10px; left: 10px; z-index: 2;
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px 7px 12px; border-radius: 999px;
+  background: rgba(20, 26, 19, 0.9); border: 1px solid var(--dark-line);
+  font-size: 11px; font-weight: 600; color: var(--dark-text);
+}
+.whereBtn {
+  border: 0; background: none; padding: 0; cursor: pointer; font-family: inherit;
+  font-size: 11px; font-weight: 700; color: var(--lime);
+}
+
+/* Places under the map: the same offers as the lit pins, as text and reachable by keyboard. */
+.listHead { display: flex; justify-content: space-between; align-items: baseline; margin: 4px 2px -2px; }
+.listTitle { font-size: 16px; font-weight: 650; letter-spacing: -0.2px; }
+.listMeta { font-size: 12px; font-weight: 600; color: var(--green); }
+.list { display: flex; flex-direction: column; gap: 8px; }
+.place {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  border: 0; text-align: left; cursor: pointer; font-family: inherit; color: inherit;
+  padding: 12px; border-radius: var(--radius); background: #fff; box-shadow: var(--shadow);
+}
+.placeOn { box-shadow: 0 0 0 2px var(--green-tint), var(--shadow); }
+.placeIcon {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  display: grid; place-items: center; font-size: 17px;
+  background: var(--green-tint); color: var(--green-ink);
+}
+.placeMain { flex: 1; min-width: 0; }
+/* The row's three lines are spans (they sit inside a button), so they're stacked here. */
+.placeName { display: block; font-size: 14px; font-weight: 600; }
+.placeMeta { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; }
+.placeCard { display: block; font-size: 12px; color: var(--muted); margin-top: 3px; }
+.placeCard strong { color: var(--ink); font-weight: 650; }
+.placeRate {
+  flex-shrink: 0; font-size: 11px; font-weight: 700; white-space: nowrap;
+  padding: 4px 9px; border-radius: 999px; background: var(--green-tint); color: var(--green-ink);
+}
+.empty { font-size: 13px; color: var(--muted); padding: 14px 2px; }
