@@ -137,7 +137,15 @@ a.row { text-decoration: none; color: inherit; }
 
 /* Chips (category / goal pickers) */
 
-/* Card Coach: score + spending analysis */
+/* Card Coach: score hero (dark surface) */
+.coachHeroCard {
+  background: var(--dark); color: #fff; box-shadow: none;
+}
+.coachHeroCard h2 { color: #fff; }
+.coachHeroCard .cardSub { color: var(--dark-muted); }
+.coachHeroCard .tileSection { border-top-color: var(--dark-line); }
+.coachHeroCard .tileLabel { color: var(--dark-muted); }
+.coachHeroCard .tileValue { color: var(--lime); }
 .coachScore {
   display: flex; align-items: center; gap: 14px;
 }
@@ -145,9 +153,53 @@ a.row { text-decoration: none; color: inherit; }
 .scoreSvg { width: 100%; height: 100%; }
 .scoreNum {
   position: absolute; inset: 0; display: grid; place-items: center;
-  font-size: 20px; font-weight: 600; color: var(--ink);
+  font-size: 20px; font-weight: 600; color: #fff;
 }
 .scoreTitle { font-size: 15px; font-weight: 600; }
+
+/* Card Coach: "left on the table" highlight */
+.missedAmount { color: var(--orange); font-weight: 600; }
+.missedCard { border-left: 4px solid var(--orange); }
+
+/* Card Coach: wallet cheat sheet */
+.stackCard { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; background: var(--green-tint); }
+.stackCard + .stackCard { margin-top: 8px; }
+.stackEmoji { width: 40px; height: 40px; border-radius: 12px; background: #fff; display: grid; place-items: center; font-size: 20px; flex-shrink: 0; }
+.stackMain { flex: 1; min-width: 0; }
+.stackCategory { font-size: 14px; font-weight: 600; color: var(--ink); }
+.stackDetail { font-size: 12px; color: var(--text); margin-top: 2px; }
+.stackRate { flex-shrink: 0; font-size: 13px; font-weight: 600; color: var(--green); background: #fff; padding: 3px 10px; border-radius: 999px; }
+
+/* Card Coach: redemption comparison bars */
+.redeemMethod {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 12px; margin-top: 6px; border-radius: 12px; background: #f7f7f8;
+}
+.redeemMethod.redeemBest { background: var(--green-tint); }
+.redeemLeft { display: flex; align-items: center; gap: 8px; font-size: 13px; min-width: 0; }
+.redeemLeft .redeemCpp { color: var(--muted); font-size: 11px; }
+.redeemValue { font-weight: 600; font-size: 14px; white-space: nowrap; }
+.redeemBest .redeemValue { color: var(--green); }
+.redeemBestTag { font-size: 10px; font-weight: 500; margin-left: 4px; color: var(--green); }
+
+/* Card Coach: graduation milestones */
+.milestoneRow { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); }
+.milestoneRow:first-of-type { border-top: none; padding-top: 8px; }
+.milestoneIcon { width: 36px; height: 36px; border-radius: 10px; background: #f4f4f5; display: grid; place-items: center; font-size: 18px; flex-shrink: 0; }
+.milestoneIcon.achieved { background: var(--green-tint); }
+.milestoneMain { flex: 1; min-width: 0; }
+.milestoneTitle { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.milestoneDetail { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+
+/* Card Coach: seasonal tips */
+.seasonalRow { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.seasonalRow:first-of-type { border-top: none; padding-top: 6px; }
+.seasonalIcon { font-size: 22px; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+.seasonalTitle { font-size: 14px; font-weight: 600; }
+.seasonalDetail { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
+
+/* Card Coach: expiration alert */
+.expirationCard { border-left: 4px solid var(--orange); }
 
 /* Earn more on your spending (hero card) */
 .coachHero h2 { font-size: 20px; }
