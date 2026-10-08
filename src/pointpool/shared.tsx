@@ -34,8 +34,9 @@ const categoryIcons = { food: LuUtensils, shopping: LuShoppingBag, transport: Lu
 interface SpendingControlsProps {
   category: CategoryId
   onCategory: (c: CategoryId) => void
-  feeFilter: FeeFilter
-  onFeeFilter: (f: FeeFilter) => void
+  // Leave both out to show just the category tabs (Home keeps the fee filter on Compare cards).
+  feeFilter?: FeeFilter
+  onFeeFilter?: (f: FeeFilter) => void
 }
 
 export function SpendingControls({ category, onCategory, feeFilter, onFeeFilter }: SpendingControlsProps) {
@@ -59,7 +60,7 @@ export function SpendingControls({ category, onCategory, feeFilter, onFeeFilter 
           )
         })}
       </div>
-      <div className={styles.feeFilters} role="group" aria-label="New card annual fee">
+      {feeFilter && onFeeFilter && <div className={styles.feeFilters} role="group" aria-label="New card annual fee">
         {feeFilters.map(({ value, label }) => (
           <button
             key={value}
@@ -70,7 +71,7 @@ export function SpendingControls({ category, onCategory, feeFilter, onFeeFilter 
             {label}
           </button>
         ))}
-      </div>
+      </div>}
     </>
   )
 }

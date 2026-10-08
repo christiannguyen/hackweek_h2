@@ -714,3 +714,8 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .chartNote { margin: 0 2px; font-size: 11px; line-height: 1.5; color: var(--text); }
 .chartNote strong { font-weight: 600; color: var(--ink); }
 .col:focus-visible, .chartApply:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
+
+
+/* Home: link to the Wallet tab */
+.walletLink { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+.walletLink:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 2px; }

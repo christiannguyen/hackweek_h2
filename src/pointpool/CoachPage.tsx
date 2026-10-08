@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { LuArrowUpRight } from 'react-icons/lu'
-import type { CompareProps } from './CardCompare'
+import { ScoreGoal, type CompareProps } from './CardCompare'
 import {
   catName,
   compareCards,
@@ -83,6 +83,9 @@ export function CoachPage({ balances, onEdit, compare: { category, onCategory } 
         {' '}<button className={styles.btnText} onClick={() => onEdit()}>{balances.length ? 'Manage cards' : 'Add a card'}</button>
       </p>}
     </section>
+
+    {/* Moved here from Home: a goal for later, next to the full comparison rather than on the summary. */}
+    <ScoreGoal balances={balances} category={category} />
 
     <p className={styles.chartNote}>
       <strong>A new card is a new bill.</strong> Annual fees are charged even in months you earn little. Applying is a

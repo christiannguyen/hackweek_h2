@@ -28,11 +28,12 @@ export interface CompareProps {
   category: CategoryId
   onCategory: (c: CategoryId) => void
   onEdit: (id?: number) => void
+  showFeeFilter?: boolean // Home leaves the fee filter to Compare cards
 }
 
 // One category, side by side: the user's card now vs. the card they could apply for. Recommendations always use the
 // strongest owned card, even when the user explores another baseline.
-export function CardCompare({ balances, category, onCategory, onEdit }: CompareProps) {
+export function CardCompare({ balances, category, onCategory, onEdit, showFeeFilter = true }: CompareProps) {
   const { yours, best, worth, close, rest } = compareCards(balances, category)
   // "No cards" means none we can estimate: an onboarding "other" card alone gets the first-card view, not an empty wallet.
   const noCards = yours.length === 0
@@ -56,7 +57,9 @@ export function CardCompare({ balances, category, onCategory, onEdit }: CompareP
   return (
     <>
       <div className={styles.compareHead}>
-        <SpendingControls category={category} onCategory={onCategory} feeFilter={feeFilter} onFeeFilter={setFeeFilter} />
+        {showFeeFilter
+          ? <SpendingControls category={category} onCategory={onCategory} feeFilter={feeFilter} onFeeFilter={setFeeFilter} />
+          : <SpendingControls category={category} onCategory={onCategory} />}
         <div className={styles.compareHeading}>
           <h3>{categoryLabel} · {noCards ? 'what could you earn?' : 'which card wins?'}</h3>
           <span>{fmtDollars(spend * 12)} / yr</span>
