@@ -6,6 +6,14 @@ const STORE_KEY = 'pointpool.balances.v4'
 const ONBOARDED_KEY = 'pointpool.onboarded.v1'
 
 export const isOnboarded = () => localStorage.getItem(ONBOARDED_KEY) === '1'
+
+// Whether the saved cards are the user's own rather than the sample wallet. Set when they finish onboarding or
+// change a card. Logging out keeps it, so signing up again adds to their cards instead of replacing them.
+const OWN_KEY = 'pointpool.ownWallet.v1'
+export const hasOwnWallet = () => localStorage.getItem(OWN_KEY) === '1'
+const markOwnWallet = () => localStorage.setItem(OWN_KEY, '1')
+// Anyone who onboarded before this flag existed already has their own cards saved.
+if (isOnboarded()) markOwnWallet()
 export const markOnboarded = () => localStorage.setItem(ONBOARDED_KEY, '1')
 // Logging out (simulated) sends the user back to Welcome; cards are only cleared if they ask.
 export const markLoggedOut = () => localStorage.removeItem(ONBOARDED_KEY)
@@ -32,6 +40,7 @@ export function useBalances() {
   }, [balances])
 
   const upsert = (entry: Omit<Balance, 'id' | 'updatedAt'>, id?: number) => {
+    markOwnWallet()
     const updatedAt = new Date().toISOString()
     setBalances((prev) =>
       id
@@ -40,10 +49,14 @@ export function useBalances() {
     )
   }
 
-  const remove = (id: number) => setBalances((prev) => prev.filter((b) => b.id !== id))
+  const remove = (id: number) => {
+    markOwnWallet()
+    setBalances((prev) => prev.filter((b) => b.id !== id))
+  }
 
   // Onboarding swaps the sample wallet for the cards the user picked.
   const replaceAll = (entries: Omit<Balance, 'id' | 'updatedAt'>[]) => {
+    markOwnWallet()
     const updatedAt = new Date().toISOString()
     setBalances(entries.map((e, i) => ({ id: Date.now() + i, ...e, updatedAt })))
   }

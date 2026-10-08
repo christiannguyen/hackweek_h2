@@ -81,7 +81,7 @@ export function ComparePage({ balances, onEdit, compare: { category, onCategory 
       </>}
       {!best && <p className={styles.chartEmpty}>
         {balances.length ? 'Your cards don’t have estimates for this yet.' : 'Add your cards to see them next to these.'}
-        {' '}<button className={styles.btnText} onClick={() => onEdit()}>{balances.length ? 'Manage cards' : 'Add a card'}</button>
+        {' '}<button className={styles.btnText} onClick={() => onEdit()}>Add a card</button>
       </p>}
     </section>
 

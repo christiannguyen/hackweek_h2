@@ -230,3 +230,6 @@
 /* The wrapper already colours its border on focus, so an outline on the input itself double-rings it. */
 .field input:focus-visible { outline: none; }
 .dark :focus-visible { outline-color: var(--lime); }
+
+/* Replay from the app: a way back without signing in again. */
+.exitLink { position: absolute; top: 12px; left: 12px; z-index: 2; display: inline-flex; align-items: center; min-height: 44px; margin: 0; padding: 0 4px; border: 0; background: none; color: inherit; opacity: 0.8; font-size: 14px; font-weight: 600; }

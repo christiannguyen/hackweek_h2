@@ -218,8 +218,8 @@ function CompareTile({ option: o, category, winner, children, onTap, tapLabel }:
       </div>}
       <dl className={styles.compareNumbers}>
         <div><dt>Rewards / yr</dt><dd>{fmtDollars(o.rewards)}</dd></div>
-        <div className={o.fee > 0 ? styles.paidFeeRow : undefined}><dt>{o.yours ? 'Added fee / yr' : 'Annual fee'}</dt><dd>{o.fee > 0 ? `−${fmtDollars(o.fee)}` : '$0'}</dd></div>
-        <div className={styles.compareNet}><dt>{o.yours ? 'Category value' : 'After new fee'}</dt><dd>{fmtDollars(o.net)}</dd></div>
+        <div className={o.fee > 0 ? styles.paidFeeRow : undefined}><dt>Annual fee</dt><dd>{o.yours ? 'Not counted' : o.fee > 0 ? `−${fmtDollars(o.fee)}` : '$0'}</dd></div>
+        <div className={styles.compareNet}><dt>You keep / yr</dt><dd>{fmtDollars(o.net)}</dd></div>
       </dl>
       </div>
       <RewardDetails option={o} />

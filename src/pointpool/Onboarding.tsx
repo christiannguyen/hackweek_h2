@@ -109,9 +109,11 @@ const loadFlow = (): Flow | null => {
 interface OnboardingProps {
   onFinish: (cards: Omit<Balance, 'id' | 'updatedAt'>[]) => void
   onLogin: () => void
+  hasWallet: boolean // the user's own cards are saved in this browser
+  onExit?: () => void // set when replaying from the app
 }
 
-export function Onboarding({ onFinish, onLogin }: OnboardingProps) {
+export function Onboarding({ onFinish, onLogin, hasWallet, onExit }: OnboardingProps) {
   const [initial] = useState(loadFlow)
   const [step, setStep] = useState<Step>(initial?.step ?? 'welcome')
   const [picked, setPicked] = useState<Picked[]>(initial?.picked ?? [])
@@ -163,13 +165,15 @@ export function Onboarding({ onFinish, onLogin }: OnboardingProps) {
           </header>
         )}
 
-        {step === 'welcome' && <Welcome onStart={() => go('account')} onLogin={() => go('login')} />}
+        {step === 'welcome' && <Welcome onStart={() => go('account')} onLogin={() => go('login')} onExit={onExit} />}
         {step === 'login' && (
           <AuthForm
             mode="login"
             onSwitch={() => go('account')}
             onNext={() => {
-              // A returning user keeps the cards already saved in this browser.
+              // A returning user keeps the cards already saved in this browser. With none saved (only the sample
+              // wallet), they pick their cards first instead of landing on sample cards as if they were theirs.
+              if (!hasWallet) return go('cards')
               markOnboarded()
               sessionStorage.removeItem(FLOW_KEY)
               onLogin()
@@ -195,7 +199,7 @@ function Logo({ light }: { light?: boolean }) {
   )
 }
 
-function Welcome({ onStart, onLogin }: { onStart: () => void; onLogin: () => void }) {
+function Welcome({ onStart, onLogin, onExit }: { onStart: () => void; onLogin: () => void; onExit?: () => void }) {
   const perks = [
     { icon: LuWallet, title: 'One place', text: 'See every card’s rewards side by side.' },
     { icon: LuGraduationCap, title: 'Compare cards', text: 'What your spending could earn on each card.' },
@@ -207,6 +211,7 @@ function Welcome({ onStart, onLogin }: { onStart: () => void; onLogin: () => voi
       {/* The one piece of the logo's scene that's left: a waterline across the foot of the screen. */}
       <Pool />
       <div className={styles.welcomeMain}>
+        {onExit && <button className={styles.exitLink} onClick={onExit}>‹ Back to app</button>}
         <Logo light />
         <h1 className={styles.welcomeTitle}>
           Make the most of your <em>card rewards</em>
@@ -265,7 +270,7 @@ function AuthForm({ mode, onNext, onSwitch }: { mode: 'signup' | 'login'; onNext
     <div className={styles.body}>
       <Logo light />
       {login ? (
-        <p className={styles.sub} style={{ marginTop: 20 }}>Welcome back. Your cards are saved in this browser.</p>
+        <p className={styles.sub} style={{ marginTop: 20 }}>Welcome back. Log in to see your cards.</p>
       ) : (
         <div className={styles.banner}>
           <b>Rewards, made simple</b>
@@ -423,7 +428,7 @@ function Goal({ goals, setGoals, onNext }: { goals: string[]; setGoals: (g: stri
   return (
     <div className={styles.body}>
       <h1 className={styles.title}>Where would you like your rewards to go?</h1>
-      <p className={styles.sub}>Pick as many as you like. We’ll show what your balances could cover there. Every option stays one tap away.</p>
+      <p className={styles.sub}>Pick as many as you like. Your Wallet opens on the closest example, and every option stays one tap away.</p>
       {/* Ten tiles, so the same deal as the card list: the grid scrolls and the two buttons stay put. */}
       <div className={`${styles.scroller} ${styles.scrollerGoal}`}>
         <div className={styles.goalGrid}>

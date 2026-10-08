@@ -26,7 +26,10 @@ export function MobileShell({ children, onAccount }: { children: ReactNode; onAc
   const [baseHash, card] = hash.split('/')
   // "#coach/<card>" is a Compare deep link, so it lights up Compare rather than Card Coach.
   const routeHash = baseHash === '#coach' && card ? '#compare' : (TAB_ALIAS[baseHash] ?? baseHash)
-  const isTab = TABS.some((t) => t.hash === routeHash)
+  // Pages that aren't tabs light up the tab they're opened from (Rewards 101 lives under Wallet).
+  const PARENT: Record<string, string> = { '#learn': '#wallet' }
+  const activeHash = PARENT[routeHash] ?? routeHash
+  const isTab = TABS.some((t) => t.hash === activeHash)
 
   return (
     <div className={styles.backdrop}>
@@ -48,7 +51,7 @@ export function MobileShell({ children, onAccount }: { children: ReactNode; onAc
             <a
               key={label}
               href={h}
-              className={`${styles.tab} ${(isTab ? routeHash === h : h === '#home') ? styles.active : ''}`}
+              className={`${styles.tab} ${(isTab ? activeHash === h : h === '#home') ? styles.active : ''}`}
               aria-current={routeHash === h ? 'page' : undefined}
             >
               <Icon aria-hidden />
