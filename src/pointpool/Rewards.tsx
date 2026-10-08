@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { LuArrowUpRight, LuChevronDown, LuCoins, LuGift, LuHotel, LuPencil, LuPlane, LuPlus, LuWallet } from 'react-icons/lu'
-import { ageDays, fmtBalance, isStale, fmtDollars, fmtPts, fmtUSD, GOALS, hasEstimates, isCash, PROGRAMS, type Balance } from './data'
+import { LuArrowUpRight, LuChevronDown, LuCoins, LuGift, LuHotel, LuPlane, LuPlus, LuWallet } from 'react-icons/lu'
+import { fmtBalance, isStale, fmtDollars, fmtPts, fmtUSD, GOALS, hasEstimates, isCash, PROGRAMS, type Balance } from './data'
 import { redemptionEstimate, redemptionExamples, REDEMPTION_EXAMPLES, type RedemptionId } from './redemption'
 import { savedGoals } from './useBalances'
-import { routeParam } from './useHashRoute'
 import styles from './pointpool.module.css'
 
 // Onboarding's "where would you like your rewards to go?" picks, as the example this page opens on.
@@ -17,52 +16,35 @@ const rewardMoney = (value: number) => Number.isInteger(value) ? fmtDollars(valu
 
 const ICONS = { flight: LuPlane, hotel: LuHotel, gift: LuGift, credit: LuWallet }
 
-export function RedeemPage({ balances, onEdit }: { balances: Balance[]; onEdit: (id?: number) => void }) {
-  // "#redeem/<id>" opens on that card (linked from Offers); otherwise the most recently updated one.
-  const [selectedId, setSelectedId] = useState<number | undefined>(() => Number(routeParam()) || undefined)
-  const selected = balances.find((b) => b.id === selectedId) ?? [...balances].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0]
+// The wallet's empty state: with no cards there are no balances either, so one screen covers both.
+export function RewardsWelcome({ onAdd }: { onAdd: () => void }) {
   return (
-    <>
-      <div className={styles.pageHead}>
-        <div>
-          <h1 className={styles.pageTitle}>{selected && isCash(selected) ? 'Use your cashback' : 'Use your points'}</h1>
-          <p className={styles.pageSub}>See what each balance could cover. Values are examples.</p>
-        </div>
-      </div>
-      {!selected ? (
-        <div className={`${styles.card} ${styles.rewardsWelcome}`}>
-          <div className={styles.rewardCoin}><LuCoins aria-hidden="true" /></div>
-          <h2>What’s sitting in your points balance?</h2>
-          <p>Add your rewards program and current balance to see what it could cover. We don’t fetch or update it automatically — you enter it from your card’s app.</p>
-          <button className={styles.compareCta} onClick={() => onEdit()}>Enter your points <LuPlus aria-hidden="true" /></button>
-          <span className={styles.rewardsPrivacy}>Saved in this browser. No bank connection needed.</span>
-          <div className={styles.rewardsTeasers}>{REDEMPTION_EXAMPLES.map((example) => {
-            const Icon = ICONS[example.id]
-            return <div key={example.id}><Icon aria-hidden="true" /><span>{example.title}</span></div>
-          })}</div>
-        </div>
-      ) : (
-        <>
-          <div className={styles.rewardsProgramRow}>
-            <label>Rewards balance
-              <select value={selected.id} onChange={(e) => setSelectedId(Number(e.target.value))}>
-                {balances.map((b) => <option key={b.id} value={b.id}>{b.cardName} · {PROGRAMS[b.programId].brand}</option>)}
-              </select>
-            </label>
-            <button className={styles.btnText} onClick={() => { setSelectedId(undefined); onEdit() }} aria-label="Add another rewards balance"><LuPlus aria-hidden="true" /> Add</button>
-          </div>
-          <RewardsPreview key={selected.id} balance={selected} onEdit={() => onEdit(selected.id)} />
-        </>
-      )}
-      <details className={styles.rewardsFinePrint}>
-        <summary>The fine print <LuChevronDown aria-hidden="true" /></summary>
-        <p>Illustrative values and example prices, not live award availability. Actual value depends on your card and redemption. Taxes, fees, and program restrictions may apply. Each balance is shown separately; points aren’t pooled across programs.</p>
-      </details>
-    </>
+    <div className={`${styles.card} ${styles.rewardsWelcome}`}>
+      <div className={styles.rewardCoin}><LuCoins aria-hidden="true" /></div>
+      <h2>What’s sitting in your points balance?</h2>
+      <p>Add a card with its rewards program and current balance to see what it could cover. We don’t fetch or update it automatically — you enter it from your card’s app.</p>
+      <button className={styles.compareCta} onClick={onAdd}>Add your first card <LuPlus aria-hidden="true" /></button>
+      <span className={styles.rewardsPrivacy}>Saved in this browser. No bank connection needed.</span>
+      <div className={styles.rewardsTeasers}>{REDEMPTION_EXAMPLES.map((example) => {
+        const Icon = ICONS[example.id]
+        return <div key={example.id}><Icon aria-hidden="true" /><span>{example.title}</span></div>
+      })}</div>
+    </div>
   )
 }
 
-function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdit: () => void }) {
+export function RewardsFinePrint() {
+  return (
+    <details className={styles.rewardsFinePrint}>
+      <summary>The fine print <LuChevronDown aria-hidden="true" /></summary>
+      <p>Illustrative values and example prices, not live award availability. Actual value depends on your card and redemption. Taxes, fees, and program restrictions may apply. Each balance is shown separately; points aren’t pooled across programs.</p>
+    </details>
+  )
+}
+
+// What the card in front could cover. This sits under the wallet's deck, so it opens straight into
+// the examples instead of restating the balance the panel above it already shows.
+export function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdit: () => void }) {
   const [choice, setChoice] = useState<RedemptionId>(goalExample)
   const [prices, setPrices] = useState<Partial<Record<RedemptionId, string>>>({})
   const p = PROGRAMS[b.programId]
@@ -75,19 +57,12 @@ function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdit: () =
   const priceFor = (item: typeof REDEMPTION_EXAMPLES[number]) => prices[item.id] === undefined ? defaultPrice(item) : Number(prices[item.id])
   const price = priceFor(example)
   const estimate = redemptionEstimate(b, example.goal, price)
-  const days = ageDays(b.updatedAt)
-  const updated = !Number.isFinite(days) ? 'Update your balance' : days === 0 ? 'Updated today' : `Updated ${days} day${days === 1 ? '' : 's'} ago`
   const steps = cash ? ["Open your card’s app and find your cashback balance", 'Check whether it applies automatically or you have to request it, and any minimum', 'Confirm when it comes off your balance'] : choice === 'hotel'
     ? ["Open your card’s rewards portal", 'Look for hotels under travel and compare the cash and points prices', 'Check availability, taxes, and fees before redeeming']
     : GOALS[example.goal].points
 
   return (
     <>
-      <section className={styles.rewardsBalance} aria-label="Your entered rewards balance">
-        <div className={styles.rewardsBalanceTop}><span>{p.name}</span><LuCoins aria-hidden="true" /></div>
-        <div className={styles.rewardsAmount}>{cash ? fmtUSD(b.amount) : fmtPts(b.amount)}<span>{cash ? 'cashback' : p.unit}</span></div>
-        <div className={styles.rewardsBalanceBottom}><span>{updated}<small>Saved in this browser · {b.cardName}</small></span><button onClick={onEdit}><LuPencil aria-hidden="true" /> Update balance</button></div>
-      </section>
       {isStale(b) && <div className={styles.rewardsRefresh}>Your balance may have changed. Updating it keeps these examples accurate.</div>}
       {!supported ? (
         <div className={styles.card}><h2>Keep track of this balance</h2><p className={styles.body}>We don’t have a value estimate for this program yet. Check its rewards portal for redemption options.</p><button className={styles.btnText} onClick={onEdit}>Edit rewards program</button></div>

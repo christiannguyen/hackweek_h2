@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
 
-export type Route = 'home' | 'redeem' | 'learn' | 'compare' | 'coach' | 'pointpool' | 'offers' | 'welcome' | 'demo'
-const ROUTES: Route[] = ['home', 'redeem', 'learn', 'compare', 'coach', 'pointpool', 'offers', 'welcome', 'demo']
+export type Route = 'home' | 'learn' | 'compare' | 'coach' | 'pointpool' | 'offers' | 'welcome' | 'demo'
+const ROUTES: Route[] = ['home', 'learn', 'compare', 'coach', 'pointpool', 'offers', 'welcome', 'demo']
 
 // "#compare/market-Savor" opens Compare at one card; old #coach/card links still work.
-// "#wallet" is the Wallet tab; "#pointpool", its old name, still opens it.
+// "#wallet" is the Wallet tab. "#pointpool" (its old name) and "#redeem" (the Use rewards tab, now a
+// section of the wallet) both still open it, so saved links and "#redeem/<id>" keep working.
+const ALIASES: Record<string, Route> = { wallet: 'pointpool', redeem: 'pointpool' }
 const parse = (): Route => {
   const [raw, card] = window.location.hash.slice(1).split('/')
   if (raw === 'coach' && card) return 'compare'
-  const h = (raw === 'wallet' ? 'pointpool' : raw) as Route
+  const h = (ALIASES[raw] ?? raw) as Route
   return ROUTES.includes(h) ? h : 'home'
 }
 

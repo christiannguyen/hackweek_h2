@@ -368,7 +368,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
       kind: 'uses',
       icon: '✈️',
       text: `${fmtBalance(b)} could be ≈${fmtMoney(travel.value)} toward travel or ≈${fmtMoney(credit.value)} as a statement credit.`,
-      href: '#redeem',
+      href: `#wallet/${b.id}`,
     })
   }
 
