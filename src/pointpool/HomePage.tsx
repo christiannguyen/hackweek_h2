@@ -31,11 +31,11 @@ export function HomePage({ balances, onEdit, compare }: Props) {
       </div>
 
       {/* Leads the page: the spending strip, then one example on whichever category is picked. The category is
-          shared state, so it carries into the full Coach page. */}
+          shared state, so it carries into the full Compare page. */}
       <div className={`${styles.card} ${styles.coachHero}`}>
         <CardCompare {...compare} />
         <ScoreGoal balances={compare.balances} category={compare.category} />
-        <a className={styles.moreLink} href="#coach">Compare more cards ›</a>
+        <a className={styles.moreLink} href="#compare">Compare more cards ›</a>
       </div>
 
       {/* The user's own cards, on the dark surface the wallet tiles use */}
