@@ -369,12 +369,13 @@ a.row { text-decoration: none; color: inherit; }
    the card's edges. Only the header is dark: the comparison tiles below stay light so the card faces
    and the rate numbers keep their contrast. */
 .compareHead {
-  margin: -16px -16px 16px; padding: 16px 16px 18px;
+  margin: -16px -16px 18px; padding: 16px 16px 20px;
   border-radius: var(--radius) var(--radius) 0 0;
   background: var(--dark); color: #fff;
 }
 .compareHead .groupHead { margin-top: 0; color: #fff; }
-.compareHead .compareHeading { margin: 0; }
+/* The chips need room: the heading is a new thought, not a caption on the filter row. */
+.compareHead .compareHeading { margin: 26px 0 0; }
 .compareHead .compareHeading > span { color: var(--dark-muted); }
 /* Category tabs become raised panels on the dark band; the picked one takes the lime rather than the
    green tint, which would disappear against it. */
@@ -406,7 +407,10 @@ a.row { text-decoration: none; color: inherit; }
 .catSpend small { font-size: 10px; color: #626b5e; font-weight: 400; }
 .categoryIcon { color: #737b6c; width: 22px; height: 22px; margin: 2px 0 8px; }
 .feeFilters { display: flex; flex-wrap: wrap; gap: 6px; }
-.feeFilter { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--text); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+/* Small chips: they qualify the tiles above rather than competing with them. Drawn at 32px, but the
+   ::after stretches the touch target back to 44px so the smaller pill is no harder to hit. */
+.feeFilter { position: relative; min-height: 32px; padding: 7px 13px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--text); font: inherit; font-size: 11.5px; font-weight: 600; line-height: 1; cursor: pointer; }
+.feeFilter::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 44px; transform: translateY(-50%); }
 .feeFilter.active { border-color: var(--selection-border); background: var(--selection-tint); color: var(--selection-ink); box-shadow: inset 0 0 0 1px var(--selection-border); }
 .feeFilter:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 .compareHeading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; margin: 22px 0 18px; }

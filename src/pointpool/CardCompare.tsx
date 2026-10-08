@@ -7,16 +7,20 @@ import {
   fmtDollars,
   fmtMoney,
   fmtRate,
+  feeFilters,
   MIN_GAIN,
+  passesFee,
   scoreGoal,
   SPEND,
   TOP_CATEGORIES,
   type Balance,
   type CardOption,
   type CategoryId,
+  type FeeFilter,
 } from './data'
 import { artFor } from './cardColors'
 import { pressable } from './a11y'
+import { SpendingControls } from './shared'
 import styles from './pointpool.module.css'
 
 export interface CompareProps {
@@ -28,17 +32,19 @@ export interface CompareProps {
 
 // One category, side by side: the user's card now vs. the card they could apply for. Recommendations always use the
 // strongest owned card, even when the user explores another baseline.
-export function CardCompare({ balances, category, onEdit }: CompareProps) {
+export function CardCompare({ balances, category, onCategory, onEdit }: CompareProps) {
   const { yours, best, worth, close, rest } = compareCards(balances, category)
   // "No cards" means none we can estimate: an onboarding "other" card alone gets the first-card view, not an empty wallet.
   const noCards = yours.length === 0
   const [selection, setSelection] = useState<{ category: CategoryId; key: string }>()
+  const [feeFilter, setFeeFilter] = useState<FeeFilter>('all')
   const selected = (selection?.category === category && yours.find((o) => o.key === selection.key)) || best
   const isBest = selected?.key === best?.key
   const selectedIndex = Math.max(0, yours.findIndex((o) => o.key === selected?.key))
-  const alternatives = [...worth, ...close, ...rest].sort((a, b) => b.net - a.net)
-  const suggested = worth[0] ?? alternatives[0]
-  const recommends = !!worth[0]
+  // The fee filter only narrows the new card on the right; the user's own cards are never filtered out.
+  const alternatives = [...worth, ...close, ...rest].filter((o) => passesFee(o, feeFilter)).sort((a, b) => b.net - a.net)
+  const suggested = alternatives.find((o) => worth.includes(o)) ?? alternatives[0]
+  const recommends = !!suggested && worth.includes(suggested)
   // The border and badge go on whichever of the two tiles earns more a year after fees, so they always match the
   // numbers shown. (The $2/mo threshold still decides the wording and the "Review card" button, not the highlight.)
   const suggestedEarnsMore = !!suggested && (!selected || suggested.net > selected.net)
@@ -50,6 +56,7 @@ export function CardCompare({ balances, category, onEdit }: CompareProps) {
   return (
     <>
       <div className={styles.compareHead}>
+        <SpendingControls category={category} onCategory={onCategory} feeFilter={feeFilter} onFeeFilter={setFeeFilter} />
         <div className={styles.compareHeading}>
           <h3>{categoryLabel} · {noCards ? 'what could you earn?' : 'which card wins?'}</h3>
           <span>{fmtDollars(spend * 12)} / yr</span>
@@ -93,7 +100,12 @@ export function CardCompare({ balances, category, onEdit }: CompareProps) {
             {!suggested ? 'No options yet' : recommends ? 'A card that could earn more' : 'Closest new card'}
           </h4>
           {suggested ? <CompareTile option={suggested} category={category} winner={suggestedEarnsMore} /> : (
-            <div className={styles.compareEmpty}>No new cards to compare for this category.</div>
+            <div className={styles.compareEmpty}>
+              <p>{feeFilter === 'all'
+                ? 'No new cards to compare for this category.'
+                : `No new cards match the ${feeFilters.find((f) => f.value === feeFilter)!.label.toLowerCase()} filter here.`}</p>
+              {feeFilter !== 'all' && <button className={styles.btnText} onClick={() => setFeeFilter('all')}>Show all cards</button>}
+            </div>
           )}
         </div>
       </div>}

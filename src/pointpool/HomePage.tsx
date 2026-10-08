@@ -1,7 +1,6 @@
 import {
   balanceUses,
   catName,
-  compareCards,
   fmtMoney,
   fmtPts,
   fmtUSD,
@@ -9,9 +8,7 @@ import {
   marketplaceCategory,
   PROGRAMS,
   SPEND,
-  TOP_CATEGORIES,
   type Balance,
-  type CategoryId,
 } from './data'
 import { CardCompare, ScoreGoal, type CompareProps } from './CardCompare'
 import { pressable } from './a11y'
@@ -26,7 +23,6 @@ interface Props {
 
 export function HomePage({ balances, onEdit, compare }: Props) {
   const market = marketplaceCategory(balances)
-  const spotlight = upgradeCategory(balances)
 
   return (
     <>
@@ -34,13 +30,12 @@ export function HomePage({ balances, onEdit, compare }: Props) {
         <h1 className={styles.pageTitle}>Earn more on your spending</h1>
       </div>
 
-      {/* Leads the page: one example, where a new card would add the most on the user's (sample) spending */}
+      {/* Leads the page: the spending strip, then one example on whichever category is picked. The category is
+          shared state, so it carries into the full Compare page. */}
       <div className={`${styles.card} ${styles.coachHero}`}>
-        <CardCompare {...compare} category={spotlight} />
-        <ScoreGoal balances={compare.balances} category={spotlight} />
-        <a className={styles.moreLink} href="#compare" onClick={() => compare.onCategory(spotlight)}>
-          Compare more cards ›
-        </a>
+        <CardCompare {...compare} />
+        <ScoreGoal balances={compare.balances} category={compare.category} />
+        <a className={styles.moreLink} href="#compare">Compare more cards ›</a>
       </div>
 
       {/* The user's own cards, on the dark surface the wallet tiles use */}
@@ -95,16 +90,6 @@ export function HomePage({ balances, onEdit, compare }: Props) {
   )
 }
 
-// The top category where a new card adds the most over the user's best card; the top category when none does.
-function upgradeCategory(balances: Balance[]): CategoryId {
-  let pick = TOP_CATEGORIES[0].id
-  let most = 0
-  for (const c of TOP_CATEGORIES) {
-    const gain = compareCards(balances, c.id).worth[0]?.gain ?? 0
-    if (gain > most) [pick, most] = [c.id, gain]
-  }
-  return pick
-}
 
 // One line per card: the balance, plus where it could go — side by side, no ranking.
 function CardRow({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: number) => void }) {
