@@ -165,15 +165,15 @@ export function CoachPage({ balances, onEdit }: Props) {
         <div className={styles.pageTitle}>Card Coach</div>
       </div>
 
-      {/* Rewards score + summary */}
-      <div className={styles.card}>
+      {/* Rewards score hero */}
+      <div className={`${styles.card} ${styles.coachHeroCard}`}>
         <div className={styles.coachScore}>
           <div className={styles.scoreCircle}>
             <svg viewBox="0 0 80 80" className={styles.scoreSvg}>
-              <circle cx="40" cy="40" r="35" fill="none" stroke="var(--line)" strokeWidth="6" />
+              <circle cx="40" cy="40" r="35" fill="none" stroke="var(--dark-line)" strokeWidth="6" />
               <circle
                 cx="40" cy="40" r="35"
-                fill="none" stroke="var(--green)" strokeWidth="6"
+                fill="none" stroke="var(--lime)" strokeWidth="6"
                 strokeLinecap="round"
                 strokeDasharray={`${(score / 100) * 220} 220`}
                 transform="rotate(-90 40 40)"
@@ -183,10 +183,10 @@ export function CoachPage({ balances, onEdit }: Props) {
           </div>
           <div>
             <div className={styles.scoreTitle}>Rewards score</div>
-            <div className={styles.rowSub}>
-              {score >= 70 ? "Great — your cards are well-matched to your spending."
-                : score >= 40 ? 'Room to improve. Follow the tips below to earn more.'
-                : hasCards ? "Low — your spending categories don't match your card bonuses."
+            <div className={styles.rowSub} style={{ color: 'var(--dark-muted)' }}>
+              {score >= 70 ? "Great — your cards match your spending well."
+                : score >= 40 ? 'Room to improve. Follow the tips below.'
+                : hasCards ? "Your spending doesn't match your card bonuses."
                 : 'Add your cards to get a personalized score.'}
             </div>
           </div>
@@ -221,16 +221,18 @@ export function CoachPage({ balances, onEdit }: Props) {
 
       {/* What you left on the table */}
       {missed && (
-        <div className={styles.card}>
+        <div className={`${styles.card} ${styles.missedCard}`}>
           <h2>What you left on the table</h2>
           <div className={styles.cardSub}>
-            Last month you could have earned <strong style={{ color: 'var(--orange)', fontWeight: 600 }}>{fmtMoney(missed.total)} more</strong> by using the right card for each purchase.
+            Last month you could have earned{' '}
+            <strong className={styles.missedAmount}>{fmtMoney(missed.total)} more</strong>{' '}
+            by using the right card for each purchase.
           </div>
           {missed.byCategory.map((c) => (
             <div key={c.id} className={styles.coachCatRow}>
               <div className={styles.coachCatHead}>
                 <span>{c.emoji} {c.label}</span>
-                <span style={{ color: 'var(--orange)', fontWeight: 600 }}>+{fmtMoney(c.missed)}</span>
+                <span className={styles.missedAmount}>+{fmtMoney(c.missed)}</span>
               </div>
               <div className={styles.coachCatDetail}>
                 <span className={styles.rowSub}>Base rate: {fmtMoney(c.actual)} vs optimal: {fmtMoney(c.optimal)}</span>
@@ -240,38 +242,36 @@ export function CoachPage({ balances, onEdit }: Props) {
         </div>
       )}
 
-      {/* Card stacking guide */}
+      {/* Card stacking — wallet cheat sheet */}
       {stacking.length > 0 && (
         <div className={styles.card}>
           <h2>Your wallet cheat sheet</h2>
           <div className={styles.cardSub}>Which card to use for what — based on your spending.</div>
-          {stacking.map((s) => (
-            <div key={s.category.id} className={styles.row} onClick={() => onEdit(s.card.id)}>
-              <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>{s.category.emoji}</div>
-              <div className={styles.rowMain}>
-                <div className={styles.rowTitleLine}>
-                  <span className={styles.rowTitle}>{s.category.label}</span>
-                  <span className={styles.tag + ' ' + styles.sm}>{s.rateLabel}</span>
+          <div style={{ marginTop: 12 }}>
+            {stacking.map((s) => (
+              <div key={s.category.id} className={styles.stackCard} onClick={() => onEdit(s.card.id)} style={{ cursor: 'pointer' }}>
+                <div className={styles.stackEmoji}>{s.category.emoji}</div>
+                <div className={styles.stackMain}>
+                  <div className={styles.stackCategory}>{s.category.label}</div>
+                  <div className={styles.stackDetail}>Use <b>{s.card.cardName}</b> — ~{fmtMoney(s.monthly)}/mo</div>
                 </div>
-                <div className={styles.rowSub}>
-                  Use <b>{s.card.cardName}</b> — earns ~{fmtMoney(s.monthly)}/mo
-                </div>
+                <div className={styles.stackRate}>{s.rateLabel}</div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Seasonal tips */}
+      {/* Seasonal / timely tips */}
       {seasonal.length > 0 && (
         <div className={styles.card}>
           <h2>Timely tips</h2>
           {seasonal.map((t) => (
-            <div key={t.id} className={styles.row}>
-              <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>{t.icon}</div>
-              <div className={styles.rowMain}>
-                <div className={styles.rowTitle}>{t.title}</div>
-                <div className={styles.rowSub}>{t.detail}</div>
+            <div key={t.id} className={styles.seasonalRow}>
+              <div className={styles.seasonalIcon}>{t.icon}</div>
+              <div>
+                <div className={styles.seasonalTitle}>{t.title}</div>
+                <div className={styles.seasonalDetail}>{t.detail}</div>
               </div>
             </div>
           ))}
@@ -280,7 +280,7 @@ export function CoachPage({ balances, onEdit }: Props) {
 
       {/* Points expiration warnings */}
       {expirations.length > 0 && (
-        <div className={styles.card} style={{ borderLeft: '4px solid var(--orange)' }}>
+        <div className={`${styles.card} ${styles.expirationCard}`}>
           <h2>Expiration alerts</h2>
           {expirations.map((w) => (
             <div key={w.balance.id} className={styles.row} onClick={() => onEdit(w.balance.id)}>
@@ -303,30 +303,21 @@ export function CoachPage({ balances, onEdit }: Props) {
           <h2>The real math on redemption</h2>
           <div className={styles.cardSub}>Not all redemption methods are equal. Here is what your points are actually worth.</div>
           {redemptions.map((r) => (
-            <div key={r.balance.id} style={{ marginTop: 14 }}>
+            <div key={r.balance.id} style={{ marginTop: 16 }}>
               <div className={styles.rowTitle}>{r.balance.cardName}</div>
-              <div className={styles.rowSub} style={{ marginBottom: 8 }}>
+              <div className={styles.rowSub}>
                 {Math.round(r.balance.amount).toLocaleString()} {r.program.unit}
               </div>
               {r.methods.map((m) => (
-                <div
-                  key={m.id}
-                  style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '8px 10px', marginTop: 4,
-                    borderRadius: 10,
-                    background: m.best ? 'var(--green-tint)' : '#f7f7f8',
-                  }}
-                >
-                  <span style={{ fontSize: 13 }}>
-                    {m.emoji} {m.label}
-                    <span style={{ color: 'var(--muted)', fontSize: 11, marginLeft: 6 }}>
-                      {m.cpp}c per point
-                    </span>
-                  </span>
-                  <span style={{ fontWeight: 600, fontSize: 14, color: m.best ? 'var(--green)' : 'var(--ink)' }}>
+                <div key={m.id} className={`${styles.redeemMethod} ${m.best ? styles.redeemBest : ''}`}>
+                  <div className={styles.redeemLeft}>
+                    <span>{m.emoji}</span>
+                    <span>{m.label}</span>
+                    <span className={styles.redeemCpp}>{m.cpp}c/pt</span>
+                  </div>
+                  <span className={styles.redeemValue}>
                     {fmtUSD(m.value)}
-                    {m.best && <span style={{ fontSize: 11, marginLeft: 4, fontWeight: 500 }}>Best</span>}
+                    {m.best && <span className={styles.redeemBestTag}>Best</span>}
                   </span>
                 </div>
               ))}
@@ -335,26 +326,24 @@ export function CoachPage({ balances, onEdit }: Props) {
         </div>
       )}
 
-      {/* Kikoff graduation milestones */}
+      {/* Credit journey — graduation milestones */}
       {milestones.length > 0 && (
         <div className={styles.card}>
           <h2>Your credit journey</h2>
-          <div className={styles.cardSub}>
-            Building credit unlocks better cards with higher rewards. Here is where you stand.
-          </div>
+          <div className={styles.cardSub}>Building credit unlocks better cards with higher rewards.</div>
           {milestones.map((m) => (
-            <div key={m.id} className={styles.row}>
-              <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>
+            <div key={m.id} className={styles.milestoneRow}>
+              <div className={`${styles.milestoneIcon} ${m.achieved ? styles.achieved : ''}`}>
                 {m.achieved ? '✅' : m.icon}
               </div>
-              <div className={styles.rowMain}>
-                <div className={styles.rowTitleLine}>
-                  <span className={styles.rowTitle}>{m.title}</span>
-                  {m.achieved && <span className={styles.tag + ' ' + styles.sm}>Done</span>}
+              <div className={styles.milestoneMain}>
+                <div className={styles.milestoneTitle}>
+                  {m.title}
+                  {m.achieved && <span className={`${styles.tag} ${styles.sm}`}>Done</span>}
                 </div>
-                <div className={styles.rowSub}>{m.detail}</div>
+                <div className={styles.milestoneDetail}>{m.detail}</div>
                 {!m.achieved && (
-                  <div className={styles.meter} style={{ marginTop: 6 }}>
+                  <div className={styles.meter} style={{ marginTop: 8 }}>
                     <div className={styles.meterBar} style={{ height: 6 }}>
                       <span className={styles.meterFill} style={{ width: `${Math.round(m.progress * 100)}%` }} />
                     </div>
@@ -371,7 +360,7 @@ export function CoachPage({ balances, onEdit }: Props) {
       {insights.length > 0 && (
         <div className={`${styles.card} ${styles.darkCard}`}>
           <h2>Your spending breakdown</h2>
-          <div className={styles.cardSub}>Based on {SPEND_TXN_COUNT} transactions from the last 30 days. Here's where your money goes and how each card earns.</div>
+          <div className={styles.cardSub}>Based on {SPEND_TXN_COUNT} transactions from the last 30 days.</div>
           {insights.map((i) => (
             <div key={i.id} className={styles.coachCatRow}>
               <div className={styles.coachCatHead}>
@@ -381,7 +370,7 @@ export function CoachPage({ balances, onEdit }: Props) {
               {i.bestCard ? (
                 <div className={styles.coachCatDetail}>
                   <span className={styles.coachCatCard}>
-                    Highest in your wallet: <b>{i.bestCard.balance.cardName}</b> at {i.bestRate}
+                    Best: <b>{i.bestCard.balance.cardName}</b> at {i.bestRate}
                   </span>
                   <span className={styles.coachCatEarn}>
                     ≈{fmtMoney(i.monthlyReward)}/mo
@@ -444,7 +433,6 @@ export function CoachPage({ balances, onEdit }: Props) {
           )}
         </>
       )}
-
 
       <Disclaimer />
     </>
