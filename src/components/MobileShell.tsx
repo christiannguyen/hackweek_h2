@@ -47,9 +47,10 @@ export function MobileShell({ children, onAccount }: { children: ReactNode; onAc
               href={h}
               className={`${styles.tab} ${(isTab ? routeHash === h : h === '#home') ? styles.active : ''}`}
               aria-current={routeHash === h ? 'page' : undefined}
+              aria-label={label}
+              title={label}
             >
-              <Icon />
-              {label}
+              <Icon aria-hidden />
             </a>
           ))}
         </nav>
