@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { LuArrowUpRight } from 'react-icons/lu'
 import type { CompareProps } from './CardCompare'
+import { artFor } from './cardColors'
 import {
   catName,
   compareCards,
@@ -128,6 +129,9 @@ function ColumnChart({ cards, category, best }: { cards: CardOption[]; category:
   }
   const span = hi - lo
   const at = (n: number) => `${((n - lo) / span) * 100}%`
+  // Losing bars hang from the baseline instead of standing on it, so they're anchored by their top edge. That's what
+  // lets both directions grow out of the baseline with the same height animation: up from it, or down from it.
+  const atTop = (n: number) => `${(1 - (n - lo) / span) * 100}%`
 
   return <>
     <div className={styles.cols} style={{ gridTemplateColumns: `repeat(${cards.length}, 1fr)` }}>
@@ -142,14 +146,22 @@ function ColumnChart({ cards, category, best }: { cards: CardOption[]; category:
           aria-label={`${o.name}: ${best ? `${same ? 'same as' : `${signed(d)} a month versus`} your card, ` : ''}${money(m.net)} a month after fees`}>
           <span className={`${styles.colPlot} ${lo < 0 ? styles.colPlotLoss : ''}`} aria-hidden="true">
             <span className={`${styles.colBase} ${best ? '' : styles.colBaseNone}`} style={{ bottom: at(0) }} />
-            {same ? <b className={styles.colSame} style={{ bottom: at(0) }}>Same</b>
+            {same ? <b className={styles.colSame} style={{ bottom: at(0), '--i': i } as CSSProperties}>Same</b>
               : <span className={`${styles.colBar} ${d < 0 ? styles.colBarLoss : ''}`}
-                style={{ bottom: at(Math.min(0, d)), height: `${(Math.abs(d) / span) * 100}%` }}>
+                style={{
+                  top: d < 0 ? atTop(0) : undefined,
+                  bottom: d < 0 ? undefined : at(0),
+                  height: `${(Math.abs(d) / span) * 100}%`,
+                  '--i': i,
+                } as CSSProperties}>
                 <b className={styles.colTop}>{label}</b>
               </span>}
           </span>
+          <ChartFace option={o} />
           <span className={styles.colName}>{o.name}</span>
-          <small className={o.fee > 0 ? styles.chartFee : undefined}>{o.fee > 0 ? `${fmtDollars(o.fee)}/yr fee` : 'No annual fee'}</small>
+          {/* Only a fee is worth a line of its own: "No annual fee" on most columns was noise, and the tooltip
+              and the math panel both still say it. */}
+          {o.fee > 0 && <small className={styles.chartFee}>{fmtDollars(o.fee)}/yr fee</small>}
           <span className={`${styles.chartTip} ${i === 0 ? styles.tipStart : i === cards.length - 1 ? styles.tipEnd : ''}`} aria-hidden="true">
             {o.fee === 0 ? `${fmtMoney(m.rewards)} in rewards, no annual fee`
               : `${fmtMoney(m.rewards)} rewards − ${fmtMoney(m.fee)} fee = ${money(m.net)}`}
@@ -160,6 +172,21 @@ function ColumnChart({ cards, category, best }: { cards: CardOption[]; category:
     {shown ? <CardMath option={shown} category={category} best={best} />
       : <p className={styles.chartHint}>Tap a card to see the math.</p>}
   </>
+}
+
+// A thumbnail of the card above its name, in the same brand tints the wallet tiles use, so the column is
+// recognisable as a card rather than a label on a bar.
+function ChartFace({ option: o }: { option: CardOption }) {
+  const art = artFor(o.short)
+  return (
+    <span
+      className={styles.chartFace}
+      style={{ '--art-from': art.from, '--art-to': art.to } as CSSProperties}
+      aria-hidden="true"
+    >
+      <span className={styles.faceChip} />
+    </span>
+  )
 }
 
 // The monthly math behind a column, and what to know before applying.
