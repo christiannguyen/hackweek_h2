@@ -249,7 +249,7 @@ function CompareTile({ option: o, category, winner, children }: {
 }) {
   return (
     <div className={`${styles.compareTile} ${winner ? styles.compareWinner : ''}`}>
-      {winner && <span className={styles.winnerBadge}>{o.yours ? 'In your wallet' : 'Earns more here'}</span>}
+      {winner && <span className={styles.winnerBadge}>{o.yours ? 'In your wallet' : 'Best pick'}</span>}
       <CardFace option={o} />
       <div className={styles.pickerSpace}>
         {children}
