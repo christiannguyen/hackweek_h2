@@ -35,7 +35,7 @@ export function LearnPage() {
     <>
       <BackLink />
       <div className={styles.pageHead}>
-        <div className={styles.pageTitle}>Rewards 101</div>
+        <h1 className={styles.pageTitle}>Rewards 101</h1>
       </div>
       <div className={styles.card}>
         <Accordion.Root collapsible variant="plain">

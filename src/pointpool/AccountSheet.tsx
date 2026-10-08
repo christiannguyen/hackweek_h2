@@ -66,7 +66,7 @@ export function AccountSheet({ open, onClose, onLogout }: Props) {
               </Drawer.Footer>
             )}
             <Drawer.CloseTrigger asChild>
-              <CloseButton size="sm" aria-label="Close" />
+              <CloseButton size="md" aria-label="Close" />
             </Drawer.CloseTrigger>
           </Drawer.Content>
         </Drawer.Positioner>
