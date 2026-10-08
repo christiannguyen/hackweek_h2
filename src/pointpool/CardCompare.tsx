@@ -20,6 +20,7 @@ import {
   type CategoryId,
 } from './data'
 import { artFor } from './cardColors'
+import { pressable } from './a11y'
 import styles from './pointpool.module.css'
 import { routeParam } from './useHashRoute'
 
@@ -43,6 +44,7 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
   const [selection, setSelection] = useState<{ category: CategoryId; key: string }>()
   const selected = (selection?.category === category && yours.find((o) => o.key === selection.key)) || best
   const isBest = selected?.key === best?.key
+  const selectedIndex = Math.max(0, yours.findIndex((o) => o.key === selected?.key))
   const alternatives = [...worth, ...close, ...rest].sort((a, b) => b.net - a.net)
   const suggested = worth[0] ?? alternatives[0]
   const recommends = !!worth[0]
@@ -95,20 +97,20 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
         <div className={styles.compareColumn}>
           <h4>
             <span className={styles.colEyebrow}>Now</span>
-            {!selected ? 'Your wallet' : isBest ? 'Highest estimate in your wallet' : 'Your selected card'}
+            {!selected ? 'Your wallet' : yours.length > 1
+              ? <>Your cards <span className={styles.cardCount}>{selectedIndex + 1}/{yours.length}</span></>
+              : 'Your card'}
           </h4>
           {selected ? (
-            <CompareTile option={selected} category={category} winner={!suggestedEarnsMore}>
-              {yours.length > 1 && (
-                <label className={styles.cardPicker}>
-                  <span>Compare another card <LuChevronDown aria-hidden="true" /></span>
-                  <select aria-label="Compare another card" value={selected.key}
-                    onChange={(e) => setSelection({ category, key: e.target.value })}>
-                    {yours.map((o) => <option key={o.key} value={o.key}>{o.name}{o.key === best?.key ? ' — highest estimate' : ''}</option>)}
-                  </select>
-                </label>
-              )}
-            </CompareTile>
+            // With more than one card, tapping the card steps through the wallet, highest estimate first, then wraps.
+            <CompareTile
+              key={selected.key}
+              option={selected}
+              category={category}
+              winner={!suggestedEarnsMore}
+              onTap={yours.length > 1 ? () => setSelection({ category, key: yours[(selectedIndex + 1) % yours.length].key }) : undefined}
+              tapLabel={`${selected.name}, card ${selectedIndex + 1} of ${yours.length}. Tap to compare the next one.`}
+            />
           ) : (
             <div className={styles.compareEmpty}>
               <p>Your cards don’t have reward estimates yet.</p>
@@ -126,6 +128,11 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
           )}
         </div>
       </div>}
+      {!noCards && yours.length > 1 && (
+        <p className={styles.compareHint}>
+          Tap your card to compare the next one · <b>{selectedIndex + 1} of {yours.length}</b>
+        </p>
+      )}
       <div className={styles.compareTakeaway} role="status">
         <LuCheck aria-hidden="true" />
         <div>
@@ -144,7 +151,6 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
               ? `New cards we looked at would add less than ${fmtMoney(MIN_GAIN)} a month.`
               : 'New cards we looked at wouldn’t earn more here.'}</>
           ) : 'Add a card we can estimate to see how a new card compares.'}
-          {!isBest && best && <button className={styles.resetCompare} onClick={() => setSelection(undefined)}>Back to your highest estimate</button>}
         </div>
       </div>
       {recommends && suggested && <NewCardCommitment option={suggested} />}
@@ -247,12 +253,15 @@ function CardFace({ option: o }: { option: CardOption }) {
   )
 }
 
-function CompareTile({ option: o, category, winner, children }: {
-  option: CardOption; category: CategoryId; winner: boolean; children?: ReactNode
+function CompareTile({ option: o, category, winner, children, onTap, tapLabel }: {
+  option: CardOption; category: CategoryId; winner: boolean; children?: ReactNode; onTap?: () => void; tapLabel?: string
 }) {
+  // The tap target covers the card and its numbers but not "Reward details", which opens on its own.
+  const tap = onTap ? { className: styles.tileTap, ...pressable(onTap, tapLabel ?? o.name) } : { className: styles.tileBody }
   return (
-    <div className={`${styles.compareTile} ${winner ? styles.compareWinner : ''}`}>
+    <div className={`${styles.compareTile} ${winner ? styles.compareWinner : ''} ${onTap ? styles.tappable : ''}`}>
       {winner && <span className={styles.winnerBadge}>{o.yours ? 'In your wallet' : 'Best pick'}</span>}
+      <div {...tap}>
       <CardFace option={o} />
       <div className={styles.pickerSpace}>
         {children}
@@ -268,6 +277,7 @@ function CompareTile({ option: o, category, winner, children }: {
         <div className={o.fee > 0 ? styles.paidFeeRow : undefined}><dt>{o.yours ? 'Added fee / yr' : 'Annual fee'}</dt><dd>{o.fee > 0 ? `−${fmtDollars(o.fee)}` : '$0'}</dd></div>
         <div className={styles.compareNet}><dt>{o.yours ? 'Category value' : 'After new fee'}</dt><dd>{fmtDollars(o.net)}</dd></div>
       </dl>
+      </div>
       <RewardDetails option={o} />
     </div>
   )

@@ -411,11 +411,17 @@ a.row { text-decoration: none; color: inherit; }
 }
 .cardOwnership { font-size: 9px; opacity: 0.88; text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.35); }
 .pickerSpace { min-height: 33px; }
-.cardPicker { position: relative; display: block; margin: 8px 0; color: var(--selection-ink); }
-.cardPicker > span { display: flex; align-items: center; justify-content: space-between; gap: 2px; font-size: 10px; font-weight: 500; }
-.cardPicker svg { flex-shrink: 0; }
-.cardPicker select { position: absolute; inset: -5px 0; width: 100%; opacity: 0; cursor: pointer; }
-.cardPicker:focus-within { outline: 2px solid var(--selection-border); outline-offset: 3px; border-radius: 3px; }
+/* Your card in the comparison: tap the card to step through the wallet */
+.tileBody, .tileTap { display: flex; flex-direction: column; flex: 1; }
+.tileTap { cursor: pointer; border-radius: 12px; transition: transform 0.12s; }
+.tileTap:active { transform: scale(0.98); }
+.tileTap:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 4px; }
+.tappable { animation: tileIn 0.25s ease-out; }
+@keyframes tileIn { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { .tappable, .tileTap { animation: none; transition: none; } }
+.cardCount { margin-left: 4px; color: var(--green-ink); }
+.compareHint { margin: 10px 0 0; text-align: center; font-size: 12px; color: var(--muted); }
+.compareHint b { color: var(--ink); font-weight: 600; }
 .cardFeeTag, .cardNoFeeTag { display: inline-block; margin: 6px 0; padding: 3px 6px; border-radius: 6px; font-size: 11px; line-height: 1.3; font-weight: 650; }
 .cardFeeTag { background: var(--fee-tint); color: var(--fee-ink); }
 .cardNoFeeTag { padding-left: 0; color: #626b5e; font-weight: 400; }
@@ -439,7 +445,6 @@ a.row { text-decoration: none; color: inherit; }
 .compareTakeaway { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; padding: 14px; background: #eaf7e4; border-radius: 16px; font-size: 13px; line-height: 1.5; }
 .compareTakeaway > svg { flex-shrink: 0; color: var(--green-ink); width: 20px; height: 20px; margin-top: 2px; }
 .compareTakeaway strong { font-weight: 650; }
-.resetCompare { display: block; background: none; border: 0; padding: 0; margin-top: 8px; text-align: left; color: var(--green-ink); text-decoration: underline; font: inherit; cursor: pointer; }
 .compareCta { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; min-height: 48px; border-radius: 16px; background: var(--lime); color: #182117; text-decoration: none; font-size: 15px; font-weight: 600; padding: 12px; }
 .compareCta:hover { background: #9fee35; }
 .cardCommitment { margin-top: 14px; border: 1px solid #e9ad83; border-left: 4px solid #dc641f; border-radius: 14px; background: #fff7ef; }
@@ -473,13 +478,12 @@ a.row { text-decoration: none; color: inherit; }
 .firstCardNumbers > div:last-child dd { color: var(--green-ink); }
 .firstCardAdd { margin-top: 12px; text-align: center; color: #626b5e; font-size: 12px; }
 .firstCardAdd button { color: var(--green-ink); font-size: 12px; text-decoration: underline; }
-.compareCta:focus-visible, .resetCompare:focus-visible, .tileDetails summary:focus-visible,
+.compareCta:focus-visible, .tileDetails summary:focus-visible,
 .commitmentSummary:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 3px; }
 @media (max-width: 360px) {
   .compareTile { padding: 12px 8px; }
   .compareColumn h4 { font-size: 9px; letter-spacing: 0; }
   .compareNumbers > div { flex-wrap: wrap; }
-  .cardPicker > span { font-size: 9px; }
   .catTab { padding: 8px 6px; }
 }
 /* Reads as a heading for the tiles under it, not a muted caption, so it carries the
