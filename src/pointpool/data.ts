@@ -411,6 +411,237 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
   return tips
 }
 
+// ---- Card stacking: which card to use for each spending category ----
+
+export interface StackingRule {
+  category: { id: CategoryId; label: string; noun: string; emoji: string }
+  card: Balance
+  rate: number
+  rateLabel: string
+  monthly: number
+}
+
+export function cardStacking(balances: Balance[], spend: Spend = SPEND): StackingRule[] {
+  const cards = balances.filter((b) => hasEstimates(PROGRAMS[b.programId]))
+  if (cards.length === 0) return []
+  return CATEGORIES
+    .filter((c) => spend[c.id] > 0)
+    .map((c) => {
+      const earnings = cardEarnings(cards, c.id, spend)
+      const best = earnings.length > 0
+        ? earnings.reduce((a, b) => (a.value.cashback >= b.value.cashback ? a : b))
+        : null
+      if (!best) return null
+      return {
+        category: c,
+        card: best.balance,
+        rate: best.rate,
+        rateLabel: fmtRate(best.program.type, best.avgRate),
+        monthly: best.value.cashback,
+      }
+    })
+    .filter((r): r is StackingRule => r !== null)
+}
+
+// ---- "What you left on the table" ----
+
+export interface LeftOnTable {
+  total: number
+  byCategory: { id: CategoryId; label: string; emoji: string; actual: number; optimal: number; missed: number }[]
+}
+
+export function leftOnTable(balances: Balance[], spend: Spend = SPEND): LeftOnTable | null {
+  const cards = balances.filter((b) => hasEstimates(PROGRAMS[b.programId]))
+  if (cards.length === 0) return null
+  const byCategory = CATEGORIES
+    .filter((c) => spend[c.id] > 0)
+    .map((c) => {
+      const earnings = cardEarnings(cards, c.id, spend)
+      const best = earnings.length > 0
+        ? earnings.reduce((a, b) => (a.value.cashback >= b.value.cashback ? a : b))
+        : null
+      const optimal = best?.value.cashback ?? 0
+      const base = spend[c.id] * 0.01
+      return { id: c.id, label: c.label, emoji: c.emoji, actual: base, optimal, missed: cents(optimal - base) }
+    })
+    .filter((c) => c.missed > 0)
+  const total = cents(byCategory.reduce((s, c) => s + c.missed, 0))
+  if (total <= 0) return null
+  return { total, byCategory }
+}
+
+// ---- Seasonal / calendar-aware tips ----
+
+export interface SeasonalTip {
+  id: string
+  icon: string
+  title: string
+  detail: string
+  months: number[]
+}
+
+const SEASONAL_TIPS: SeasonalTip[] = [
+  { id: 'holiday', icon: '🎄', title: 'Holiday spending ahead', detail: 'Use your highest-earning shopping card for gifts. Many cards offer extra rewards on department stores in Q4.', months: [10, 11] },
+  { id: 'back-to-school', icon: '📚', title: 'Back-to-school season', detail: 'School supplies, electronics, and clothing — use your best shopping card for these purchases.', months: [7, 8] },
+  { id: 'summer-travel', icon: '🏖️', title: 'Summer travel season', detail: 'Book travel through your card portal for bonus rates. Gas spending goes up — use your best transport card.', months: [5, 6] },
+  { id: 'tax-season', icon: '📋', title: 'Tax season reminder', detail: 'Some cards earn bonus rewards on tax prep services. Check if your cashback or points can offset your tax prep costs.', months: [1, 2, 3] },
+  { id: 'q1-rotate', icon: '🔄', title: 'Q1 rotating categories are live', detail: 'If you have a Discover it or Chase Freedom, activate your Q1 bonus categories now to earn 5%.', months: [0] },
+  { id: 'q2-rotate', icon: '🔄', title: 'Q2 rotating categories are live', detail: 'Activate your Q2 bonus categories on Discover it or Chase Freedom to keep earning 5%.', months: [3] },
+  { id: 'q3-rotate', icon: '🔄', title: 'Q3 rotating categories are live', detail: 'Activate your Q3 bonus categories. Rotating category cards need manual opt-in each quarter.', months: [6] },
+  { id: 'q4-rotate', icon: '🔄', title: 'Q4 rotating categories are live', detail: 'Last quarter of the year — activate your Q4 bonus categories for holiday shopping rewards.', months: [9] },
+  { id: 'new-year', icon: '🎯', title: 'New year, new rewards strategy', detail: 'Annual caps reset in January. Review your card lineup and make sure you are using the right card for each category.', months: [0] },
+]
+
+export function seasonalTips(month?: number): SeasonalTip[] {
+  const m = month ?? new Date().getMonth()
+  return SEASONAL_TIPS.filter((t) => t.months.includes(m))
+}
+
+// ---- Points expiration warnings ----
+
+export interface ExpirationWarning {
+  balance: Balance
+  message: string
+  severity: 'info' | 'warning'
+}
+
+const EXPIRATION_RULES: Partial<Record<ProgramId, { months: number; note: string }>> = {
+  capone: { months: 24, note: 'Capital One miles expire after 24 months of account inactivity.' },
+  citi_typ: { months: 12, note: 'Citi ThankYou Points expire 12 months after your last account activity.' },
+  discover: { months: 0, note: 'Discover cashback does not expire while your account is open.' },
+}
+
+export function expirationWarnings(balances: Balance[]): ExpirationWarning[] {
+  const warnings: ExpirationWarning[] = []
+  for (const b of balances) {
+    if (!(b.amount > 0)) continue
+    const rule = EXPIRATION_RULES[b.programId]
+    if (!rule) continue
+    if (rule.months === 0) continue
+    const daysSinceUpdate = ageDays(b.updatedAt)
+    const monthsSinceUpdate = daysSinceUpdate / 30
+    if (monthsSinceUpdate > rule.months * 0.75) {
+      warnings.push({
+        balance: b,
+        message: `${rule.note} Make a purchase or redeem soon to keep them active.`,
+        severity: monthsSinceUpdate > rule.months * 0.9 ? 'warning' : 'info',
+      })
+    }
+  }
+  return warnings
+}
+
+// ---- Kikoff graduation milestones ----
+
+export interface GraduationMilestone {
+  id: string
+  icon: string
+  title: string
+  detail: string
+  progress: number
+  achieved: boolean
+}
+
+export function graduationMilestones(balances: Balance[], score: number = CREDIT_SCORE): GraduationMilestone[] {
+  const milestones: GraduationMilestone[] = []
+  const tier = tierFor(score)
+
+  const allUnder30 = balances.every((b) => {
+    const u = utilization(b)
+    return u === null || u < 0.3
+  })
+  const allUnder10 = balances.every((b) => {
+    const u = utilization(b)
+    return u === null || u < 0.1
+  })
+
+  milestones.push({
+    id: 'util-30',
+    icon: '📊',
+    title: 'Keep utilization under 30%',
+    detail: allUnder30
+      ? 'You are under 30% on all cards. Keep it up — this is a key factor in your credit score.'
+      : 'Pay down balances to get all cards under 30% utilization. This is the biggest quick win for your score.',
+    progress: allUnder30 ? 1 : Math.max(0, 1 - (balances.reduce((max, b) => Math.max(max, utilization(b) ?? 0), 0) - 0.3) / 0.7),
+    achieved: allUnder30,
+  })
+
+  milestones.push({
+    id: 'util-10',
+    icon: '🏆',
+    title: 'Get to single-digit utilization',
+    detail: allUnder10
+      ? 'Excellent — under 10% utilization is ideal for the highest credit scores.'
+      : 'Below 10% utilization is where credit scores really improve. Pay down a bit more to reach this level.',
+    progress: allUnder10 ? 1 : allUnder30 ? 0.5 : 0,
+    achieved: allUnder10,
+  })
+
+  if (tier === 'building' || tier === 'fair') {
+    const target = tier === 'building' ? 580 : 670
+    const from = tier === 'building' ? 300 : 580
+    milestones.push({
+      id: 'score-up',
+      icon: '📈',
+      title: tier === 'building' ? 'Reach fair credit (580+)' : 'Reach good credit (670+)',
+      detail: tier === 'building'
+        ? `At ${score}, you are ${target - score} points from fair credit. Fair credit opens unsecured cards with real rewards.`
+        : `At ${score}, you are ${target - score} points from good credit. Good credit unlocks the best no-fee rewards cards.`,
+      progress: Math.min(1, (score - from) / (target - from)),
+      achieved: false,
+    })
+  }
+
+  const nextTier = CREDIT_TIERS[tierRank(tier) + 1]
+  if (nextTier) {
+    const cardsAtNextTier = MARKET_CARDS.filter((c) => c.credit === nextTier.id && c.annualFee === 0)
+    if (cardsAtNextTier.length > 0) {
+      const best = cardsAtNextTier.sort((a, b) => b.base - a.base)[0]
+      milestones.push({
+        id: 'next-card',
+        icon: '💳',
+        title: `Unlock: ${best.issuer} ${best.name}`,
+        detail: `At ${nextTier.range} credit, you could qualify for cards like the ${best.issuer} ${best.name} (${fmtRate(best.type, best.base)} on everything, no annual fee).`,
+        progress: Math.min(1, (score - CREDIT_TIERS[tierRank(tier)].min) / (nextTier.min - CREDIT_TIERS[tierRank(tier)].min)),
+        achieved: false,
+      })
+    }
+  }
+
+  return milestones
+}
+
+// ---- Redemption math: real value of points across methods ----
+
+export interface RedemptionComparison {
+  balance: Balance
+  program: Program
+  methods: { id: string; label: string; emoji: string; cpp: number; value: number; best: boolean }[]
+}
+
+export function redemptionMath(balances: Balance[]): RedemptionComparison[] {
+  return balances
+    .filter((b) => {
+      const p = PROGRAMS[b.programId]
+      return p.type === 'points' && p.cpp && b.amount > 0
+    })
+    .map((b) => {
+      const p = PROGRAMS[b.programId]
+      const cpp = p.cpp!
+      const methods = [
+        { id: 'travel', label: 'Travel portal', emoji: '✈️', cpp: cpp.travel, value: cents((b.amount * cpp.travel) / 100) },
+        { id: 'everyday', label: 'Gift cards / shopping', emoji: '🛒', cpp: cpp.everyday, value: cents((b.amount * cpp.everyday) / 100) },
+        { id: 'cashback', label: 'Statement credit', emoji: '💵', cpp: cpp.cashback, value: cents((b.amount * cpp.cashback) / 100) },
+      ]
+      const maxVal = Math.max(...methods.map((m) => m.value))
+      return {
+        balance: b,
+        program: p,
+        methods: methods.map((m) => ({ ...m, best: m.value === maxVal })),
+      }
+    })
+}
+
 // Highest-spend category where every card earns the base rate — a spot Marketplace cards could add to.
 export function marketplaceCategory(balances: Balance[], spend: Spend = SPEND): CategoryId | null {
   const cards = balances.filter((b) => hasEstimates(PROGRAMS[b.programId]))

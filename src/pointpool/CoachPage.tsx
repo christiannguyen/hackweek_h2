@@ -1,13 +1,21 @@
 import {
   cardEarnings,
+  cardStacking,
   CATEGORIES,
   catName,
   coachTips,
-  fmtRate,
+  CREDIT_SCORE,
+  expirationWarnings,
   fmtMoney,
+  fmtRate,
+  fmtUSD,
+  graduationMilestones,
   hasEstimates,
+  leftOnTable,
   PROGRAMS,
+  redemptionMath,
   ruleFor,
+  seasonalTips,
   SPEND,
   SPEND_TXN_COUNT,
   type Balance,
@@ -51,8 +59,7 @@ function analyzeSpending(balances: Balance[], spend: Spend): CategoryInsight[] {
         emoji: c.emoji,
         spend: spend[c.id],
         bestCard: best,
-        // The year-average rate, so a rotating 5% category reads as what it earns over a year.
-        bestRate: best ? fmtRate(best.program.type, best.avgRate) : '1×',
+        bestRate: best ? fmtRate(best.program.type, best.avgRate) : '1x',
         monthlyReward: best?.value.cashback ?? 0,
       }
     })
@@ -101,7 +108,7 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
         id: `rotate-${b.id}`,
         icon: '🔁',
         title: `${b.cardName} has a quarterly bonus to activate`,
-        detail: `Its rotating categories include ${bonus.map((c) => catName(c.id)).join(', ')}. The bonus rate applies once it’s activated each quarter.`,
+        detail: `Its rotating categories include ${bonus.map((c) => catName(c.id)).join(', ')}. The bonus rate applies once it's activated each quarter.`,
       })
     }
   }
@@ -125,10 +132,16 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
 export function CoachPage({ balances, onEdit }: Props) {
   const insights = analyzeSpending(balances, SPEND)
   const actions = generateActions(balances, insights)
-  // Bonus and rotating-category tips repeat the actions above, so this page shows the rest.
   const tips = coachTips(balances).filter((t) => t.kind !== 'bonus' && t.kind !== 'rotating')
 
   const hasCards = balances.some((b) => hasEstimates(PROGRAMS[b.programId]))
+
+  const stacking = cardStacking(balances)
+  const missed = leftOnTable(balances)
+  const seasonal = seasonalTips()
+  const expirations = expirationWarnings(balances)
+  const milestones = graduationMilestones(balances, CREDIT_SCORE)
+  const redemptions = redemptionMath(balances)
 
   return (
     <>
@@ -149,11 +162,159 @@ export function CoachPage({ balances, onEdit }: Props) {
         </div>
       )}
 
+      {/* What you left on the table */}
+      {missed && (
+        <div className={styles.card}>
+          <h2>What you left on the table</h2>
+          <div className={styles.cardSub}>
+            Last month you could have earned <strong style={{ color: 'var(--orange)', fontWeight: 600 }}>{fmtMoney(missed.total)} more</strong> by using the right card for each purchase.
+          </div>
+          {missed.byCategory.map((c) => (
+            <div key={c.id} className={styles.coachCatRow}>
+              <div className={styles.coachCatHead}>
+                <span>{c.emoji} {c.label}</span>
+                <span style={{ color: 'var(--orange)', fontWeight: 600 }}>+{fmtMoney(c.missed)}</span>
+              </div>
+              <div className={styles.coachCatDetail}>
+                <span className={styles.rowSub}>Base rate: {fmtMoney(c.actual)} vs optimal: {fmtMoney(c.optimal)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Card stacking guide */}
+      {stacking.length > 0 && (
+        <div className={styles.card}>
+          <h2>Your wallet cheat sheet</h2>
+          <div className={styles.cardSub}>Which card to use for what — based on your spending.</div>
+          {stacking.map((s) => (
+            <div key={s.category.id} className={styles.row} onClick={() => onEdit(s.card.id)}>
+              <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>{s.category.emoji}</div>
+              <div className={styles.rowMain}>
+                <div className={styles.rowTitleLine}>
+                  <span className={styles.rowTitle}>{s.category.label}</span>
+                  <span className={styles.tag + ' ' + styles.sm}>{s.rateLabel}</span>
+                </div>
+                <div className={styles.rowSub}>
+                  Use <b>{s.card.cardName}</b> — earns ~{fmtMoney(s.monthly)}/mo
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Seasonal tips */}
+      {seasonal.length > 0 && (
+        <div className={styles.card}>
+          <h2>Timely tips</h2>
+          {seasonal.map((t) => (
+            <div key={t.id} className={styles.row}>
+              <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>{t.icon}</div>
+              <div className={styles.rowMain}>
+                <div className={styles.rowTitle}>{t.title}</div>
+                <div className={styles.rowSub}>{t.detail}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Points expiration warnings */}
+      {expirations.length > 0 && (
+        <div className={styles.card} style={{ borderLeft: '4px solid var(--orange)' }}>
+          <h2>Expiration alerts</h2>
+          {expirations.map((w) => (
+            <div key={w.balance.id} className={styles.row} onClick={() => onEdit(w.balance.id)}>
+              <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>
+                {w.severity === 'warning' ? '🚨' : '⏳'}
+              </div>
+              <div className={styles.rowMain}>
+                <div className={styles.rowTitle}>{w.balance.cardName}</div>
+                <div className={styles.rowSub}>{w.message}</div>
+              </div>
+              <span className={styles.chev}>›</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Redemption math */}
+      {redemptions.length > 0 && (
+        <div className={styles.card}>
+          <h2>The real math on redemption</h2>
+          <div className={styles.cardSub}>Not all redemption methods are equal. Here is what your points are actually worth.</div>
+          {redemptions.map((r) => (
+            <div key={r.balance.id} style={{ marginTop: 14 }}>
+              <div className={styles.rowTitle}>{r.balance.cardName}</div>
+              <div className={styles.rowSub} style={{ marginBottom: 8 }}>
+                {Math.round(r.balance.amount).toLocaleString()} {r.program.unit}
+              </div>
+              {r.methods.map((m) => (
+                <div
+                  key={m.id}
+                  style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '8px 10px', marginTop: 4,
+                    borderRadius: 10,
+                    background: m.best ? 'var(--green-tint)' : '#f7f7f8',
+                  }}
+                >
+                  <span style={{ fontSize: 13 }}>
+                    {m.emoji} {m.label}
+                    <span style={{ color: 'var(--muted)', fontSize: 11, marginLeft: 6 }}>
+                      {m.cpp}c per point
+                    </span>
+                  </span>
+                  <span style={{ fontWeight: 600, fontSize: 14, color: m.best ? 'var(--green)' : 'var(--ink)' }}>
+                    {fmtUSD(m.value)}
+                    {m.best && <span style={{ fontSize: 11, marginLeft: 4, fontWeight: 500 }}>Best</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Kikoff graduation milestones */}
+      {milestones.length > 0 && (
+        <div className={styles.card}>
+          <h2>Your credit journey</h2>
+          <div className={styles.cardSub}>
+            Building credit unlocks better cards with higher rewards. Here is where you stand.
+          </div>
+          {milestones.map((m) => (
+            <div key={m.id} className={styles.row}>
+              <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>
+                {m.achieved ? '✅' : m.icon}
+              </div>
+              <div className={styles.rowMain}>
+                <div className={styles.rowTitleLine}>
+                  <span className={styles.rowTitle}>{m.title}</span>
+                  {m.achieved && <span className={styles.tag + ' ' + styles.sm}>Done</span>}
+                </div>
+                <div className={styles.rowSub}>{m.detail}</div>
+                {!m.achieved && (
+                  <div className={styles.meter} style={{ marginTop: 6 }}>
+                    <div className={styles.meterBar} style={{ height: 6 }}>
+                      <span className={styles.meterFill} style={{ width: `${Math.round(m.progress * 100)}%` }} />
+                    </div>
+                    <span>{Math.round(m.progress * 100)}%</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Spending breakdown */}
       {insights.length > 0 && (
         <div className={styles.card}>
           <h2>Your spending breakdown</h2>
-          <div className={styles.cardSub}>Based on {SPEND_TXN_COUNT} transactions from the last 30 days. Here’s where your money goes and how each card earns.</div>
+          <div className={styles.cardSub}>Based on {SPEND_TXN_COUNT} transactions from the last 30 days. Here's where your money goes and how each card earns.</div>
           {insights.map((i) => (
             <div key={i.id} className={styles.coachCatRow}>
               <div className={styles.coachCatHead}>
