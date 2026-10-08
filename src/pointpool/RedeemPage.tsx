@@ -16,7 +16,7 @@ export function RedeemPage({ balances, onEdit }: { balances: Balance[]; onEdit: 
       <div className={styles.pageHead}>
         <div>
           <h1 className={styles.pageTitle}>{selected && isCash(selected) ? 'Use your cashback' : 'Use your points'}</h1>
-          <p className={styles.pageSub}>Put your rewards toward everyday expenses.</p>
+          <p className={styles.pageSub}>See what each balance could cover. Values are examples.</p>
         </div>
       </div>
       {!selected ? (
@@ -78,13 +78,13 @@ function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdit: () =
         <div className={styles.rewardsAmount}>{cash ? fmtUSD(b.amount) : fmtPts(b.amount)}<span>{cash ? 'cashback' : p.unit}</span></div>
         <div className={styles.rewardsBalanceBottom}><span>{updated}<small>Saved in this browser · {b.cardName}</small></span><button onClick={onEdit}><LuPencil aria-hidden="true" /> Update balance</button></div>
       </section>
-      {isStale(b) && <div className={styles.rewardsRefresh}>Your balance may have changed. Update it before planning a redemption.</div>}
+      {isStale(b) && <div className={styles.rewardsRefresh}>Your balance may have changed. Updating it keeps these examples accurate.</div>}
       {!supported ? (
         <div className={styles.card}><h2>Keep track of this balance</h2><p className={styles.body}>We don’t have a value estimate for this program yet. Check its rewards portal for redemption options.</p><button className={styles.btnText} onClick={onEdit}>Edit rewards program</button></div>
       ) : (
         <>
           <div className={styles.rewardsSectionHead}><h2>{cash ? 'What this can do' : 'Picture the possibilities'}</h2>{examples.length > 1 && <span>Choose one to explore</span>}</div>
-          {b.amount === 0 && <div className={styles.rewardsRefresh}>Your balance is 0. Update it to see your progress toward these examples.</div>}
+          {b.amount === 0 && <div className={styles.rewardsRefresh}>You have {cash ? '$0.00' : `0 ${p.unit}`} in rewards. Update your balance to see your progress toward these examples.</div>}
           {/* A cash balance has exactly one option, so the chooser grid would only restate the card below it. */}
           {examples.length > 1 && <><div className={styles.redemptionGrid}>
             {examples.map((item) => {
@@ -104,13 +104,13 @@ function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdit: () =
               )
             })}
           </div>
-          <p className={styles.rewardsAlternatives}>These are alternative ways to use the same points—not four rewards you can redeem together.</p></>}
+          <p className={styles.rewardsAlternatives}>These are alternative ways to use the same points — not four rewards to use together.</p></>}
           <section className={styles.card} aria-label={`How to use rewards for ${example.title.toLowerCase()}`}>
             <div className={styles.cardHead}><h2>{example.title} <LuArrowUpRight className={styles.inlineRewardIcon} aria-hidden="true" /></h2><span className={styles.rewardExampleTag}>Example</span></div>
             {/* Cashback redeems 1:1, so restating the balance as its own "value" says nothing. Lead with the effect instead. */}
             {estimate && (cash ? <div className={styles.rewardsEstimate}>
               <strong>{fmtUSD(estimate.value)}</strong> off what you owe on this card.
-              <span>Cashback converts 1:1 — every $1 cancels $1 of your balance. Not an airline or hotel points redemption.</span>
+              <span>Cashback converts 1:1 — each $1 of cashback takes $1 off what you owe. Not an airline or hotel points redemption.</span>
             </div> : <div className={styles.rewardsEstimate}>
               <strong>≈{rewardMoney(estimate.value)}</strong> in {example.goal === 'travel' ? 'travel value' : example.goal === 'everyday' ? 'gift-card value' : 'statement-credit value'} from your {fmtBalance(b)}.
               <span>At an illustrative {estimate.cpp}¢ per {p.unit === 'miles' ? 'mile' : 'point'}. A {rewardMoney(price)} redemption would need about {fmtPts(estimate.needed)} {p.unit}.</span>
@@ -120,7 +120,7 @@ function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdit: () =
               <span className={styles.redemptionProgress} aria-hidden="true"><span style={{width: `${estimate.percent}%`}} /></span>
             </div>}
             <details className={styles.rewardsCustomPrice}><summary>Try a different {cash ? 'balance' : 'price'} <LuChevronDown aria-hidden="true" /></summary><label>{cash ? 'Card balance ($)' : 'Target price ($)'}<input type="number" min="0.01" step="0.01" inputMode="decimal" value={prices[example.id] ?? defaultPrice(example)} onChange={(e) => setPrices((prev) => ({...prev, [example.id]: e.target.value}))} /></label>{!estimate && <p role="status">Enter an amount greater than $0.</p>}</details>
-            <details className={styles.rewardsCustomPrice}><summary>How to {cash ? 'redeem it' : 'use them'} <LuChevronDown aria-hidden="true" /></summary>
+            <details className={styles.rewardsCustomPrice}><summary>How to use {cash ? 'it' : 'them'} <LuChevronDown aria-hidden="true" /></summary>
               <ol className={styles.rewardsSteps}>{steps.map((step) => <li key={step}>{step}</li>)}</ol>
               <p className={styles.rewardsAlternatives}>Confirm the final value in your issuer’s app. This preview doesn’t book or redeem anything.</p>
             </details>

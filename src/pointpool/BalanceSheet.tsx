@@ -36,7 +36,7 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
   }
 
   const remove = () => {
-    if (balance && confirm('Remove this balance?')) {
+    if (balance && confirm('Remove this card from your Wallet?')) {
       onRemove(balance.id)
       onClose()
     }
@@ -50,7 +50,7 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
           <Drawer.Content maxW="430px" mx="auto" roundedTop="20px" pb="env(safe-area-inset-bottom)">
             <Drawer.Header>
               <Drawer.Title fontSize="17px" fontWeight="500">
-                {purpose === 'rewards' ? balance ? 'Update rewards balance' : 'Enter your rewards' : balance ? 'Edit balance' : 'Add a card'}
+                {balance ? 'Edit card' : 'Add a card'}
               </Drawer.Title>
             </Drawer.Header>
             <Drawer.Body>
@@ -97,7 +97,7 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
                   <Field.HelperText fontSize="12px">Saved in this browser. {cash ? 'Enter dollars and cents.' : 'Enter a whole number of points or miles.'}</Field.HelperText>
                 </Field.Root>
                 <Field.Root>
-                  <Field.Label fontSize="13px">Credit limit ($)</Field.Label>
+                  <Field.Label fontSize="13px">Credit limit ($), optional</Field.Label>
                   <Input
                     type="number"
                     inputMode="decimal"
@@ -109,7 +109,7 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
                   />
                 </Field.Root>
                 <Field.Root>
-                  <Field.Label fontSize="13px">Current balance ($)</Field.Label>
+                  <Field.Label fontSize="13px">Amount you owe ($), optional</Field.Label>
                   <Input
                     type="number"
                     inputMode="decimal"

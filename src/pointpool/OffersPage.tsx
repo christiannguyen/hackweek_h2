@@ -39,7 +39,7 @@ const PLACES_BY_AREA: Record<string, NearbyPlace[]> = {
   default: [
     { name: 'Whole Foods Market', type: 'Grocery', category: 'food', kind: 'grocery', distance: '0.3 mi' },
     { name: 'Chipotle', type: 'Restaurant', category: 'food', kind: 'restaurant', distance: '0.4 mi' },
-    { name: 'Trader Joe\'s', type: 'Grocery', category: 'food', kind: 'grocery', distance: '0.6 mi' },
+    { name: 'Trader Joe’s', type: 'Grocery', category: 'food', kind: 'grocery', distance: '0.6 mi' },
     { name: 'Target', type: 'Retail', category: 'shopping', kind: 'store', distance: '0.5 mi' },
     { name: 'Amazon Fresh', type: 'Online grocery', category: 'food', kind: 'online-grocery', distance: '0.8 mi' },
     { name: 'Costco Gas', type: 'Gas station', category: 'transport', kind: 'club-gas', distance: '1.1 mi' },
@@ -62,7 +62,6 @@ interface PlaceOffer {
   place: NearbyPlace
   card: Balance
   rate: string
-  tag?: string
 }
 
 // Whether a card's bonus in this category reaches this kind of place, read from the card's terms note. Without a
@@ -110,7 +109,7 @@ function useLocation() {
 
   const detect = useCallback(() => {
     if (!navigator.geolocation) {
-      setLoc({ status: 'error', message: 'Geolocation not supported' })
+      setLoc({ status: 'error', message: 'Couldn’t get your location. Enter a ZIP code instead.' })
       return
     }
     setLoc({ status: 'detecting' })
@@ -123,7 +122,7 @@ function useLocation() {
         })
       },
       () => {
-        setLoc({ status: 'error', message: 'Location access denied' })
+        setLoc({ status: 'error', message: 'Couldn’t get your location. Enter a ZIP code instead.' })
       },
       { timeout: 10000 },
     )
@@ -145,7 +144,6 @@ interface RedemptionOffer {
   emoji: string
   title: string
   desc: string
-  tag?: string
 }
 
 function redemptionOffers(b: Balance): RedemptionOffer[] {
@@ -157,21 +155,21 @@ function redemptionOffers(b: Balance): RedemptionOffer[] {
   const offers: RedemptionOffer[] = []
 
   if (isCash(b)) {
-    offers.push({ id: `${b.id}-statement`, emoji: '💵', title: 'Statement credit', desc: `Apply ${fmtUSD(b.amount)} to your next statement. Minimums vary by card.`, tag: 'Best value' })
+    offers.push({ id: `${b.id}-statement`, emoji: '💵', title: 'Statement credit', desc: `Apply ${fmtUSD(b.amount)} to your next statement. Minimums vary by card.` })
     offers.push({ id: `${b.id}-deposit`, emoji: '🏦', title: 'Bank deposit', desc: `Deposit ${fmtUSD(b.amount)} to your bank account. Minimums vary by card.` })
     offers.push({ id: `${b.id}-checkout`, emoji: '🛍️', title: 'Pay at checkout', desc: 'Use cashback at Amazon or PayPal checkout.' })
   } else {
     if (travel && b.amount > 0) {
-      offers.push({ id: `${b.id}-travel`, emoji: '✈️', title: 'Book travel', desc: `${fmtBalance(b)} could cover ≈${fmtMoney(travel.value)} of flights or hotels.`, tag: 'Best value' })
+      offers.push({ id: `${b.id}-travel`, emoji: '✈️', title: 'Book travel', desc: `${fmtBalance(b)} could cover ≈${fmtMoney(travel.value)} of flights or hotels.` })
     }
     if (b.amount > 0) {
-      offers.push({ id: `${b.id}-giftcard`, emoji: '🎁', title: 'Gift cards', desc: 'Redeem for gift cards at popular retailers.' })
+      offers.push({ id: `${b.id}-giftcard`, emoji: '🎁', title: 'Gift cards', desc: 'Use points for gift cards at popular retailers.' })
     }
     if (credit && b.amount > 0) {
       offers.push({ id: `${b.id}-credit`, emoji: '💵', title: 'Statement credit', desc: `Takes ≈${fmtMoney(credit.value)} off what you owe on this card.` })
     }
     if (p.brand === 'Chase' || p.brand === 'Amex') {
-      offers.push({ id: `${b.id}-transfer`, emoji: '🔄', title: 'Transfer to airlines', desc: `Move ${p.brand} points to airline or hotel partners.`, tag: 'High value' })
+      offers.push({ id: `${b.id}-transfer`, emoji: '🔄', title: 'Transfer to airlines', desc: `Move ${p.brand} points to airline or hotel partners.` })
     }
   }
   return offers
@@ -200,7 +198,7 @@ export function OffersPage({ balances, onEdit }: Props) {
       {/* Location section */}
       <div className={styles.card}>
         <h2>Nearby offers</h2>
-        <div className={styles.cardSub}>Find places near you where your cards earn bonus rewards.</div>
+        <div className={styles.cardSub}>Places where your cards could earn bonus rewards. Sample places for this demo.</div>
 
         {loc.status === 'idle' && (
           <div className={styles.locActions}>
@@ -227,7 +225,7 @@ export function OffersPage({ balances, onEdit }: Props) {
         )}
 
         {loc.status === 'detecting' && (
-          <div className={styles.locStatus}>Detecting your location...</div>
+          <div className={styles.locStatus}>Finding your location…</div>
         )}
 
         {loc.status === 'error' && (
@@ -286,13 +284,12 @@ export function OffersPage({ balances, onEdit }: Props) {
                 <div className={styles.rowMain}>
                   <div className={styles.rowTitleLine}>
                     <span className={styles.rowTitle}>{o.place.name}</span>
-                    {o.tag && <span className={`${styles.tag} ${styles.sm}`}>{o.tag}</span>}
                   </div>
                   <div className={styles.rowSub}>
                     {o.place.type} · {o.place.distance}
                   </div>
                   <div className={styles.rowSub}>
-                    Use <b>{o.card.cardName}</b> for <b>{o.rate}</b>
+                    <b>{o.card.cardName}</b> could earn <b>{o.rate}</b>
                   </div>
                 </div>
               </div>
@@ -305,7 +302,7 @@ export function OffersPage({ balances, onEdit }: Props) {
       {cardsWithRedemptions.length > 0 && (
         <>
           <div className={styles.sectionHead}>
-            <span className={styles.sectionTitle}>Redeem your rewards</span>
+            <span className={styles.sectionTitle}>Ways to use your rewards</span>
           </div>
           {cardsWithRedemptions.map(({ balance: b, offers }) => (
             <div key={b.id} className={styles.card}>
@@ -320,8 +317,7 @@ export function OffersPage({ balances, onEdit }: Props) {
                     <div className={styles.rowMain}>
                       <div className={styles.rowTitleLine}>
                         <span className={styles.rowTitle}>{o.title}</span>
-                        {o.tag && <span className={`${styles.tag} ${styles.sm}`}>{o.tag}</span>}
-                      </div>
+                          </div>
                       <div className={styles.rowSub}>{o.desc}</div>
                     </div>
                     <span className={styles.chev}>›</span>

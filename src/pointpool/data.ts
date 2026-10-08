@@ -39,17 +39,17 @@ const GOAL_IDS: GoalId[] = ['travel', 'everyday', 'cashback']
 export const GOALS: Record<GoalId, { label: string; points: string[]; cashback: string[] }> = {
   travel: {
     label: '✈️ Flight',
-    points: ["Sign in to your card's rewards portal", 'Search flights in the travel section', 'Choose "pay with points" at checkout'],
+    points: ['Sign in to your card’s rewards portal', 'Search flights in the travel section', 'Choose "pay with points" at checkout'],
     cashback: ['Book the flight with any card', 'Redeem cashback as a statement credit to offset it'],
   },
   everyday: {
     label: '🛒 Everyday',
-    points: ["Open your card's rewards page", 'Pick gift cards or "shop with points" (e.g. Amazon)', 'Apply points at checkout'],
+    points: ['Open your card’s rewards page', 'Pick gift cards or "shop with points" (e.g. Amazon)', 'Apply points at checkout'],
     cashback: ['Use cashback at checkout with supported merchants (e.g. Amazon, PayPal)'],
   },
   cashback: {
     label: '💵 Cash',
-    points: ["Open your card's rewards page", 'Choose "statement credit" or "deposit to bank"', 'Enter the amount to redeem'],
+    points: ['Open your card’s rewards page', 'Choose "statement credit" or "deposit to bank"', 'Enter the amount to redeem'],
     cashback: ['Choose statement credit or direct deposit', 'Funds usually post in 1–3 business days'],
   },
 }
@@ -250,7 +250,7 @@ export interface BalanceUse {
 }
 
 const POINT_USES: Omit<BalanceUse, 'value'>[] = [
-  { id: 'travel', emoji: '✈️', label: 'toward travel', detail: "Flights or hotels booked through the card's travel site" },
+  { id: 'travel', emoji: '✈️', label: 'toward travel', detail: 'Flights or hotels booked through the card’s travel site' },
   { id: 'everyday', emoji: '🛒', label: 'in gift cards', detail: 'Gift cards, or shop with points at stores like Amazon' },
   { id: 'cashback', emoji: '💵', label: 'as a statement credit', detail: 'Comes off what you owe, or lands in your bank' },
 ]
@@ -327,7 +327,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
     id: 'payoff',
     kind: 'payoff',
     icon: '✅',
-    text: 'Pay your full balance each month. Card interest is often 25% a year or more — far more than any card earns back.',
+    text: 'Paying the full balance each month keeps interest away. Card interest is often 25% a year or more, more than any card earns back.',
     href: '#coach',
   })
 
@@ -367,7 +367,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
       id: `uses-${b.id}`,
       kind: 'uses',
       icon: '✈️',
-      text: `${fmtBalance(b)} → ≈${fmtMoney(travel.value)} travel or ≈${fmtMoney(credit.value)} credit.`,
+      text: `${fmtBalance(b)} could be ≈${fmtMoney(travel.value)} toward travel or ≈${fmtMoney(credit.value)} as a statement credit.`,
       href: '#redeem',
     })
   }
@@ -382,7 +382,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
         id: `rotating-${b.id}`,
         kind: 'rotating',
         icon: '🔁',
-        text: `${b.cardName} rotates ${rate}% categories each quarter, including ${joinAnd(bonus.map((c) => catName(c.id)))}. Activate each one to earn it.`,
+        text: `${b.cardName} rotates ${rate}% categories each quarter, including ${joinAnd(bonus.map((c) => catName(c.id)))}. The bonus rate applies once it’s activated each quarter.`,
         href: '#coach',
       })
     } else if (!rule && b.programId === 'discover') {
@@ -390,7 +390,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
         id: `rotating-${b.id}`,
         kind: 'rotating',
         icon: '🔁',
-        text: 'Some Discover cards rotate bonus categories quarterly — activate them to earn extra cashback.',
+        text: 'Some Discover cards rotate bonus categories each quarter. The bonus applies once it’s activated.',
         href: '#coach',
       })
     }
@@ -402,7 +402,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
       id: `stale-${b.id}`,
       kind: 'stale',
       icon: '⏰',
-      text: `${b.cardName} balance is ${ageDays(b.updatedAt)} days old — update for better estimates.`,
+      text: `${b.cardName} balance is ${ageDays(b.updatedAt)} days old. Updating it refreshes these estimates.`,
       href: '#',
       balanceId: b.id,
     })
@@ -713,11 +713,11 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
         if (r?.needs && worthAt(monthSpend, c, r)) return ['step', `${at(r.rate)} only if you ${r.needs}`]
         const beatsBefore = rewards > baseline // earns more than your card, until the fee
         if (c.annualFee > 0 && beatsBefore && even && even > monthSpend)
-          return ['spend', `Worth the ${fee} fee only if you spend ${fmtMoney(even)}+/mo`]
-        if (gain > 0) return ['small', 'Not enough extra to be worth a credit check']
+          return ['spend', `Covers the ${fee} fee from ${fmtMoney(even)}+/mo`]
+        if (gain > 0) return ['small', `Adds less than ${fmtMoney(MIN_GAIN)}/mo here`]
         if (c.annualFee > 0 && (beatsBefore || !best)) return ['fee', `The ${fee} fee is more than it adds`]
         if (best) return ['less', `Your ${best.name} already earns ${Math.abs(gain) < 0.12 ? 'as much' : 'more'}`]
-        return ['less', 'Not enough to be worth a credit check']
+        return ['less', `Adds less than ${fmtMoney(MIN_GAIN)}/mo here`]
       }
       const [whyKind, why] = worth ? [undefined, undefined] : whyNot()
 
@@ -726,7 +726,7 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
         r?.note,
         c.note,
         c.deposit && `Needs a refundable deposit of at least ${fmtDollars(c.deposit)}.`,
-        worth && even && `Worth the ${fee} fee from ${fmtMoney(even)} a month in ${catName(cat)}. You spend ${fmtMoney(monthSpend)}.`,
+        worth && even && `Covers the ${fee} fee from ${fmtMoney(even)} a month in ${catName(cat)}. You spend ${fmtMoney(monthSpend)}.`,
       ].filter((n): n is string => !!n)
 
       return {
@@ -768,7 +768,7 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
       continue
     }
     const [keep, drop] = worth[i].type !== 'cashback' && o.type === 'cashback' ? [o, worth[i]] : [worth[i], o]
-    keep.notes.push(`The ${drop.name} earns about the same, as ${drop.type === 'cashback' ? 'cash back' : 'points'}.`)
+    keep.notes.push(`The ${drop.name} earns about the same, as ${drop.type === 'cashback' ? 'cashback' : 'points'}.`)
     worth[i] = keep
   }
 

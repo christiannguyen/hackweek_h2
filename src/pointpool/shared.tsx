@@ -4,7 +4,7 @@ import styles from './pointpool.module.css'
 // Only shown when a balance is due for an update — fresh balances stay quiet.
 export function FreshnessTag({ balance }: { balance: Balance }) {
   if (!isStale(balance)) return null
-  return <span className={`${styles.tag} ${styles.sm} ${styles.warn}`}>Ready to refresh</span>
+  return <span className={`${styles.tag} ${styles.sm} ${styles.warn}`}>Update balance</span>
 }
 
 export function BackLink({ to = '#pointpool', label = 'Wallet' }: { to?: string; label?: string } = {}) {
