@@ -101,11 +101,12 @@ export function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdi
             {/* Cashback redeems 1:1, so restating the balance as its own "value" says nothing. Lead with the effect
                 instead — off the card for a statement credit, toward the purchase for everything else. */}
             {estimate && (cash ? <div className={styles.rewardsEstimate}>
+              {/* `covered`, not `value`: cashback can't take more off than the amount in front of it. */}
               {example.id === 'credit' ? <>
-                <strong>{fmtUSD(estimate.value)}</strong> off what you owe on this card.
+                <strong>{fmtUSD(estimate.covered)}</strong> off what you owe on this card.
                 <span>Cashback converts 1:1 — each $1 of cashback takes $1 off what you owe. Not an airline or hotel points redemption.</span>
               </> : <>
-                <strong>{fmtUSD(estimate.value)}</strong> toward {example.id === 'hotel' ? 'a hotel night' : example.id === 'flight' ? 'a flight' : 'a gift card'}.
+                <strong>{fmtUSD(estimate.covered)}</strong> toward {example.id === 'hotel' ? 'a hotel night' : example.id === 'flight' ? 'a flight' : 'a gift card'}.
                 <span>Cashback is worth its face value — $1 covers $1 of a {rewardMoney(price)} {CASH_NOUN[example.id]}. You take it as a statement credit or deposit first, then spend it; this isn’t a points booking.</span>
               </>}
             </div> : <div className={styles.rewardsEstimate}>

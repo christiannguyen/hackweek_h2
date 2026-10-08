@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { IconType } from 'react-icons'
 import {
+  LuCheck,
   LuChevronDown,
   LuChevronRight,
   LuClock3,
@@ -15,7 +16,6 @@ import {
   LuSparkles,
   LuTarget,
   LuTrendingUp,
-  LuTriangleAlert,
   LuUtensils,
   LuWallet,
 } from 'react-icons/lu'
@@ -38,7 +38,6 @@ import {
   ruleFor,
   seasonalTips,
   SPEND,
-  SPEND_TXN_COUNT,
   type Balance,
   type CardEarning,
   type CategoryId,
@@ -109,7 +108,7 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
   const cards = balances.filter((b) => hasEstimates(PROGRAMS[b.programId]))
 
   for (const i of insights) {
-    if (i.bestCard && i.bestCard.rate > 1) {
+    if (i.bestCard && i.bestCard.terms && i.bestCard.rate > i.bestCard.base) {
       actions.push({
         id: `use-${i.id}`,
         Icon: i.Icon,
@@ -122,7 +121,8 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
   }
 
   for (const i of insights) {
-    if (!i.bestCard || i.bestCard.rate <= 1) {
+    // Only for wallets with cards we can estimate; with none, every category would read "base rate".
+    if (cards.length > 0 && (!i.bestCard || !i.bestCard.terms || i.bestCard.rate <= i.bestCard.base)) {
       actions.push({
         id: `gap-${i.id}`,
         Icon: LuSearch,
@@ -159,17 +159,17 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
   return actions
 }
 
+// Share of spending matched to a strong rate: each category's best card, in cash value per dollar over a year (caps,
+// rotating quarters and points value included), against a 5%-back card. A rotating 5% reads as its ~2% average.
 function walletScore(insights: CategoryInsight[]): number {
-  if (insights.length === 0) return 0
   let totalSpend = 0
-  let weightedRate = 0
+  let weighted = 0
   for (const i of insights) {
     totalSpend += i.spend
-    const rate = i.bestCard?.rate ?? 1
-    const maxRate = Math.max(rate, 5)
-    weightedRate += i.spend * (rate / maxRate)
+    const pct = i.spend > 0 ? (i.monthlyReward / i.spend) * 100 : 0
+    weighted += i.spend * Math.min(1, pct / 5)
   }
-  return totalSpend > 0 ? Math.round((weightedRate / totalSpend) * 100) : 0
+  return totalSpend > 0 ? Math.round((weighted / totalSpend) * 100) : 0
 }
 
 // A collapsed list row: the headline stays visible, the explanation is one tap away.
@@ -183,6 +183,34 @@ function CoachItem({ Icon, title, detail }: { Icon: IconType; title: string; det
       </summary>
       <p className={c.itemSub}>{detail}</p>
     </details>
+  )
+}
+
+// More than one points balance used to stack a full panel each. Tabs keep one card's math on screen at a
+// time, so the numbers belong to a card you picked instead of running together down the page.
+function RedemptionSection({ comparisons }: { comparisons: RedemptionComparison[] }) {
+  const [pick, setPick] = useState(comparisons[0].balance.id)
+  const current = comparisons.find((r) => r.balance.id === pick) ?? comparisons[0]
+  if (comparisons.length === 1) return <RedemptionPanel comparison={current} />
+
+  return (
+    <>
+      <div className={c.tabRow} role="tablist" aria-label="Points balance">
+        {comparisons.map((r) => (
+          <button
+            key={r.balance.id}
+            role="tab"
+            aria-selected={r.balance.id === current.balance.id}
+            className={`${c.tab} ${r.balance.id === current.balance.id ? c.tabOn : ''}`}
+            onClick={() => setPick(r.balance.id)}
+          >
+            {r.balance.cardName}
+          </button>
+        ))}
+      </div>
+      {/* Keyed so a new card starts on its own best method rather than inheriting the last one's. */}
+      <RedemptionPanel key={current.balance.id} comparison={current} />
+    </>
   )
 }
 
@@ -244,17 +272,16 @@ export function CoachPage({ balances, onEdit }: Props) {
   const actions = generateActions(balances, insights)
   const tips = coachTips(balances).filter((t) => t.kind !== 'bonus' && t.kind !== 'rotating')
 
-  const totalMonthlyRewards = insights.reduce((sum, i) => sum + i.monthlyReward, 0)
-  const totalYearlyRewards = totalMonthlyRewards * 12
   const hasCards = balances.some((b) => hasEstimates(PROGRAMS[b.programId]))
 
   const stacking = cardStacking(balances)
   const missed = leftOnTable(balances)
-  const seasonal = seasonalTips()
+  const seasonal = seasonalTips(undefined, balances)
   const expirations = expirationWarnings(balances)
   const milestones = graduationMilestones(balances, CREDIT_SCORE)
   const redemptions = redemptionMath(balances)
 
+  const doneCount = milestones.filter((m) => m.achieved).length
   const topMissed = missed?.byCategory.reduce((a, b) => (a.missed >= b.missed ? a : b))
   const maxStackMonthly = Math.max(...stacking.map((s) => s.monthly), 0)
 
@@ -273,32 +300,28 @@ export function CoachPage({ balances, onEdit }: Props) {
         <h1 className={styles.pageTitle}>Card Coach</h1>
       </div>
 
-      {/* Rewards score hero */}
-      <div className={c.hero}>
-        <div className={c.heroTop}>
-          <div>
-            <div className={c.heroLabel}>Your rewards score</div>
-            <div className={c.heroLine}>Your wallet is matched</div>
-            <div className={c.heroScore}>{score}%</div>
-          </div>
-          <div className={c.heroBadge}><LuTarget aria-hidden="true" /></div>
-        </div>
-        <div className={c.heroNote}>
-          {score >= 70 ? 'Great — your cards match your spending well.'
-            : score >= 40 ? 'Room to improve. Follow the tips below.'
-            : hasCards ? "Your spending doesn't match your card bonuses."
-            : 'Add your cards to get a personalized score.'}
-        </div>
-        {hasCards && (
-          <>
-            <div className={c.heroMeterHead}>
-              <span>Est. rewards</span>
-              <span>{fmtMoney(totalMonthlyRewards)}/mo · {fmtMoney(totalYearlyRewards)}/yr</span>
+      {/* Rewards score hero. No combined rewards total: each program's rewards stay in that program. */}
+      {hasCards && (
+        <div className={c.hero}>
+          <div className={c.heroTop}>
+            <div>
+              <div className={c.heroLabel}>Your rewards score</div>
+              <div className={c.heroLine}>Your cards match</div>
+              <div className={c.heroScore}>{score}%</div>
             </div>
-            <div className={c.heroMeter}><span style={{ width: `${score}%` }} /></div>
-          </>
-        )}
-      </div>
+            <div className={c.heroBadge}><LuTarget aria-hidden="true" /></div>
+          </div>
+          <div className={c.heroNote}>
+            {score >= 70 ? 'of your spending with a strong rate. Your cards fit how you spend.'
+              : score >= 40 ? 'of your spending with a strong rate. The ideas below show where it could go higher.'
+              : 'of your spending with a strong rate. Most of it earns about 1–2% today.'}
+          </div>
+          <div className={c.heroMeterHead}>
+            <span>Compared with a 5%-back card in every category</span>
+          </div>
+          <div className={c.heroMeter}><span style={{ width: `${score}%` }} /></div>
+        </div>
+      )}
 
       {!hasCards && (
         <div className={c.panel}>
@@ -313,11 +336,10 @@ export function CoachPage({ balances, onEdit }: Props) {
         <button className={c.promo} onClick={() => jump(stacking.length > 0 ? 'coach-cheat' : 'coach-breakdown')}>
           <div className={c.promoMain}>
             <div className={c.promoIcon}><LuPiggyBank aria-hidden="true" /></div>
-            <div className={c.promoTitle}>You left money on the table</div>
-            <div className={c.promoSub}>Using the right card for each purchase last month would have earned more.</div>
+            <div className={c.promoTitle}>Your best card for each category</div>
+            <div className={c.promoSub}>Compared with a flat 1% card, using your best card in {topMissed.label.toLowerCase()} could add about {fmtMoney(topMissed.missed)} a month. Illustrative.</div>
             <div className={c.promoFoot}>
-              +{fmtMoney(missed.total)} more
-              <span className={c.pill}>{topMissed.label} +{fmtMoney(topMissed.missed)}</span>
+              <span className={c.pill}>{topMissed.label} +{fmtMoney(topMissed.missed)}/mo</span>
             </div>
           </div>
           <span className={c.promoChev}><LuChevronRight aria-hidden="true" /></span>
@@ -351,9 +373,11 @@ export function CoachPage({ balances, onEdit }: Props) {
                   <span className={c.slideRate}>{s.rateLabel}</span>
                 </div>
                 <div className={c.slideTitle}>{s.category.label}</div>
-                <div className={c.slideSub}>Use {s.card.cardName}</div>
+                <div className={c.slideSub}>Use <strong className={c.slideCard}>{s.card.cardName}</strong></div>
                 <div className={c.slideFoot}>
-                  <span>~{fmtMoney(s.monthly)}/mo</span>
+                  <span className={c.slideEarn}>
+                    Earns ~{fmtMoney(s.monthly)}<span className={c.slideEarnUnit}>/mo in rewards</span>
+                  </span>
                   <span className={c.slideBar}>
                     <span style={{ width: `${maxStackMonthly > 0 ? Math.round((s.monthly / maxStackMonthly) * 100) : 0}%` }} />
                   </span>
@@ -372,8 +396,9 @@ export function CoachPage({ balances, onEdit }: Props) {
           </div>
           <div className={c.list}>
             {expirations.map((w) => (
-              <CoachItem key={w.balance.id} Icon={w.severity === 'warning' ? LuTriangleAlert : LuClock3}
-                title={`${w.balance.cardName} points expiring`} detail={w.message} />
+              <CoachItem key={w.balance.id} Icon={LuClock3}
+                title={`Check when your ${w.balance.cardName} ${PROGRAMS[w.balance.programId].unit} expire`}
+                detail={w.message} />
             ))}
             {seasonal.map((t) => (
               <CoachItem key={t.id} Icon={LuSnowflake} title={t.title} detail={t.detail} />
@@ -386,9 +411,10 @@ export function CoachPage({ balances, onEdit }: Props) {
       {redemptions.length > 0 && (
         <>
           <div id="coach-redeem" className={c.sectionHead}>
-            <span className={c.sectionTitle}>The real math on redemption</span>
+            <span className={c.sectionTitle}>What your points are worth</span>
+            {redemptions.length > 1 && <span className={c.sectionMeta}>{redemptions.length} balances</span>}
           </div>
-          {redemptions.map((r) => <RedemptionPanel key={r.balance.id} comparison={r} />)}
+          <RedemptionSection comparisons={redemptions} />
         </>
       )}
 
@@ -397,64 +423,41 @@ export function CoachPage({ balances, onEdit }: Props) {
         <>
           <div id="coach-credit" className={c.sectionHead}>
             <span className={c.sectionTitle}>Your credit journey</span>
-            <span className={c.sectionMeta}>
-              {milestones.filter((m) => m.achieved).length} / {milestones.length} done
-            </span>
+            <span className={c.sectionMeta}>{doneCount} of {milestones.length} done</span>
           </div>
           <div className={c.panel}>
             <div className={c.panelSub}>Building credit unlocks better cards with higher rewards.</div>
-            {milestones.map((m) => (
-              <details key={m.id} className={c.milestone}>
-                <summary>
-                  <span className={`${c.checkMark} ${m.achieved ? '' : c.off}`} aria-hidden>{m.achieved ? '✓' : ''}</span>
-                  <span className={c.milestoneTitle}>{m.title}</span>
-                  <LuChevronDown className={c.itemChev} aria-hidden="true" />
-                </summary>
-                <p className={c.itemSub}>{m.detail}</p>
-                {!m.achieved && (
-                  <div className={c.progress}><span style={{ width: `${Math.round(m.progress * 100)}%` }} /></div>
-                )}
-              </details>
-            ))}
+            <div className={c.journeyMeter}>
+              <span style={{ width: `${Math.round((doneCount / milestones.length) * 100)}%` }} />
+            </div>
+            {/* A rail down the left connects the steps, so finished and upcoming read as one path. */}
+            <ol className={c.journey}>
+              {milestones.map((m) => (
+                <li key={m.id} className={`${c.step} ${m.achieved ? c.stepDone : ''}`}>
+                  <details className={c.stepDetails}>
+                    <summary>
+                      <span className={c.stepMark} aria-hidden="true">{m.achieved && <LuCheck />}</span>
+                      <span className={c.stepTitle}>{m.title}</span>
+                      {m.achieved
+                        ? <span className={c.stepTag}>Done</span>
+                        : <span className={c.stepPct}>{Math.round(m.progress * 100)}%</span>}
+                      <LuChevronDown className={c.itemChev} aria-hidden="true" />
+                    </summary>
+                    <div className={c.stepBody}>
+                      <p>{m.detail}</p>
+                      {!m.achieved && (
+                        <div className={c.progress}><span style={{ width: `${Math.round(m.progress * 100)}%` }} /></div>
+                      )}
+                    </div>
+                  </details>
+                </li>
+              ))}
+            </ol>
           </div>
         </>
       )}
 
-      {/* Spending breakdown */}
-      {insights.length > 0 && (
-        <>
-          <div id="coach-breakdown" className={c.sectionHead}>
-            <span className={c.sectionTitle}>Your spending breakdown</span>
-            <span className={c.sectionMeta}>{SPEND_TXN_COUNT} txns · 30d</span>
-          </div>
-          <div className={c.list}>
-            {insights.map((i) => (
-              <div key={i.id} className={c.item}>
-                <div className={c.itemIcon}><i.Icon aria-hidden="true" /></div>
-                <div className={c.itemMain}>
-                  <div className={c.itemTitle}>{i.label} · {fmtMoney(i.spend)}/mo</div>
-                  <div className={c.itemSub}>
-                    {i.bestCard
-                      ? <>Best: <b>{i.bestCard.balance.cardName}</b> at {i.bestRate}</>
-                      : 'No cards earn a bonus here'}
-                  </div>
-                </div>
-                {i.bestCard && <span className={c.saveTag}>≈{fmtMoney(i.monthlyReward)}</span>}
-              </div>
-            ))}
-          </div>
-          {missed && (
-            <div className={c.chipBox}>
-              <div className={c.chipLabel}>Missed last month vs. the 1% base rate</div>
-              <div className={c.chips}>
-                {missed.byCategory.map((m) => (
-                  <span key={m.id} className={c.chip}>{m.label} +{fmtMoney(m.missed)}</span>
-                ))}
-              </div>
-            </div>
-          )}
-        </>
-      )}
+      {/* The spending breakdown lived here; Home already shows monthly spend by category. */}
 
       {/* Actions + quick tips */}
       {(actions.length > 0 || tips.length > 0) && (

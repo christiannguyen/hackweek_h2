@@ -71,8 +71,9 @@ export const fmtUSD = (n: number) => n.toLocaleString(undefined, { style: 'curre
 // Compact money: whole dollars at $100+ ("$625"), otherwise cents ("$5.00", "$10.50").
 export const fmtMoney = (n: number) => {
   const c = cents(n)
-  const digits = c >= 100 ? 0 : 2
-  return c.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: digits, maximumFractionDigits: digits })
+  const digits = Math.abs(c) >= 100 ? 0 : 2
+  const s = Math.abs(c).toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: digits, maximumFractionDigits: digits })
+  return c < 0 ? `−${s}` : s
 }
 // Never negative: a balance saved with a clock slightly ahead still reads as today.
 export const ageDays = (iso: string) => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 864e5))
@@ -481,7 +482,7 @@ export interface SeasonalTip {
 }
 
 const SEASONAL_TIPS: SeasonalTip[] = [
-  { id: 'holiday', icon: '🎄', title: 'Holiday spending ahead', detail: 'Use your highest-earning shopping card for gifts. Many cards offer extra rewards on department stores in Q4.', months: [10, 11] },
+  { id: 'holiday', icon: '🎄', title: 'Holiday spending ahead', detail: 'Your cheat sheet shows which card could earn the most on shopping for gifts.', months: [10, 11] },
   { id: 'back-to-school', icon: '📚', title: 'Back-to-school season', detail: 'School supplies, electronics, and clothing — use your best shopping card for these purchases.', months: [7, 8] },
   { id: 'summer-travel', icon: '🏖️', title: 'Summer travel season', detail: 'Book travel through your card portal for bonus rates. Gas spending goes up — use your best transport card.', months: [5, 6] },
   { id: 'tax-season', icon: '📋', title: 'Tax season reminder', detail: 'Some cards earn bonus rewards on tax prep services. Check if your cashback or points can offset your tax prep costs.', months: [1, 2, 3] },
@@ -492,9 +493,10 @@ const SEASONAL_TIPS: SeasonalTip[] = [
   { id: 'new-year', icon: '🎯', title: 'New year, new rewards strategy', detail: 'Annual caps reset in January. Review your card lineup and make sure you are using the right card for each category.', months: [0] },
 ]
 
-export function seasonalTips(month?: number): SeasonalTip[] {
+export function seasonalTips(month?: number, balances: Balance[] = []): SeasonalTip[] {
   const m = month ?? new Date().getMonth()
-  return SEASONAL_TIPS.filter((t) => t.months.includes(m))
+  const rotating = balances.some((b) => Object.values(ruleFor(b.cardName)?.rates ?? {}).some((r) => r?.quarters))
+  return SEASONAL_TIPS.filter((t) => t.months.includes(m) && (rotating || !t.id.endsWith('-rotate')))
 }
 
 // ---- Points expiration warnings ----
@@ -523,8 +525,8 @@ export function expirationWarnings(balances: Balance[]): ExpirationWarning[] {
     if (monthsSinceUpdate > rule.months * 0.75) {
       warnings.push({
         balance: b,
-        message: `${rule.note} Make a purchase or redeem soon to keep them active.`,
-        severity: monthsSinceUpdate > rule.months * 0.9 ? 'warning' : 'info',
+        message: `${rule.note} If you haven’t used this card in a while, check the program’s rules.`,
+        severity: 'info',
       })
     }
   }
@@ -546,27 +548,31 @@ export function graduationMilestones(balances: Balance[], score: number = CREDIT
   const milestones: GraduationMilestone[] = []
   const tier = tierFor(score)
 
-  const allUnder30 = balances.every((b) => {
-    const u = utilization(b)
-    return u === null || u < 0.3
-  })
-  const allUnder10 = balances.every((b) => {
-    const u = utilization(b)
-    return u === null || u < 0.1
-  })
+  // Only cards with both a limit and an amount owed count. With none, there's nothing to tick off yet.
+  const utils = balances.map(utilization).filter((u): u is number => u !== null)
+  const allUnder30 = utils.length > 0 && utils.every((u) => u < 0.3)
+  const allUnder10 = utils.length > 0 && utils.every((u) => u < 0.1)
 
-  milestones.push({
+  if (utils.length === 0) milestones.push({
+    id: 'util-track',
+    icon: '📊',
+    title: 'Track your utilization',
+    detail: 'Add each card’s limit and what you owe to see how much of your limit is in use. Under 30% can help your credit score.',
+    progress: 0,
+    achieved: false,
+  })
+  else milestones.push({
     id: 'util-30',
     icon: '📊',
     title: 'Keep utilization under 30%',
     detail: allUnder30
       ? 'You are under 30% on all cards. Keep it up — this is a key factor in your credit score.'
       : 'Pay down balances to get all cards under 30% utilization. This is the biggest quick win for your score.',
-    progress: allUnder30 ? 1 : Math.max(0, 1 - (balances.reduce((max, b) => Math.max(max, utilization(b) ?? 0), 0) - 0.3) / 0.7),
+    progress: allUnder30 ? 1 : Math.max(0, 1 - (Math.max(...utils) - 0.3) / 0.7),
     achieved: allUnder30,
   })
 
-  milestones.push({
+  if (utils.length > 0) milestones.push({
     id: 'util-10',
     icon: '🏆',
     title: 'Get to single-digit utilization',
@@ -600,8 +606,8 @@ export function graduationMilestones(balances: Balance[], score: number = CREDIT
       milestones.push({
         id: 'next-card',
         icon: '💳',
-        title: `Unlock: ${best.issuer} ${best.name}`,
-        detail: `At ${nextTier.range} credit, you could qualify for cards like the ${best.issuer} ${best.name} (${fmtRate(best.type, best.base)} on everything, no annual fee).`,
+        title: `Cards usually for ${nextTier.label.toLowerCase()} credit (${nextTier.range})`,
+        detail: `Cards like the ${best.issuer} ${best.name} (${fmtRate(best.type, best.base)} on everything, no annual fee) are usually for ${nextTier.range} credit. Approval isn’t guaranteed.`,
         progress: Math.min(1, (score - CREDIT_TIERS[tierRank(tier)].min) / (nextTier.min - CREDIT_TIERS[tierRank(tier)].min)),
         achieved: false,
       })
