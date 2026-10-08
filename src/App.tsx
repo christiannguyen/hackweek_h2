@@ -24,8 +24,7 @@ function App() {
   // While the sample wallet is still showing, onboarding swaps it for the user's picks; once the cards are theirs
   // (even after logging out), new picks are added to them instead.
   const firstRun = !hasOwnWallet()
-  // Shared so the category picked on the home hero carries into the full Compare page. Starts on the user's
-  // highest-spend category.
+  // Home sets this to its featured opportunity when opening Compare; direct visits start on highest spend.
   const [category, setCategory] = useState<CategoryId>(TOP_CATEGORY)
   const [accountOpen, setAccountOpen] = useState(0) // 0 = closed; a new number remounts the sheet fresh
   const [sheet, setSheet] = useState<{ open: boolean; id?: number; key: number; purpose?: 'rewards' }>({ open: false, key: 0 })
@@ -67,7 +66,7 @@ function App() {
   return (
     <MobileShell onAccount={() => setAccountOpen(Date.now())}>
       <main className={`${styles.root} ${styles.view}`}>
-        {route === 'home' && <HomePage balances={balances} compare={compare} />}
+        {route === 'home' && <HomePage balances={balances} compare={compare} onRewards={openRewardsSheet} />}
         {route === 'compare' && <ComparePage balances={balances} onEdit={openSheet} compare={compare} />}
         {route === 'coach' && <CoachPage balances={balances} onEdit={openSheet} />}
         {route === 'pointpool' && <PointpoolPage balances={balances} onEdit={openSheet} onRewards={openRewardsSheet} />}

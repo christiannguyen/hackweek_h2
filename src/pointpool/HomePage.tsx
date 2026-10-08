@@ -1,107 +1,116 @@
+import { LuArrowRight, LuFuel, LuShoppingBag, LuSparkles, LuUtensils } from 'react-icons/lu'
 import {
-  balanceUses,
+  cardStacking,
   catName,
   fmtMoney,
-  fmtPts,
-  fmtUSD,
-  isCash,
-  marketplaceCategory,
-  PROGRAMS,
+  homeOpportunity,
   SPEND,
+  TOP_CATEGORIES,
   type Balance,
 } from './data'
-import { CardArt } from './CardArt'
-import { CardCompare, ScoreGoal, type CompareProps } from './CardCompare'
-import { Disclaimer, FreshnessTag } from './shared'
+import type { CompareProps } from './CardCompare'
+import { HomeRewards } from './HomeRewards'
 import styles from './pointpool.module.css'
 
 interface Props {
   balances: Balance[]
   compare: CompareProps
+  onRewards: (id: number) => void
 }
 
-export function HomePage({ balances, compare }: Props) {
-  const market = marketplaceCategory(balances)
-
+export function HomePage({ balances, compare, onRewards }: Props) {
   return (
     <>
       <div className={styles.pageHead}>
-        <h1 className={styles.pageTitle}>Earn more on your spending</h1>
+        <div>
+          <h1 className={styles.pageTitle}>Your everyday, rewarded</h1>
+          <p className={styles.pageSub}>A little more from what you already spend.</p>
+        </div>
       </div>
 
-      {/* Leads the page: the spending strip, then one example on whichever category is picked. The category is
-          shared state, so it carries into the full Compare page. */}
-      <div className={`${styles.card} ${styles.coachHero}`}>
-        <CardCompare {...compare} />
-        <ScoreGoal balances={compare.balances} category={compare.category} />
-        <a className={styles.moreLink} href="#compare">Compare more cards ›</a>
-      </div>
+      <SpendingSnapshot balances={balances} />
+      <HomeInsight balances={balances} onCategory={compare.onCategory} onEdit={compare.onEdit} />
+      <HomeRewards balances={balances} onRewards={onRewards} />
 
-      {/* The wallet in miniature, on the dark surface the deck uses: the same card faces, one per row.
-          The whole tile opens the Wallet tab, so adding and editing happen there rather than twice. */}
-      <a className={`${styles.card} ${styles.darkCard} ${styles.walletLink}`} href="#wallet">
-        <div className={styles.cardHead}>
-          <div>
-            <h2>Wallet</h2>
-            <span className={styles.walletLinkSub}>Your cards</span>
-          </div>
-          <span className={styles.chev}>›</span>
-        </div>
-        <div className={styles.mt}>
-          {balances.length === 0 && <div className={styles.empty}>Add a card to get started.</div>}
-          {balances.map((b) => (
-            <CardRow key={b.id} balance={b} />
-          ))}
-        </div>
-      </a>
-
-      {/* "Ways to use your points" and "Rewards 101" live on the wallet page; Home linked to the same
-          two places a tab away. */}
-
-      <a className={styles.promo} href="https://kikoff.com/login" target="_blank" rel="noopener noreferrer">
-        <div className={styles.rowMain}>
-          <div className={styles.promoTitle}>Kikoff Marketplace</div>
-          <div className={styles.promoSub}>
-            {market
-              ? `Cards with bonus rewards on ${catName(market)} — a fit for your ${fmtMoney(SPEND[market])} a month.`
-              : 'Explore cards with bonus rewards.'}
-          </div>
-        </div>
-        <span className={styles.chev}>›</span>
-      </a>
-
-      <Disclaimer />
+      <p className={styles.disclaimer}>
+        Sample spending and illustrative rates. Reward balances are entered by you; check the issuer for your current balance and redemption options.
+      </p>
     </>
   )
 }
 
+const CATEGORY_ICONS = { food: LuUtensils, shopping: LuShoppingBag, transport: LuFuel }
 
-// One line per card: the card's face, its balance, and where it could go — side by side, no ranking.
-function CardRow({ balance: b }: { balance: Balance }) {
-  const p = PROGRAMS[b.programId]
-  const uses = balanceUses(b)
-  const travel = uses.find((u) => u.id === 'travel')
-  const credit = uses.find((u) => u.id === 'cashback')
+function SpendingSnapshot({ balances }: { balances: Balance[] }) {
+  const suggestions = cardStacking(balances)
+  return <section className={`${styles.card} ${styles.homeSpending}`} aria-labelledby="home-spending-title">
+    <div className={styles.cardHead}>
+      <h2 id="home-spending-title">Your spending</h2>
+      <span className={styles.homePeriod}>Last 30 days</span>
+    </div>
+    <p className={styles.homeSpendingSub}>
+      {suggestions.length ? 'Top categories · best cards in your wallet' : 'Your top spending categories'}
+    </p>
+    <ul className={styles.homeSpendList}>
+      {TOP_CATEGORIES.map((category) => {
+        const Icon = CATEGORY_ICONS[category.id]
+        const suggestion = suggestions.find((s) => s.category.id === category.id)
+        return <li key={category.id} className={styles.homeSpendRow}>
+          <span className={styles.homeCategoryIcon}><Icon aria-hidden="true" /></span>
+          <div className={styles.rowMain}>
+            <div className={styles.homeCategoryName}>{category.label}</div>
+            {suggestion && <div className={styles.homeCardSuggestion}>Use {suggestion.card.cardName}</div>}
+          </div>
+          <span className={styles.homeSpendAmount}>{fmtMoney(SPEND[category.id])}</span>
+        </li>
+      })}
+    </ul>
+    {suggestions.length > 0 && <a className={styles.homeTextLink} href="#coach">
+      See your card strategy <LuArrowRight aria-hidden="true" />
+    </a>}
+  </section>
+}
 
-  let sub: string
-  if (uses.length === 0) sub = 'Estimates coming soon'
-  else if (!(b.amount > 0)) sub = 'Add your balance to see where it could go'
-  else if (isCash(b)) sub = 'Comes off what you owe; options vary by card'
-  else sub = `Could be ≈${fmtMoney(travel!.value)} in travel or ≈${fmtMoney(credit!.value)} as a statement credit`
+function HomeInsight({ balances, onCategory, onEdit }: Omit<CompareProps, 'category'>) {
+  const opportunity = homeOpportunity(balances)
+  const best = opportunity?.best
+  const canCompare = !!best
+  const hasGain = canCompare && opportunity.top?.worth
 
   return (
-    <div className={styles.row}>
-      <CardArt balance={b} />
-      <div className={styles.rowMain}>
-        <div className={styles.rowTitleLine}>
-          <span className={`${styles.rowTitle} ${styles.ellipsis}`}>{b.cardName}</span>
-          <span className={styles.rowAmount}>
-            {isCash(b) ? fmtUSD(b.amount) : `${fmtPts(b.amount)} ${p.unit === 'points' ? 'pts' : p.unit}`}
-          </span>
-        </div>
-        <div className={styles.rowSub}>{sub}</div>
-        <FreshnessTag balance={b} />
-      </div>
-    </div>
+    <section className={`${styles.card} ${styles.homeInsight}`} aria-labelledby="home-insight-title">
+      <div className={styles.insightEyebrow}><LuSparkles aria-hidden="true" /> {hasGain ? 'A new-card opportunity' : 'Your next move'}</div>
+      {hasGain ? <>
+        <h2 id="home-insight-title" className={styles.insightGainTitle}>
+          You could earn{' '}
+          <span className={styles.insightAmount}>{fmtMoney(opportunity.gain)}<small> more / mo</small></span>
+        </h2>
+        <p className={styles.insightBody}>
+          On {catName(opportunity.category)}, compared with your best card.<br />Estimated after annual fees.
+        </p>
+      </> : best ? <>
+        <h2 id="home-insight-title">Your card is a good fit</h2>
+        <p className={styles.insightBody}>
+          Your {best.name} already earns well on {catName(opportunity.category)}.
+          {' '}{opportunity.top ? 'A new card wouldn’t add much here.' : 'Explore how it compares.'}
+        </p>
+      </> : <>
+        <h2 id="home-insight-title">Find out if you could earn more</h2>
+        <p className={styles.insightBody}>
+          {balances.length
+            ? 'Your cards don’t have reward estimates yet. Add a supported card to compare your options.'
+            : 'Add your cards to see whether your everyday spending could earn more rewards.'}
+        </p>
+      </>}
+      {canCompare ? (
+        <a className={styles.compareCta} href="#compare" onClick={() => onCategory(opportunity.category)}>
+          Compare cards <LuArrowRight aria-hidden="true" />
+        </a>
+      ) : (
+        <button className={styles.compareCta} onClick={() => onEdit()}>
+          Add a card <LuArrowRight aria-hidden="true" />
+        </button>
+      )}
+    </section>
   )
 }

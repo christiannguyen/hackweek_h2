@@ -26,9 +26,7 @@ export function BackLink() {
   )
 }
 
-// The controls both comparison views open on: every category with its last-30-days spend, then the annual-fee
-// filter for the new cards being suggested. Home and Card Coach share the component so the two stay in step —
-// the category carries between the pages, and the strip reads the same on both.
+// Detailed comparison controls: last-30-days spend by category and annual fees for new cards.
 const categoryIcons = { food: LuUtensils, shopping: LuShoppingBag, transport: LuFuel }
 
 interface SpendingControlsProps {
