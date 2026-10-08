@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { LuArrowUpRight, LuChevronDown, LuCoins, LuGift, LuHotel, LuPlane, LuPlus, LuWallet } from 'react-icons/lu'
 import { fmtBalance, isStale, fmtDollars, fmtPts, fmtUSD, GOALS, hasEstimates, isCash, PROGRAMS, type Balance } from './data'
-import { redemptionEstimate, redemptionExamples, REDEMPTION_EXAMPLES, type RedemptionId } from './redemption'
+import { redemptionEstimate, REDEMPTION_EXAMPLES, type RedemptionId } from './redemption'
 import { savedGoals } from './useBalances'
 import styles from './pointpool.module.css'
 
@@ -15,6 +15,9 @@ const goalExample = (): RedemptionId => GOAL_EXAMPLE[savedGoals()[0]] ?? 'credit
 const rewardMoney = (value: number) => Number.isInteger(value) ? fmtDollars(value) : fmtUSD(value)
 
 const ICONS = { flight: LuPlane, hotel: LuHotel, gift: LuGift, credit: LuWallet }
+
+// What a cashback dollar is being measured against, for copy like "against a $300 flight".
+const CASH_NOUN: Record<RedemptionId, string> = { credit: 'balance', gift: 'gift card', flight: 'flight', hotel: 'hotel night' }
 
 // The wallet's empty state: with no cards there are no balances either, so one screen covers both.
 export function RewardsWelcome({ onAdd }: { onAdd: () => void }) {
@@ -50,14 +53,18 @@ export function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdi
   const p = PROGRAMS[b.programId]
   const cash = isCash(b)
   const supported = hasEstimates(p)
-  const examples = redemptionExamples(b)
-  const example = examples.find((e) => e.id === choice) ?? examples[0]
+  const example = REDEMPTION_EXAMPLES.find((e) => e.id === choice) ?? REDEMPTION_EXAMPLES[0]
   // Paying down the card starts from what's actually owed when it's been entered, not the $100 example.
   const defaultPrice = (item: typeof REDEMPTION_EXAMPLES[number]) => item.id === 'credit' && b.cardBalance && b.cardBalance > 0 ? b.cardBalance : item.price
   const priceFor = (item: typeof REDEMPTION_EXAMPLES[number]) => prices[item.id] === undefined ? defaultPrice(item) : Number(prices[item.id])
   const price = priceFor(example)
+  // Only the statement-credit example is about the card's own balance; the rest are ordinary prices.
+  const cashCredit = cash && example.id === 'credit'
   const estimate = redemptionEstimate(b, example.goal, price)
-  const steps = cash ? ["Open your card’s app and find your cashback balance", 'Check whether it applies automatically or you have to request it, and any minimum', 'Confirm when it comes off your balance'] : choice === 'hotel'
+  // Cashback has to be taken out of the program before it can go anywhere, so its steps start there.
+  const steps = cash
+    ? ["Open your card’s app and find your cashback balance", ...GOALS[example.goal].cashback, 'Check any minimum before you redeem']
+    : choice === 'hotel'
     ? ["Open your card’s rewards portal", 'Look for hotels under travel and compare the cash and points prices', 'Check availability, taxes, and fees before redeeming']
     : GOALS[example.goal].points
 
@@ -68,11 +75,10 @@ export function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdi
         <div className={styles.card}><h2>Keep track of this balance</h2><p className={styles.body}>We don’t have a value estimate for this program yet. Check its rewards portal for redemption options.</p><button className={styles.btnText} onClick={onEdit}>Edit rewards program</button></div>
       ) : (
         <>
-          <div className={styles.rewardsSectionHead}><h2>{cash ? 'What this can do' : 'Picture the possibilities'}</h2>{examples.length > 1 && <span>Choose one to explore</span>}</div>
+          <div className={styles.rewardsSectionHead}><h2>Picture the possibilities</h2><span>Choose one to explore</span></div>
           {b.amount === 0 && <div className={styles.rewardsRefresh}>You have {cash ? '$0.00' : `0 ${p.unit}`} in rewards. Update your balance to see your progress toward these examples.</div>}
-          {/* A cash balance has exactly one option, so the chooser grid would only restate the card below it. */}
-          {examples.length > 1 && <><div className={styles.redemptionGrid}>
-            {examples.map((item) => {
+          <div className={styles.redemptionGrid}>
+            {REDEMPTION_EXAMPLES.map((item) => {
               const Icon = ICONS[item.id]
               const cost = priceFor(item)
               const result = redemptionEstimate(b, item.goal, cost)
@@ -89,22 +95,28 @@ export function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdi
               )
             })}
           </div>
-          <p className={styles.rewardsAlternatives}>These are alternative ways to use the same points — not four rewards to use together.</p></>}
+          <p className={styles.rewardsAlternatives}>These are alternative ways to use the same {cash ? 'cashback' : 'points'} — not four rewards to use together.</p>
           <section className={styles.card} aria-label={`How to use rewards for ${example.title.toLowerCase()}`}>
             <div className={styles.cardHead}><h2>{example.title} <LuArrowUpRight className={styles.inlineRewardIcon} aria-hidden="true" /></h2><span className={styles.rewardExampleTag}>Example</span></div>
-            {/* Cashback redeems 1:1, so restating the balance as its own "value" says nothing. Lead with the effect instead. */}
+            {/* Cashback redeems 1:1, so restating the balance as its own "value" says nothing. Lead with the effect
+                instead — off the card for a statement credit, toward the purchase for everything else. */}
             {estimate && (cash ? <div className={styles.rewardsEstimate}>
-              <strong>{fmtUSD(estimate.value)}</strong> off what you owe on this card.
-              <span>Cashback converts 1:1 — each $1 of cashback takes $1 off what you owe. Not an airline or hotel points redemption.</span>
+              {example.id === 'credit' ? <>
+                <strong>{fmtUSD(estimate.value)}</strong> off what you owe on this card.
+                <span>Cashback converts 1:1 — each $1 of cashback takes $1 off what you owe. Not an airline or hotel points redemption.</span>
+              </> : <>
+                <strong>{fmtUSD(estimate.value)}</strong> toward {example.id === 'hotel' ? 'a hotel night' : example.id === 'flight' ? 'a flight' : 'a gift card'}.
+                <span>Cashback is worth its face value — $1 covers $1 of a {rewardMoney(price)} {CASH_NOUN[example.id]}. You take it as a statement credit or deposit first, then spend it; this isn’t a points booking.</span>
+              </>}
             </div> : <div className={styles.rewardsEstimate}>
               <strong>≈{rewardMoney(estimate.value)}</strong> in {example.goal === 'travel' ? 'travel value' : example.goal === 'everyday' ? 'gift-card value' : 'statement-credit value'} from your {fmtBalance(b)}.
               <span>At an illustrative {estimate.cpp}¢ per {p.unit === 'miles' ? 'mile' : 'point'}. A {rewardMoney(price)} redemption would need about {fmtPts(estimate.needed)} {p.unit}.</span>
             </div>)}
             {estimate && cash && <div className={styles.rewardsCoverage}>
-              <div><span>Against a {rewardMoney(price)} balance</span><strong>{estimate.remaining === 0 ? 'Covers all of it' : `${rewardMoney(estimate.remaining)} left to pay`}</strong></div>
+              <div><span>Against a {rewardMoney(price)} {CASH_NOUN[example.id]}</span><strong>{estimate.remaining === 0 ? 'Covers all of it' : `${rewardMoney(estimate.remaining)} left to ${example.id === 'credit' ? 'pay' : 'cover'}`}</strong></div>
               <span className={styles.redemptionProgress} aria-hidden="true"><span style={{width: `${estimate.percent}%`}} /></span>
             </div>}
-            <details className={styles.rewardsCustomPrice}><summary>Try a different {cash ? 'balance' : 'price'} <LuChevronDown aria-hidden="true" /></summary><label>{cash ? 'Card balance ($)' : 'Target price ($)'}<input type="number" min="0.01" step="0.01" inputMode="decimal" value={prices[example.id] ?? defaultPrice(example)} onChange={(e) => setPrices((prev) => ({...prev, [example.id]: e.target.value}))} /></label>{!estimate && <p role="status">Enter an amount greater than $0.</p>}</details>
+            <details className={styles.rewardsCustomPrice}><summary>Try a different {cashCredit ? 'balance' : 'price'} <LuChevronDown aria-hidden="true" /></summary><label>{cashCredit ? 'Card balance ($)' : 'Target price ($)'}<input type="number" min="0.01" step="0.01" inputMode="decimal" value={prices[example.id] ?? defaultPrice(example)} onChange={(e) => setPrices((prev) => ({...prev, [example.id]: e.target.value}))} /></label>{!estimate && <p role="status">Enter an amount greater than $0.</p>}</details>
             <details className={styles.rewardsCustomPrice}><summary>How to use {cash ? 'it' : 'them'} <LuChevronDown aria-hidden="true" /></summary>
               <ol className={styles.rewardsSteps}>{steps.map((step) => <li key={step}>{step}</li>)}</ol>
               <p className={styles.rewardsAlternatives}>Confirm the final value in your issuer’s app. This preview doesn’t book or redeem anything.</p>

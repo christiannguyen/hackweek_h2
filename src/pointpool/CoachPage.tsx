@@ -1,3 +1,24 @@
+import { useState } from 'react'
+import type { IconType } from 'react-icons'
+import {
+  LuChevronDown,
+  LuChevronRight,
+  LuClock3,
+  LuFuel,
+  LuLayers,
+  LuLightbulb,
+  LuPiggyBank,
+  LuPlus,
+  LuSearch,
+  LuShoppingBag,
+  LuSnowflake,
+  LuSparkles,
+  LuTarget,
+  LuTrendingUp,
+  LuTriangleAlert,
+  LuUtensils,
+  LuWallet,
+} from 'react-icons/lu'
 import {
   cardEarnings,
   cardStacking,
@@ -21,8 +42,10 @@ import {
   type Balance,
   type CardEarning,
   type CategoryId,
+  type RedemptionComparison,
   type Spend,
 } from './data'
+import { CategoryArt } from './CategoryArt'
 import { Disclaimer } from './shared'
 import styles from './pointpool.module.css'
 import c from './coach.module.css'
@@ -32,12 +55,20 @@ interface Props {
   onEdit: (id?: number) => void
 }
 
+// One icon set for the whole page, so Card Coach looks like the rest of the app
+// instead of a wall of emoji.
+const CATEGORY_ICON: Record<CategoryId, IconType> = {
+  food: LuUtensils,
+  shopping: LuShoppingBag,
+  transport: LuFuel,
+}
+
 // --- Analysis helpers ---
 
 interface CategoryInsight {
   id: CategoryId
   label: string
-  emoji: string
+  Icon: IconType
   spend: number
   bestCard: CardEarning | null
   bestRate: string
@@ -57,7 +88,7 @@ function analyzeSpending(balances: Balance[], spend: Spend): CategoryInsight[] {
       return {
         id: c.id,
         label: c.label,
-        emoji: c.emoji,
+        Icon: CATEGORY_ICON[c.id],
         spend: spend[c.id],
         bestCard: best,
         bestRate: best ? fmtRate(best.program.type, best.avgRate) : '1x',
@@ -68,7 +99,7 @@ function analyzeSpending(balances: Balance[], spend: Spend): CategoryInsight[] {
 
 interface SpendingAction {
   id: string
-  icon: string
+  Icon: IconType
   title: string
   detail: string
 }
@@ -81,7 +112,7 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
     if (i.bestCard && i.bestCard.rate > 1) {
       actions.push({
         id: `use-${i.id}`,
-        icon: i.emoji,
+        Icon: i.Icon,
         title: `${i.bestCard.balance.cardName} could earn ${i.bestRate} on ${catName(i.id)}`,
         detail: i.bestCard.avgRate !== i.bestCard.rate
           ? `Earns ${fmtRate(i.bestCard.program.type, i.bestCard.rate)} in bonus periods, about ${i.bestRate} over a year — about ${fmtMoney(i.monthlyReward)}/mo on your ${fmtMoney(i.spend)}/mo spend.`
@@ -94,7 +125,7 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
     if (!i.bestCard || i.bestCard.rate <= 1) {
       actions.push({
         id: `gap-${i.id}`,
-        icon: '🔍',
+        Icon: LuSearch,
         title: `${i.label}: earning the base rate`,
         detail: `You spend ${fmtMoney(i.spend)}/mo here. A card with a bonus on ${catName(i.id)} could earn more; the comparison on Home shows options.`,
       })
@@ -107,7 +138,7 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
     if (bonus.length > 0) {
       actions.push({
         id: `rotate-${b.id}`,
-        icon: '🔁',
+        Icon: LuLayers,
         title: `${b.cardName} has a quarterly bonus to activate`,
         detail: `Its rotating categories include ${bonus.map((c) => catName(c.id)).join(', ')}. The bonus rate applies once it's activated each quarter.`,
       })
@@ -118,7 +149,7 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
     if (b.creditLimit && b.cardBalance && b.cardBalance / b.creditLimit > 0.3) {
       actions.push({
         id: `util-${b.id}`,
-        icon: '💳',
+        Icon: LuWallet,
         title: `${b.cardName}: ${Math.round((b.cardBalance / b.creditLimit) * 100)}% of your limit in use`,
         detail: 'Using less than 30% of your limit can help your credit score, and paying in full keeps interest from eating into rewards.',
       })
@@ -139,6 +170,70 @@ function walletScore(insights: CategoryInsight[]): number {
     weightedRate += i.spend * (rate / maxRate)
   }
   return totalSpend > 0 ? Math.round((weightedRate / totalSpend) * 100) : 0
+}
+
+// A collapsed list row: the headline stays visible, the explanation is one tap away.
+function CoachItem({ Icon, title, detail }: { Icon: IconType; title: string; detail: string }) {
+  return (
+    <details className={c.itemDetails}>
+      <summary>
+        <span className={c.itemIcon}><Icon aria-hidden="true" /></span>
+        <span className={c.itemMain}><span className={c.itemTitle}>{title}</span></span>
+        <LuChevronDown className={c.itemChev} aria-hidden="true" />
+      </summary>
+      <p className={c.itemSub}>{detail}</p>
+    </details>
+  )
+}
+
+// One balance's redemption value. The three methods were a checklist of near-identical rows; now you
+// tap a method to see its value, and a program that pays the same everywhere says so instead of
+// pretending there's a winner.
+function RedemptionPanel({ comparison }: { comparison: RedemptionComparison }) {
+  const { balance, program, methods } = comparison
+  const [pick, setPick] = useState(() => methods.find((m) => m.best)?.id ?? methods[0].id)
+  const method = methods.find((m) => m.id === pick) ?? methods[0]
+  const high = Math.max(...methods.map((m) => m.value))
+  const low = Math.min(...methods.map((m) => m.value))
+  const flat = high === low
+
+  return (
+    <div className={c.panel}>
+      <div className={c.panelHead}>
+        <span className={c.panelTitle}><span className={c.dot} />{balance.cardName}</span>
+        {!flat && <span className={c.saveTag}>Up to +{fmtUSD(high - low)}</span>}
+      </div>
+      <div className={c.panelSub}>{Math.round(balance.amount).toLocaleString()} {program.unit}</div>
+      {flat ? (
+        <>
+          <div className={c.bigValue}>≈{fmtUSD(high)}</div>
+          <p className={c.panelNote}>
+            This program is worth about {methods[0].cpp}¢ a {program.unit === 'miles' ? 'mile' : 'point'} whichever
+            way you redeem — travel, gift cards, or a statement credit all come out the same, so pick whatever
+            you'll actually use.
+          </p>
+        </>
+      ) : (
+        <>
+          <div className={c.pillRow} role="group" aria-label="Redemption method">
+            {methods.map((m) => (
+              <button key={m.id} className={`${c.tapPill} ${m.id === pick ? c.tapPillOn : ''}`}
+                aria-pressed={m.id === pick} onClick={() => setPick(m.id)}>
+                {m.label}
+              </button>
+            ))}
+          </div>
+          <div className={c.bigValue}>≈{fmtUSD(method.value)}</div>
+          <p className={c.panelNote}>
+            {method.label} values them at {method.cpp}¢ each.{' '}
+            {method.value === high
+              ? 'That’s the most this balance is worth.'
+              : `That’s ${fmtUSD(high - method.value)} less than the best option here.`}
+          </p>
+        </>
+      )}
+    </div>
+  )
 }
 
 // --- Component ---
@@ -163,15 +258,14 @@ export function CoachPage({ balances, onEdit }: Props) {
   const topMissed = missed?.byCategory.reduce((a, b) => (a.missed >= b.missed ? a : b))
   const maxStackMonthly = Math.max(...stacking.map((s) => s.monthly), 0)
 
-  const quickActions = [
-    { id: 'coach-cheat', icon: '🃏', label: 'Cheat sheet', color: c.blue, show: stacking.length > 0 },
-    { id: 'coach-redeem', icon: '💎', label: 'Redeem', color: c.purple, show: redemptions.length > 0 },
-    { id: 'coach-credit', icon: '📈', label: 'Credit', color: c.orange, show: milestones.length > 0 },
-    { id: 'coach-ideas', icon: '💡', label: 'Ideas', color: c.pink, show: actions.length > 0 || tips.length > 0 },
+  const quickActions: { id: string; Icon: IconType; label: string; show: boolean }[] = [
+    { id: 'coach-cheat', Icon: LuLayers, label: 'Cheat sheet', show: stacking.length > 0 },
+    { id: 'coach-redeem', Icon: LuPiggyBank, label: 'Redeem', show: redemptions.length > 0 },
+    { id: 'coach-credit', Icon: LuTrendingUp, label: 'Credit', show: milestones.length > 0 },
+    { id: 'coach-ideas', Icon: LuLightbulb, label: 'Ideas', show: actions.length > 0 || tips.length > 0 },
   ].filter((q) => q.show)
 
   const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  const tint = (i: number) => c[`tint${i % 5}`]
 
   return (
     <>
@@ -185,9 +279,9 @@ export function CoachPage({ balances, onEdit }: Props) {
           <div>
             <div className={c.heroLabel}>Your rewards score</div>
             <div className={c.heroLine}>Your wallet is matched</div>
-            <div className={c.heroScore}>{score}% 🎯</div>
+            <div className={c.heroScore}>{score}%</div>
           </div>
-          <div className={c.heroBadge} aria-hidden>✨</div>
+          <div className={c.heroBadge}><LuTarget aria-hidden="true" /></div>
         </div>
         <div className={c.heroNote}>
           {score >= 70 ? 'Great — your cards match your spending well.'
@@ -210,7 +304,7 @@ export function CoachPage({ balances, onEdit }: Props) {
         <div className={c.panel}>
           <div className={c.panelTitle}>Get personalized coaching</div>
           <div className={c.panelSub}>Add your cards and we'll show which one to use for every purchase.</div>
-          <button className={c.cta} onClick={() => onEdit()}>+ Add a card</button>
+          <button className={c.cta} onClick={() => onEdit()}>Add a card <LuPlus aria-hidden="true" /></button>
         </div>
       )}
 
@@ -218,15 +312,15 @@ export function CoachPage({ balances, onEdit }: Props) {
       {missed && topMissed && (
         <button className={c.promo} onClick={() => jump(stacking.length > 0 ? 'coach-cheat' : 'coach-breakdown')}>
           <div className={c.promoMain}>
-            <div className={c.promoIcon} aria-hidden>💸</div>
+            <div className={c.promoIcon}><LuPiggyBank aria-hidden="true" /></div>
             <div className={c.promoTitle}>You left money on the table</div>
             <div className={c.promoSub}>Using the right card for each purchase last month would have earned more.</div>
             <div className={c.promoFoot}>
               +{fmtMoney(missed.total)} more
-              <span className={c.pill}>{topMissed.emoji} {topMissed.label} +{fmtMoney(topMissed.missed)}</span>
+              <span className={c.pill}>{topMissed.label} +{fmtMoney(topMissed.missed)}</span>
             </div>
           </div>
-          <span className={c.promoChev} aria-hidden>›</span>
+          <span className={c.promoChev}><LuChevronRight aria-hidden="true" /></span>
         </button>
       )}
 
@@ -235,7 +329,7 @@ export function CoachPage({ balances, onEdit }: Props) {
         <div className={c.quick}>
           {quickActions.map((q) => (
             <button key={q.id} className={c.quickBtn} onClick={() => jump(q.id)}>
-              <span className={`${c.quickIcon} ${q.color}`} aria-hidden>{q.icon}</span>
+              <span className={c.quickIcon}><q.Icon aria-hidden="true" /></span>
               {q.label}
             </button>
           ))}
@@ -250,10 +344,10 @@ export function CoachPage({ balances, onEdit }: Props) {
             <span className={c.sectionMeta}>{stacking.length} categories</span>
           </div>
           <div className={c.carousel}>
-            {stacking.map((s, i) => (
+            {stacking.map((s) => (
               <button key={s.category.id} className={c.slide} onClick={() => onEdit(s.card.id)}>
-                <div className={`${c.slideArt} ${c[`art${i % 5}`]}`}>
-                  <span aria-hidden>{s.category.emoji}</span>
+                <div className={c.slideArt}>
+                  <CategoryArt category={s.category.id} className={c.slideImg} />
                   <span className={c.slideRate}>{s.rateLabel}</span>
                 </div>
                 <div className={c.slideTitle}>{s.category.label}</div>
@@ -278,23 +372,11 @@ export function CoachPage({ balances, onEdit }: Props) {
           </div>
           <div className={c.list}>
             {expirations.map((w) => (
-              <button key={w.balance.id} className={c.item} onClick={() => onEdit(w.balance.id)}>
-                <div className={`${c.itemIcon} ${c.tint3}`} aria-hidden>{w.severity === 'warning' ? '🚨' : '⏳'}</div>
-                <div className={c.itemMain}>
-                  <div className={c.itemTitle}>{w.balance.cardName} points expiring</div>
-                  <div className={c.itemSub}>{w.message}</div>
-                </div>
-                <span className={c.itemAction} aria-hidden>›</span>
-              </button>
+              <CoachItem key={w.balance.id} Icon={w.severity === 'warning' ? LuTriangleAlert : LuClock3}
+                title={`${w.balance.cardName} points expiring`} detail={w.message} />
             ))}
-            {seasonal.map((t, i) => (
-              <div key={t.id} className={c.item}>
-                <div className={`${c.itemIcon} ${tint(i + 1)}`} aria-hidden>{t.icon}</div>
-                <div className={c.itemMain}>
-                  <div className={c.itemTitle}>{t.title}</div>
-                  <div className={c.itemSub}>{t.detail}</div>
-                </div>
-              </div>
+            {seasonal.map((t) => (
+              <CoachItem key={t.id} Icon={LuSnowflake} title={t.title} detail={t.detail} />
             ))}
           </div>
         </>
@@ -306,30 +388,7 @@ export function CoachPage({ balances, onEdit }: Props) {
           <div id="coach-redeem" className={c.sectionHead}>
             <span className={c.sectionTitle}>The real math on redemption</span>
           </div>
-          {redemptions.map((r) => {
-            const best = r.methods.find((m) => m.best)
-            const worst = r.methods.reduce((a, b) => (a.value <= b.value ? a : b))
-            return (
-              <div key={r.balance.id} className={c.panel}>
-                <div className={c.panelHead}>
-                  <span className={c.panelTitle}><span className={c.dot} />{r.balance.cardName}</span>
-                  {best && best.value > worst.value && (
-                    <span className={c.saveTag}>+{fmtUSD(best.value - worst.value)}</span>
-                  )}
-                </div>
-                <div className={c.panelSub}>
-                  {Math.round(r.balance.amount).toLocaleString()} {r.program.unit} · what they're worth
-                </div>
-                {r.methods.map((m) => (
-                  <div key={m.id} className={c.check}>
-                    <span className={`${c.checkMark} ${m.best ? '' : c.off}`} aria-hidden>{m.best ? '✓' : ''}</span>
-                    <span>{m.emoji} {m.label} <span style={{ color: 'var(--muted)', fontSize: 11 }}>{m.cpp}c/pt</span></span>
-                    <span className={`${c.checkValue} ${m.best ? c.best : ''}`}>{fmtUSD(m.value)}</span>
-                  </div>
-                ))}
-              </div>
-            )
-          })}
+          {redemptions.map((r) => <RedemptionPanel key={r.balance.id} comparison={r} />)}
         </>
       )}
 
@@ -345,16 +404,17 @@ export function CoachPage({ balances, onEdit }: Props) {
           <div className={c.panel}>
             <div className={c.panelSub}>Building credit unlocks better cards with higher rewards.</div>
             {milestones.map((m) => (
-              <div key={m.id} className={c.check} style={{ alignItems: 'flex-start' }}>
-                <span className={`${c.checkMark} ${m.achieved ? '' : c.off}`} aria-hidden>{m.achieved ? '✓' : ''}</span>
-                <div className={c.itemMain}>
-                  <div className={c.itemTitle} style={{ fontSize: 13 }}>{m.icon} {m.title}</div>
-                  <div className={c.itemSub}>{m.detail}</div>
-                  {!m.achieved && (
-                    <div className={c.progress}><span style={{ width: `${Math.round(m.progress * 100)}%` }} /></div>
-                  )}
-                </div>
-              </div>
+              <details key={m.id} className={c.milestone}>
+                <summary>
+                  <span className={`${c.checkMark} ${m.achieved ? '' : c.off}`} aria-hidden>{m.achieved ? '✓' : ''}</span>
+                  <span className={c.milestoneTitle}>{m.title}</span>
+                  <LuChevronDown className={c.itemChev} aria-hidden="true" />
+                </summary>
+                <p className={c.itemSub}>{m.detail}</p>
+                {!m.achieved && (
+                  <div className={c.progress}><span style={{ width: `${Math.round(m.progress * 100)}%` }} /></div>
+                )}
+              </details>
             ))}
           </div>
         </>
@@ -368,9 +428,9 @@ export function CoachPage({ balances, onEdit }: Props) {
             <span className={c.sectionMeta}>{SPEND_TXN_COUNT} txns · 30d</span>
           </div>
           <div className={c.list}>
-            {insights.map((i, idx) => (
+            {insights.map((i) => (
               <div key={i.id} className={c.item}>
-                <div className={`${c.itemIcon} ${tint(idx)}`} aria-hidden>{i.emoji}</div>
+                <div className={c.itemIcon}><i.Icon aria-hidden="true" /></div>
                 <div className={c.itemMain}>
                   <div className={c.itemTitle}>{i.label} · {fmtMoney(i.spend)}/mo</div>
                   <div className={c.itemSub}>
@@ -388,7 +448,7 @@ export function CoachPage({ balances, onEdit }: Props) {
               <div className={c.chipLabel}>Missed last month vs. the 1% base rate</div>
               <div className={c.chips}>
                 {missed.byCategory.map((m) => (
-                  <span key={m.id} className={c.chip}>{m.emoji} {m.label} +{fmtMoney(m.missed)}</span>
+                  <span key={m.id} className={c.chip}>{m.label} +{fmtMoney(m.missed)}</span>
                 ))}
               </div>
             </div>
@@ -403,19 +463,13 @@ export function CoachPage({ balances, onEdit }: Props) {
             <span className={c.sectionTitle}>Ideas for your spending</span>
           </div>
           <div className={c.list}>
-            {actions.map((a, i) => (
-              <div key={a.id} className={c.item}>
-                <div className={`${c.itemIcon} ${tint(i)}`} aria-hidden>{a.icon}</div>
-                <div className={c.itemMain}>
-                  <div className={c.itemTitle}>{a.title}</div>
-                  <div className={c.itemSub}>{a.detail}</div>
-                </div>
-              </div>
+            {actions.map((a) => (
+              <CoachItem key={a.id} Icon={a.Icon} title={a.title} detail={a.detail} />
             ))}
-            {tips.map((t, i) =>
+            {tips.map((t) =>
               t.href === '#coach' && !t.balanceId ? (
                 <div key={t.id} className={c.item}>
-                  <div className={`${c.itemIcon} ${tint(i + 2)}`} aria-hidden>{t.icon}</div>
+                  <div className={c.itemIcon}><LuSparkles aria-hidden="true" /></div>
                   <div className={`${c.itemMain} ${c.itemSub}`} style={{ color: 'var(--text)' }}>{t.text}</div>
                 </div>
               ) : (
@@ -430,9 +484,9 @@ export function CoachPage({ balances, onEdit }: Props) {
                       : undefined
                   }
                 >
-                  <div className={`${c.itemIcon} ${tint(i + 2)}`} aria-hidden>{t.icon}</div>
+                  <div className={c.itemIcon}><LuSparkles aria-hidden="true" /></div>
                   <div className={`${c.itemMain} ${c.itemSub}`} style={{ color: 'var(--text)' }}>{t.text}</div>
-                  <span className={c.itemAction} aria-hidden>›</span>
+                  <span className={c.itemAction}><LuChevronRight aria-hidden="true" /></span>
                 </a>
               ),
             )}
