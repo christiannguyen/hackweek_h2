@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   LuArrowLeft,
   LuCheck,
@@ -21,7 +21,7 @@ import {
   LuZap,
 } from 'react-icons/lu'
 import type { IconType } from 'react-icons'
-import { balanceUses, fmtMoney, PROGRAMS, type Balance, type ProgramId } from './data'
+import { PROGRAMS, type Balance, type ProgramId } from './data'
 import { markOnboarded, saveGoals } from './useBalances'
 import styles from './onboarding.module.css'
 
@@ -56,25 +56,24 @@ function CardArt({ name }: { name: string }) {
   )
 }
 
-// Places rewards could go. Each maps to the use whose estimate it reads from: `points` for points cards, `cash` for
-// cashback cards (cashback has no travel or gift-card rate, so most read as a statement credit).
-type UseId = 'travel' | 'everyday' | 'cashback' | 'deposit' | 'checkout'
-interface GoalOption { id: string; label: string; sub: string; icon: IconType; points: UseId; cash: UseId; phrase: string }
+// Places rewards could go. The ids are saved on finish so the app's Use rewards tab can open on one.
+interface GoalOption { id: string; label: string; sub: string; icon: IconType }
 const GOAL_OPTIONS: GoalOption[] = [
-  { id: 'flights', label: 'Flights', sub: 'Book with points', icon: LuPlane, points: 'travel', cash: 'cashback', phrase: 'toward flights' },
-  { id: 'hotels', label: 'Hotels', sub: 'Stays and resorts', icon: LuHotel, points: 'travel', cash: 'cashback', phrase: 'toward hotels' },
-  { id: 'dining', label: 'Dining out', sub: 'Restaurant gift cards', icon: LuUtensils, points: 'everyday', cash: 'cashback', phrase: 'toward dining out' },
-  { id: 'groceries', label: 'Groceries', sub: 'Offset the grocery bill', icon: LuShoppingCart, points: 'cashback', cash: 'cashback', phrase: 'toward groceries' },
-  { id: 'shopping', label: 'Online shopping', sub: 'Pay at checkout', icon: LuShoppingBag, points: 'everyday', cash: 'checkout', phrase: 'at checkout online' },
-  { id: 'gift', label: 'Gift cards', sub: 'For you or others', icon: LuGift, points: 'everyday', cash: 'cashback', phrase: 'in gift cards' },
-  { id: 'events', label: 'Experiences', sub: 'Concerts and events', icon: LuTicket, points: 'everyday', cash: 'cashback', phrase: 'toward experiences' },
-  { id: 'bill', label: 'My card bill', sub: 'A statement credit', icon: LuCreditCard, points: 'cashback', cash: 'cashback', phrase: 'off your card bill' },
-  { id: 'bank', label: 'Cash to my bank', sub: 'A direct deposit', icon: LuLandmark, points: 'cashback', cash: 'deposit', phrase: 'as a bank deposit' },
-  { id: 'charity', label: 'Charity', sub: 'Donate your rewards', icon: LuHeartHandshake, points: 'cashback', cash: 'cashback', phrase: 'to charity' },
+  { id: 'flights', label: 'Flights', sub: 'Book with points', icon: LuPlane },
+  { id: 'hotels', label: 'Hotels', sub: 'Stays and resorts', icon: LuHotel },
+  { id: 'dining', label: 'Dining out', sub: 'Restaurant gift cards', icon: LuUtensils },
+  { id: 'groceries', label: 'Groceries', sub: 'Offset the grocery bill', icon: LuShoppingCart },
+  { id: 'shopping', label: 'Online shopping', sub: 'Pay at checkout', icon: LuShoppingBag },
+  { id: 'gift', label: 'Gift cards', sub: 'For you or others', icon: LuGift },
+  { id: 'events', label: 'Experiences', sub: 'Concerts and events', icon: LuTicket },
+  { id: 'bill', label: 'My card bill', sub: 'A statement credit', icon: LuCreditCard },
+  { id: 'bank', label: 'Cash to my bank', sub: 'A direct deposit', icon: LuLandmark },
+  { id: 'charity', label: 'Charity', sub: 'Donate your rewards', icon: LuHeartHandshake },
 ]
 
-type Step = 'welcome' | 'login' | 'account' | 'cards' | 'balances' | 'goal' | 'setup' | 'done'
+type Step = 'welcome' | 'login' | 'account' | 'cards' | 'balances' | 'goal' | 'setup'
 const PROGRESS: Step[] = ['account', 'cards', 'balances', 'goal']
+const DARK_STEPS = new Set<Step>(['welcome', 'login', 'account', 'cards', 'balances', 'goal', 'setup'])
 
 interface Picked {
   key: string
@@ -99,8 +98,9 @@ interface Flow { step: Step; picked: Picked[]; goals: string[] }
 const loadFlow = (): Flow | null => {
   try {
     const f = JSON.parse(sessionStorage.getItem(FLOW_KEY) ?? 'null') as Flow | null
-    // The account step holds nothing to restore, and setup is a timed beat: both resume one step on.
-    return f && { ...f, step: f.step === 'account' ? 'cards' : f.step === 'setup' ? 'done' : f.step }
+    // The account step holds nothing to restore, so it resumes one step on. A restored 'setup' simply
+    // replays its beat and drops into the app, which is where it was heading anyway.
+    return f && { ...f, step: f.step === 'account' ? 'cards' : f.step }
   } catch {
     return null
   }
@@ -127,25 +127,26 @@ export function Onboarding({ onFinish, onLogin }: OnboardingProps) {
   }
   const back: Partial<Record<Step, Step>> = { login: 'welcome', account: 'welcome', cards: 'account', balances: 'cards', goal: 'balances' }
 
-  // A short "setting up" beat before the summary.
-  useEffect(() => {
-    if (step !== 'setup') return
-    const t = setTimeout(() => go('done'), 1600)
-    return () => clearTimeout(t)
-  }, [step])
-
-  const finish = () => {
+  const finish = useCallback(() => {
     markOnboarded()
     saveGoals(goals)
     sessionStorage.removeItem(FLOW_KEY)
     onFinish(picked.map((p) => ({ programId: p.programId, cardName: p.name, amount: cleanAmount(p) })))
-  }
+  }, [goals, picked, onFinish])
+
+  // A short "setting up" beat, then straight into the app — there is no summary screen to stop at.
+  useEffect(() => {
+    if (step !== 'setup') return
+    const t = setTimeout(finish, 1600)
+    return () => clearTimeout(t)
+  }, [step, finish])
 
   const stepIndex = PROGRESS.indexOf(step)
 
   return (
     <div className={styles.backdrop}>
-      <div className={`${styles.phone} ${step === 'welcome' ? styles.dark : ''}`}>
+      {/* Every onboarding screen shares the dark surface. */}
+      <div className={`${styles.phone} ${DARK_STEPS.has(step) ? styles.dark : ''}`}>
         {(stepIndex >= 0 || step === 'login') && (
           <header className={styles.top}>
             <button className={styles.backBtn} onClick={() => go(back[step]!)} aria-label="Back">
@@ -180,7 +181,6 @@ export function Onboarding({ onFinish, onLogin }: OnboardingProps) {
         {step === 'balances' && <Balances picked={picked} setPicked={setPicked} onNext={() => go('goal')} />}
         {step === 'goal' && <Goal goals={goals} setGoals={setGoals} onNext={() => go('setup')} />}
         {step === 'setup' && <Setup />}
-        {step === 'done' && <Done picked={picked} goals={goals} onFinish={finish} onEditBalances={() => go('balances')} />}
       </div>
     </div>
   )
@@ -204,21 +204,27 @@ function Welcome({ onStart, onLogin }: { onStart: () => void; onLogin: () => voi
   ]
   return (
     <div className={styles.welcome}>
-      {/* The logo's scene: a dark sky, the p's bowl, and a pool the cards float in. */}
-      <div className={styles.bowl} aria-hidden="true" />
-      <Logo light />
-      <h1 className={styles.welcomeTitle}>
-        Make the most of your <em>card rewards</em>
-      </h1>
-      <div className={styles.perks}>
-        <Pool />
-        {perks.map(({ icon: Icon, title, text }) => (
-          <div key={title} className={styles.perk}>
-            <Icon className={styles.perkIcon} aria-hidden="true" />
-            <b>{title}</b>
-            <span>{text}</span>
-          </div>
-        ))}
+      {/* The one piece of the logo's scene that's left: a waterline across the foot of the screen. */}
+      <Pool />
+      <div className={styles.welcomeMain}>
+        <Logo light />
+        <h1 className={styles.welcomeTitle}>
+          Make the most of your <em>card rewards</em>
+        </h1>
+        <p className={styles.welcomeSub}>
+          See what your points and cashback are really worth, across every card you carry.
+        </p>
+        <div className={styles.perks}>
+          {perks.map(({ icon: Icon, title, text }) => (
+            <div key={title} className={styles.perk}>
+              <Icon className={styles.perkIcon} aria-hidden="true" />
+              <div>
+                <b>{title}</b>
+                <span>{text}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
       <div className={styles.welcomeFoot}>
         <button className={styles.primary} onClick={onStart}>Get started</button>
@@ -231,20 +237,14 @@ function Welcome({ onStart, onLogin }: { onStart: () => void; onLogin: () => voi
 }
 
 // One wave period every 200 units; the SVG is two periods wide and slides one period, so the loop is seamless.
-const WAVE = 'M0 20 Q50 6 100 20 T200 20 T300 20 T400 20 V40 H0 Z'
 const SURFACE = 'M0 20 Q50 6 100 20 T200 20 T300 20 T400 20'
 
 function Pool() {
   return (
     <div className={styles.pool} aria-hidden="true">
-      <svg className={`${styles.wave} ${styles.waveBack}`} viewBox="0 0 400 40" preserveAspectRatio="none">
-        <path d={WAVE} />
-      </svg>
       <svg className={styles.wave} viewBox="0 0 400 40" preserveAspectRatio="none">
-        <path d={WAVE} />
         <path className={styles.surface} d={SURFACE} vectorEffect="non-scaling-stroke" />
       </svg>
-      <div className={styles.water} />
     </div>
   )
 }
@@ -263,12 +263,12 @@ function AuthForm({ mode, onNext, onSwitch }: { mode: 'signup' | 'login'; onNext
 
   return (
     <div className={styles.body}>
-      <Logo />
+      <Logo light />
       {login ? (
         <p className={styles.sub} style={{ marginTop: 20 }}>Welcome back. Your cards are saved in this browser.</p>
       ) : (
         <div className={styles.banner}>
-          <b>💰 Rewards, made simple</b>
+          <b>Rewards, made simple</b>
           <span>See what your points and cashback could cover, all in one place.</span>
         </div>
       )}
@@ -344,28 +344,32 @@ function Cards({ picked, setPicked, onNext }: { picked: Picked[]; setPicked: (p:
         <input placeholder="Search cards" value={query} onChange={(e) => setQuery(e.currentTarget.value)} />
       </label>
 
-      <div className={styles.list}>
-        {shown.map((c) => {
-          const on = has(c.name)
-          return (
-            <button key={c.name} className={`${styles.option} ${on ? styles.selected : ''}`} onClick={() => toggle(c)} aria-pressed={on}>
-              <CardArt name={c.name} />
-              <span className={styles.optMain}>
-                <b>{c.name}</b>
-                <span>{c.issuer}</span>
-              </span>
-              <span className={styles.check}>{on && <LuCheck />}</span>
+      {/* The catalog is long enough that the "type the card name" row used to sit off the bottom of the
+          screen. Only this list scrolls, so that row and the Continue button stay put. */}
+      <div className={styles.scroller}>
+        <div className={styles.list}>
+          {shown.map((c) => {
+            const on = has(c.name)
+            return (
+              <button key={c.name} className={`${styles.option} ${on ? styles.selected : ''}`} onClick={() => toggle(c)} aria-pressed={on}>
+                <CardArt name={c.name} />
+                <span className={styles.optMain}>
+                  <b>{c.name}</b>
+                  <span>{c.issuer}</span>
+                </span>
+                <span className={styles.check}>{on && <LuCheck />}</span>
+              </button>
+            )
+          })}
+          {shown.length === 0 && <p className={styles.sub}>No match. Add it below.</p>}
+          {picked.filter((p) => p.programId === 'other').map((p) => (
+            <button key={p.key} className={`${styles.option} ${styles.selected}`} onClick={() => setPicked(picked.filter((x) => x.key !== p.key))} aria-pressed>
+              <CardArt name={p.name} />
+              <span className={styles.optMain}><b>{p.name}</b><span>Other card</span></span>
+              <span className={styles.check}><LuCheck /></span>
             </button>
-          )
-        })}
-        {shown.length === 0 && <p className={styles.sub}>No match. Add it below.</p>}
-        {picked.filter((p) => p.programId === 'other').map((p) => (
-          <button key={p.key} className={`${styles.option} ${styles.selected}`} onClick={() => setPicked(picked.filter((x) => x.key !== p.key))} aria-pressed>
-            <CardArt name={p.name} />
-            <span className={styles.optMain}><b>{p.name}</b><span>Other card</span></span>
-            <span className={styles.check}><LuCheck /></span>
-          </button>
-        ))}
+          ))}
+        </div>
       </div>
 
       <div className={styles.otherRow}>
@@ -420,20 +424,23 @@ function Goal({ goals, setGoals, onNext }: { goals: string[]; setGoals: (g: stri
     <div className={styles.body}>
       <h1 className={styles.title}>Where would you like your rewards to go?</h1>
       <p className={styles.sub}>Pick as many as you like. We’ll show what your balances could cover there. Every option stays one tap away.</p>
-      <div className={styles.goalGrid}>
-        {GOAL_OPTIONS.map(({ id, label, sub, icon: Icon }) => {
-          const on = goals.includes(id)
-          return (
-            <button key={id} className={`${styles.goalTile} ${on ? styles.selected : ''}`} onClick={() => toggle(id)} aria-pressed={on}>
-              <span className={styles.goalTop}>
-                <span className={styles.optIcon}><Icon /></span>
-                <span className={styles.check}>{on && <LuCheck />}</span>
-              </span>
-              <b>{label}</b>
-              <span>{sub}</span>
-            </button>
-          )
-        })}
+      {/* Ten tiles, so the same deal as the card list: the grid scrolls and the two buttons stay put. */}
+      <div className={`${styles.scroller} ${styles.scrollerGoal}`}>
+        <div className={styles.goalGrid}>
+          {GOAL_OPTIONS.map(({ id, label, sub, icon: Icon }) => {
+            const on = goals.includes(id)
+            return (
+              <button key={id} className={`${styles.goalTile} ${on ? styles.selected : ''}`} onClick={() => toggle(id)} aria-pressed={on}>
+                <span className={styles.goalTop}>
+                  <span className={styles.optIcon}><Icon /></span>
+                  <span className={styles.check}>{on && <LuCheck />}</span>
+                </span>
+                <b>{label}</b>
+                <span>{sub}</span>
+              </button>
+            )
+          })}
+        </div>
       </div>
       <div className={styles.footer}>
         <button className={styles.primary} disabled={goals.length === 0} onClick={onNext}>
@@ -455,49 +462,3 @@ function Setup() {
   )
 }
 
-function Done({ picked, goals, onFinish, onEditBalances }: { picked: Picked[]; goals: string[]; onFinish: () => void; onEditBalances: () => void }) {
-  // Up to two of the user's picks per card ("Not sure yet" shows a statement credit), side by side, no ranking.
-  const chosen = GOAL_OPTIONS.filter((o) => goals.includes(o.id))
-  return (
-    <div className={styles.body}>
-      <div className={styles.doneBadge}><LuCheck /></div>
-      <h1 className={styles.title}>You’re all set</h1>
-      <p className={styles.sub}>Here’s what each balance could look like. Each program’s rewards are used within that program.</p>
-      <div className={styles.list}>
-        {picked.map((p) => {
-          const b: Balance = { id: 0, programId: p.programId, cardName: p.name, amount: cleanAmount(p), updatedAt: '' }
-          const uses = balanceUses(b)
-          const cash = PROGRAMS[p.programId].type === 'cashback'
-          // One line per way of using the balance: two picks that read from the same use (flights and hotels are both
-          // travel) would just repeat the same number. Cashback is exact, so it gets no "≈".
-          const seen = new Set<string>()
-          const parts = (chosen.length ? chosen : [GOAL_OPTIONS.find((o) => o.id === 'bill')!])
-            .map((o) => {
-              const use = uses.find((u) => u.id === (cash ? o.cash : o.points))
-              if (!use || seen.has(use.id)) return null
-              seen.add(use.id)
-              return `${cash ? '' : '≈'}${fmtMoney(use.value)} ${o.phrase}`
-            })
-            .filter(Boolean)
-            .slice(0, 2)
-          const line = !(b.amount > 0)
-            ? 'Add your balance to see where it could go'
-            : parts.length
-              ? `Could be ${parts.join(' or ')}`
-              : 'Estimates coming soon'
-          return (
-            <div key={p.key} className={styles.balanceRow}>
-              <CardArt name={p.name} />
-              <span className={styles.optMain}><b>{p.name}</b><span>{line}</span></span>
-            </div>
-          )
-        })}
-      </div>
-      <p className={styles.fine}>Estimates only, based on illustrative rates.</p>
-      <div className={styles.footer}>
-        <button className={styles.primary} onClick={onFinish}>Go to my Pointpool</button>
-        <button className={styles.ghost} onClick={onEditBalances}>Edit balances</button>
-      </div>
-    </div>
-  )
-}
