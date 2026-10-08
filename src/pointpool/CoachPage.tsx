@@ -369,7 +369,7 @@ export function CoachPage({ balances, onEdit }: Props) {
 
       {/* Spending breakdown */}
       {insights.length > 0 && (
-        <div className={styles.card}>
+        <div className={`${styles.card} ${styles.darkCard}`}>
           <h2>Your spending breakdown</h2>
           <div className={styles.cardSub}>Based on {SPEND_TXN_COUNT} transactions from the last 30 days. Here's where your money goes and how each card earns.</div>
           {insights.map((i) => (

@@ -198,7 +198,7 @@ export function OffersPage({ balances, onEdit }: Props) {
       </div>
 
       {/* Location section */}
-      <div className={styles.card}>
+      <div className={`${styles.card} ${styles.darkCard}`}>
         <h2>Nearby offers</h2>
         <div className={styles.cardSub}>Places where your cards could earn bonus rewards. Sample places for this demo.</div>
 
@@ -307,7 +307,7 @@ export function OffersPage({ balances, onEdit }: Props) {
             <span className={styles.sectionTitle}>Ways to use your rewards</span>
           </div>
           {cardsWithRedemptions.map(({ balance: b, offers }) => (
-            <div key={b.id} className={styles.card}>
+            <div key={b.id} className={`${styles.card} ${styles.darkCard}`}>
               <div className={styles.cardHead}>
                 <h2 className={styles.ellipsis}>{b.cardName}</h2>
                 <span className={`${styles.tag} ${styles.sm}`}>{fmtBalance(b)}</span>

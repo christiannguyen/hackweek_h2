@@ -63,23 +63,26 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
 
   return (
     <>
-      <h3 className={styles.groupHead}>Your top {TOP_CATEGORIES.length} categories</h3>
-      <div className={styles.catTabs} role="group" aria-label="Category">
-        {TOP_CATEGORIES.map((c) => {
-          const Icon = icons[c.id]
-          return (
-            <button key={c.id} className={`${styles.catTab} ${c.id === category ? styles.active : ''}`}
-              aria-pressed={c.id === category} onClick={() => { setSelection(undefined); onCategory(c.id) }}>
-              <Icon className={styles.categoryIcon} aria-hidden="true" />
-              <span className={styles.catLabel}>{c.label}</span>
-              <span className={styles.catSpend}>{fmtMoney(SPEND[c.id])}<small>/mo</small></span>
-            </button>
-          )
-        })}
-      </div>
-      <div className={styles.compareHeading}>
-        <h3>{categoryLabel} · {noCards ? 'what could your spending earn?' : 'how your cards compare'}</h3>
-        <span>{fmtDollars(spend * 12)} / yr</span>
+      {/* Dark band at the top of the hero card: the category picker and what this one is worth a year. */}
+      <div className={styles.compareHead}>
+        <h3 className={styles.groupHead}>Your top {TOP_CATEGORIES.length} categories</h3>
+        <div className={styles.catTabs} role="group" aria-label="Category">
+          {TOP_CATEGORIES.map((c) => {
+            const Icon = icons[c.id]
+            return (
+              <button key={c.id} className={`${styles.catTab} ${c.id === category ? styles.active : ''}`}
+                aria-pressed={c.id === category} onClick={() => { setSelection(undefined); onCategory(c.id) }}>
+                <Icon className={styles.categoryIcon} aria-hidden="true" />
+                <span className={styles.catLabel}>{c.label}</span>
+                <span className={styles.catSpend}>{fmtMoney(SPEND[c.id])}<small>/mo</small></span>
+              </button>
+            )
+          })}
+        </div>
+        <div className={styles.compareHeading}>
+          <h3>{categoryLabel} · {noCards ? 'what could your spending earn?' : 'how your cards compare'}</h3>
+          <span>{fmtDollars(spend * 12)} / yr</span>
+        </div>
       </div>
       {noCards ? (
         <>
