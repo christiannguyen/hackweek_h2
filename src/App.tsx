@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { MobileShell } from '@/components/MobileShell'
+import { PointPoolDemo } from '@/demo/PointPoolDemo'
 import { AccountSheet } from '@/pointpool/AccountSheet'
 import { BalanceSheet } from '@/pointpool/BalanceSheet'
 import { CoachPage } from '@/pointpool/CoachPage'
@@ -37,6 +38,9 @@ function App() {
     onCategory: setCategory,
     onEdit: openSheet,
   }
+
+  // The scripted presentation demo stands on its own: no sign-up, no tab bar.
+  if (route === 'demo') return <PointPoolDemo />
 
   if (onboarding || route === 'welcome') {
     return (
