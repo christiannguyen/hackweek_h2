@@ -36,8 +36,9 @@ const HOME_LIMIT = 3
 // Recommendations always use the strongest owned card, even when the user explores another baseline.
 export function CardCompare({ balances, category, onCategory, onEdit, variant = 'condensed' }: CompareProps) {
   const full = variant === 'full'
-  const noCards = balances.length === 0
   const { yours, best, worth, close, rest } = compareCards(balances, category)
+  // "No cards" means none we can estimate: an onboarding "other" card alone gets the first-card view, not an empty wallet.
+  const noCards = yours.length === 0
   const [selection, setSelection] = useState<{ category: CategoryId; key: string }>()
   const selected = (selection?.category === category && yours.find((o) => o.key === selection.key)) || best
   const isBest = selected?.key === best?.key
@@ -104,7 +105,7 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
           ) : (
             <div className={styles.compareEmpty}>
               <p>Your cards don’t have reward estimates yet.</p>
-              <button className={styles.btnText} onClick={() => onEdit()}>Manage cards</button>
+              <button className={styles.btnText} onClick={() => onEdit()}>Add a card</button>
             </div>
           )}
         </div>

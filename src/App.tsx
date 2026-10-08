@@ -19,6 +19,9 @@ function App() {
   const { balances, upsert, remove, replaceAll } = useBalances()
   // First visit (or "#welcome" to replay it) shows the simulated sign-up and card setup.
   const [onboarding, setOnboarding] = useState(() => !isOnboarded() || window.location.hash === '#welcome')
+  // A first run swaps the sample wallet for the user's picks; a replay adds new picks to the cards already saved.
+  // Read each render: finishing marks onboarding done, so a later replay in the same visit counts as a replay.
+  const firstRun = !isOnboarded()
   // Shared so the category picked on the home hero carries into the full Coach page. Starts on the user's
   // highest-spend category.
   const [category, setCategory] = useState<CategoryId>(TOP_CATEGORY)
@@ -37,7 +40,14 @@ function App() {
     return (
       <Onboarding
         onFinish={(cards) => {
-          replaceAll(cards)
+          if (firstRun) replaceAll(cards)
+          else
+            for (const c of cards)
+              if (!balances.some((b) => b.cardName.trim().toLowerCase() === c.cardName.trim().toLowerCase())) upsert(c)
+          setOnboarding(false)
+          window.location.hash = '#home'
+        }}
+        onLogin={() => {
           setOnboarding(false)
           window.location.hash = '#home'
         }}

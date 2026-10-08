@@ -60,7 +60,6 @@ a.card { text-decoration: none; color: inherit; display: block; }
 .cardHead > :last-child:not(:first-child) { flex-shrink: 0; }
 .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chev { color: #9a9a9a; font-size: 20px; line-height: 1; text-decoration: none; }
-.label { color: var(--muted); font-size: 12px; }
 .body { color: var(--text); font-size: 14px; line-height: 1.45; }
 
 .tag {
@@ -72,7 +71,6 @@ a.card { text-decoration: none; color: inherit; display: block; }
 .tag.warn { background: var(--orange-tint); color: var(--orange); }
 .tag.gray { background: #f0f0f0; color: #777; }
 
-.green { color: var(--green); }
 
 /* Smart-tasks style banner (lime border + lime arrow) */
 .tip {
@@ -128,16 +126,6 @@ a.row { text-decoration: none; color: inherit; }
 .add { font-weight: 600; }
 
 /* Chips (category / goal pickers) */
-.chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
-.chips::-webkit-scrollbar { display: none; }
-/* Inside a card, chips scroll edge to edge (like the carousel) instead of clipping at the card padding. */
-.card .chips { margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; scroll-padding: 0 16px; }
-.chip {
-  font: inherit; font-size: 13px; white-space: nowrap;
-  border: 1px solid #e6e6e6; background: #fff; color: var(--ink);
-  padding: 6px 12px; border-radius: 999px; cursor: pointer;
-}
-.chip.active { background: var(--selection-tint); color: var(--selection-ink); border-color: var(--selection-border); }
 
 /* Earn more on your spending (hero card) */
 .coachHero h2 { font-size: 20px; }
@@ -163,25 +151,8 @@ a.row { text-decoration: none; color: inherit; }
 
 /* Where your points could go */
 .cardSub { font-size: 13px; color: var(--text); margin-top: 4px; line-height: 1.4; }
-.useBlock { padding: 12px 0 2px; border-top: 1px solid var(--line); margin-top: 12px; }
-.useHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-.useTitle { flex: 1; min-width: 0; font-size: 15px; font-weight: 500; }
-.useHead > span { flex-shrink: 0; }
-.useLine { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 1.4; margin-top: 6px; }
-.useLine b { font-weight: 600; }
-.useEmoji { flex-shrink: 0; width: 20px; text-align: center; }
-.useDetail { display: block; font-size: 12px; color: var(--muted); }
-.tie { font-size: 13px; color: var(--green); margin-top: 8px; line-height: 1.35; }
 
 /* Redeem */
-.priceInput { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
-.priceInput input {
-  font: inherit; font-size: 15px; width: 100%;
-  padding: 9px 12px; border: 1px solid #e2e2e2; border-radius: 12px; background: #fff;
-}
-.estimate { background: #f5fbf3; border-radius: 12px; padding: 10px 12px; margin-top: 10px; font-size: 13px; line-height: 1.45; }
-.assumptions { font-size: 11px; color: var(--muted); margin-top: 4px; }
-.steps { margin: 10px 0 0; padding-left: 18px; color: var(--text); line-height: 1.6; font-size: 13px; }
 
 /* Location / nearby offers (Offers tab) */
 .locActions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 14px; }
@@ -405,8 +376,6 @@ a.row { text-decoration: none; color: inherit; }
    card earns now (gray), the extra on top (green), and the share of the rewards a new card's fee takes back
    (striped). Values sit at the bar tip, in ink. */
 .chartHead { margin-top: 18px; }
-.chartTitle { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.3; color: var(--ink); }
-.chartSub { margin: 3px 0 0; font-size: 12px; line-height: 1.4; color: var(--muted); }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; font-size: 12px; color: var(--text); }
 .legend > span { display: inline-flex; align-items: center; gap: 6px; }
 .legend i { width: 12px; height: 12px; border-radius: 3px; }
@@ -434,13 +403,6 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .why { display: block; margin-top: 5px; font-size: 12px; line-height: 1.35; color: var(--text); }
 
 /* Full page: the cards that aren't close to worth it, folded under one line */
-.skip { border-top: 1px solid var(--line); }
-.colHead + .skip { border-top: none; }
-.skip > summary + .barItem { margin-top: 2px; }
-.skip > summary { list-style: none; cursor: pointer; width: fit-content; padding: 11px 0 3px; font-size: 13px; font-weight: 500; color: var(--muted); border-radius: 6px; }
-.skip > summary::-webkit-details-marker { display: none; }
-.skip > summary::after { content: '›'; display: inline-block; margin-left: 6px; transition: transform 0.15s; }
-.skip[open] > summary::after { transform: rotate(90deg); }
 
 .math {
   margin: 2px 16px 8px 0; padding: 10px 12px; border-radius: 12px;
@@ -467,12 +429,14 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .card > .meter { margin-top: 12px; }
 .goalTip { font-size: 12px; color: var(--muted); margin-top: 12px; line-height: 1.4; }
 
-.catTab:focus-visible, .chip:focus-visible, .btnText:focus-visible, .moreLink:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
-.catTab:focus-visible, .chip:focus-visible { outline-color: var(--selection-border); }
-.barRow:focus-visible, .skip > summary:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
+.catTab:focus-visible, .btnText:focus-visible, .moreLink:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.catTab:focus-visible { outline-color: var(--selection-border); }
+.barRow:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
+.row[role="button"]:focus-visible, .walletTile[role="button"]:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 2px; }
+.row[role="button"] { cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
-  .barRow::after, .bar, .skip > summary::after { transition: none; }
+  .barRow::after, .bar { transition: none; }
 }
 
 /* Manual rewards balances and visual redemption examples. */

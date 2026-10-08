@@ -7,10 +7,20 @@ export function FreshnessTag({ balance }: { balance: Balance }) {
   return <span className={`${styles.tag} ${styles.sm} ${styles.warn}`}>Update balance</span>
 }
 
-export function BackLink({ to = '#pointpool', label = 'Wallet' }: { to?: string; label?: string } = {}) {
+// Goes back to wherever the user came from (Home or Wallet both link to Learn); Home when there's nowhere to go back to.
+export function BackLink() {
   return (
-    <a className={styles.back} href={to}>
-      ‹ {label}
+    <a
+      className={styles.back}
+      href="#home"
+      onClick={(e) => {
+        if (window.history.length > 1) {
+          e.preventDefault()
+          window.history.back()
+        }
+      }}
+    >
+      ‹ Back
     </a>
   )
 }

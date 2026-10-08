@@ -8,7 +8,7 @@ const TABS: { label: string; icon: IconType; hash: string }[] = [
   { label: 'Home', icon: LuHouse, hash: '#home' },
   { label: 'Card Coach', icon: LuGraduationCap, hash: '#coach' },
   { label: 'Use rewards', icon: LuGift, hash: '#redeem' },
-  { label: 'Wallet', icon: LuWallet, hash: '#pointpool' },
+  { label: 'Wallet', icon: LuWallet, hash: '#wallet' },
   { label: 'Offers', icon: LuCreditCard, hash: '#offers' },
 ]
 
@@ -20,7 +20,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
-  const routeHash = hash.split('/')[0]
+  const routeHash = hash.split('/')[0] === '#pointpool' ? '#wallet' : hash.split('/')[0]
   const isTab = TABS.some((t) => t.hash === routeHash)
 
   return (
