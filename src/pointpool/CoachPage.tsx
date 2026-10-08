@@ -142,7 +142,7 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
         id: `rotate-${b.id}`,
         Icon: LuLayers,
         title: `${b.cardName} has a quarterly bonus to activate`,
-        detail: `Its rotating categories include ${bonus.map((c) => catName(c.id)).join(', ')}. The bonus rate applies once it's activated each quarter.`,
+        detail: `Its rotating categories include ${bonus.map((c) => catName(c.id)).join(', ')}. The bonus rate applies once it’s activated each quarter.`,
       })
     }
   }
@@ -241,7 +241,7 @@ function RedemptionPanel({ comparison }: { comparison: RedemptionComparison }) {
           <p className={c.panelNote}>
             This program is worth about {methods[0].cpp}¢ a {program.unit === 'miles' ? 'mile' : 'point'} whichever
             way you redeem — travel, gift cards, or a statement credit all come out the same, so pick whatever
-            you'll actually use.
+            you’ll actually use.
           </p>
         </>
       ) : (

@@ -84,17 +84,6 @@ a.card { text-decoration: none; color: inherit; display: block; }
 
 
 /* Smart-tasks style banner (lime border + lime arrow) */
-.tip {
-  display: flex; align-items: center; gap: 10px;
-  background: #fff;
-  border: 1.5px solid var(--lime-border);
-  border-radius: var(--radius);
-  padding: 10px 12px;
-  text-decoration: none; color: var(--ink);
-}
-.tipIcon { width: 30px; height: 30px; border-radius: 8px; background: #8fdc5a; display: grid; place-items: center; font-size: 16px; flex-shrink: 0; }
-.tipMain { flex: 1; min-width: 0; }
-.tipText { font-size: 13px; line-height: 1.35; }
 
 /* Balance list rows */
 .row {
@@ -142,23 +131,8 @@ a.row { text-decoration: none; color: inherit; }
 .coachHero h2 { font-size: 20px; }
 .coachHero { border: none; background: #fff; }
 .note { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
-.sample { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.4; }
 .moreLink { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 500; color: var(--green-ink); text-decoration: none; }
 /* Card Coach: spending analysis */
-.coachCatRow { padding: 12px 0; border-top: 1px solid var(--line); }
-.coachCatRow:first-of-type { border-top: none; margin-top: 10px; }
-.coachCatHead {
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 14px; font-weight: 500;
-}
-.coachCatSpend { font-variant-numeric: tabular-nums; }
-.coachCatDetail {
-  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
-  margin-top: 4px; font-size: 13px; color: var(--text);
-}
-.coachCatDetail b { font-weight: 600; }
-.coachCatCard { min-width: 0; }
-.coachCatEarn { flex-shrink: 0; font-weight: 600; color: var(--green); }
 
 /* Where your points could go */
 .cardSub { font-size: 13px; color: var(--text); margin-top: 4px; line-height: 1.4; }
@@ -168,10 +142,11 @@ a.row { text-decoration: none; color: inherit; }
 /* Location / nearby offers (Offers tab) */
 .locActions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 14px; }
 .locBtn {
-  font: inherit; font-size: 14px; font-weight: 500;
+  font: inherit; font-size: 14px; font-weight: 600;
   display: flex; align-items: center; gap: 6px;
   background: var(--ink); color: #fff; border: none;
   padding: 10px 20px; border-radius: 999px; cursor: pointer; width: 100%; justify-content: center;
+  min-height: 48px;
 }
 .locOr { font-size: 12px; color: var(--muted); }
 .locZip { width: 100%; }
@@ -203,7 +178,7 @@ a.row { text-decoration: none; color: inherit; }
    recolours the primitives (rows, tags, meters, text buttons) that those panels are built from, so
    a panel doesn't need per-page overrides. Light cards are still the default — tips, promos and
    the comparison tiles stay light so the card faces and rate numbers keep their contrast. */
-.darkCard, .walletTile { background: var(--dark); color: #fff; box-shadow: none; }
+.darkCard { background: var(--dark); color: #fff; box-shadow: none; }
 /* Home's wallet summary: the whole tile is the link to the Wallet tab, so the rows inside are a
    preview rather than controls of their own. */
 /* `a.card` sets `color: inherit`, which outranks .darkCard's white on its own element. */
@@ -212,8 +187,8 @@ a.walletLink { display: block; color: #fff; }
 .walletLink .cardHead { align-items: flex-start; }
 .walletLink .chev { font-size: 20px; line-height: 1; }
 @media (hover: hover) { .walletLink:hover .chev { color: var(--lime); } }
-.darkCard .rowIcon, .walletTile .rowIcon { background: var(--dark-raised); color: var(--lime); }
-.darkCard .rowSub, .walletTile .rowSub { color: var(--dark-muted); }
+.darkCard .rowIcon { background: var(--dark-raised); color: var(--lime); }
+.darkCard .rowSub { color: var(--dark-muted); }
 .darkCard .cardSub { color: var(--dark-text); }
 .darkCard .empty { color: var(--dark-muted); }
 .darkCard .row { border-top-color: var(--dark-line); }
@@ -223,17 +198,10 @@ a.walletLink { display: block; color: #fff; }
 .darkCard .btnText { color: var(--lime); }
 .darkCard .tag { background: var(--dark-raised); color: var(--lime); }
 .darkCard .tag.gray { background: var(--dark-raised); color: var(--dark-muted); }
-.walletTile .tileSection { border-top-color: var(--dark-line); }
-.walletTile .tileLabel { color: var(--dark-muted); }
-.walletTile .tileValue { color: #fff; }
-.walletTile .tileSection:last-child .tileValue { color: var(--lime); }
-.darkCard .meterBar, .walletTile .meterBar { background: var(--dark-line); }
-.darkCard .tag.warn, .walletTile .tag.warn { background: var(--dark-warn); color: var(--dark-warn-ink); }
+.darkCard .meterBar { background: var(--dark-line); }
+.darkCard .tag.warn { background: var(--dark-warn); color: var(--dark-warn-ink); }
 
 /* Card Coach's spending breakdown on the dark surface. */
-.darkCard .coachCatRow { border-top-color: var(--dark-line); }
-.darkCard .coachCatDetail { color: var(--dark-text); }
-.darkCard .coachCatEarn { color: var(--lime); }
 
 /* Offers' location controls on the dark surface: the detect button takes the lime the dark cards use
    for their primary action, and the ZIP field becomes a raised panel rather than a white cut-out. */
@@ -288,16 +256,8 @@ a.walletLink { display: block; color: #fff; }
   color: rgba(255, 255, 255, 0.92);
   text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.45);
 }
-.walletTile:hover .cardArt {
-  transform: translateY(-1px);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.4),
-    0 2px 3px rgba(0, 0, 0, 0.4),
-    0 8px 16px -4px rgba(0, 0, 0, 0.5);
-}
 @media (prefers-reduced-motion: reduce) {
   .cardArt { transition: none; }
-  .walletTile:hover .cardArt { transform: none; }
 }
 
 /* Wallet deck (PointpoolPage.tsx) — the cards fanned rather than listed. The deck box is one card
@@ -400,7 +360,6 @@ a.walletLink { display: block; color: #fff; }
   border-radius: var(--radius) var(--radius) 0 0;
   background: var(--dark); color: #fff;
 }
-.compareHead .groupHead { margin-top: 0; color: #fff; }
 /* The chips need room: the heading is a new thought, not a caption on the filter row. */
 .compareHead .compareHeading { margin: 26px 0 0; }
 .compareHead .compareHeading > span { color: var(--dark-muted); }
@@ -453,7 +412,7 @@ a.walletLink { display: block; color: #fff; }
 /* Shared neutral eyebrow: both columns are advice, so the axis of comparison is the action, not the endorsement. */
 .colEyebrow { display: block; font-size: 11px; font-weight: 650; letter-spacing: 0.6px; color: #626b5e; margin-bottom: 3px; }
 .compareColumn:nth-child(2) h4 .colEyebrow { color: #8d948a; }
-.compareTile { position: relative; flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 12px 10px; background: #f7f8f3; border: 1.5px solid #e0e5d9; border-radius: 20px; }
+.compareTile { position: relative; flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 12px 10px; background: #f7f8f3; border: 1.5px solid #e0e5d9; border-radius: 14px; }
 .compareWinner { border-color: var(--selection-border); box-shadow: 0 0 0 3px var(--selection-glow); }
 .winnerBadge { position: absolute; top: -12px; right: 8px; background: var(--lime); color: #182117; border: 1px solid var(--lime-border); padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 /* Comparison card faces — the wallet's brand-tinted card art (.cardArt above) at tile size, so
@@ -534,11 +493,11 @@ a.walletLink { display: block; color: #fff; }
 .tileDetails { font-size: 11px; color: #626b5e; margin-top: 8px; line-height: 1.4; }
 .tileDetails summary { cursor: pointer; }
 .tileDetails p { margin: 6px 0; }
-.compareEmpty { flex: 1; background: #f7f8f3; border: 1px dashed #e0e5d9; border-radius: 20px; padding: 18px 12px; font-size: 12px; line-height: 1.5; color: #626b5e; }
+.compareEmpty { flex: 1; background: #f7f8f3; border: 1px dashed #e0e5d9; border-radius: 14px; padding: 18px 12px; font-size: 12px; line-height: 1.5; color: #626b5e; }
 .compareEmpty p { margin: 0 0 12px; }
 /* Opens on a tap: the tiles above already carry the numbers, so the sentence reading them back waits to be asked
    for rather than sitting between the comparison and the button. */
-.compareTakeaway { margin-top: 16px; padding: 12px 14px; background: #eaf7e4; border-radius: 16px; font-size: 13px; line-height: 1.5; }
+.compareTakeaway { margin-top: 16px; padding: 12px 14px; background: #eaf7e4; border-radius: 12px; font-size: 13px; line-height: 1.5; }
 .compareTakeaway summary { display: flex; align-items: center; gap: 10px; min-height: 24px; cursor: pointer; font-weight: 600; color: var(--green-ink); list-style: none; }
 .compareTakeaway summary::-webkit-details-marker { display: none; }
 .compareTakeaway summary svg { flex-shrink: 0; width: 20px; height: 20px; }
@@ -549,7 +508,7 @@ a.walletLink { display: block; color: #fff; }
 .compareCta { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; min-height: 48px; border-radius: 16px; background: var(--lime); color: #182117; text-decoration: none; font-size: 15px; font-weight: 600; padding: 12px; }
 .compareCta:hover { background: #9fee35; }
 .firstCardIntro { margin: -8px 0 16px; font-size: 13px; line-height: 1.5; color: #626b5e; }
-.firstCardOpportunity { padding: 20px 16px 14px; border: 1.5px solid var(--selection-border); border-radius: 20px; background: #fff; box-shadow: 0 0 0 3px var(--selection-glow); }
+.firstCardOpportunity { padding: 20px 16px 14px; border: 1.5px solid var(--selection-border); border-radius: 14px; background: #fff; box-shadow: 0 0 0 3px var(--selection-glow); }
 .firstCardEyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--green-ink); }
 .firstCardValue { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; font-size: 46px; line-height: 1.15; letter-spacing: -1.5px; font-weight: 700; }
 .firstCardValue > span { font-size: 15px; font-weight: 400; letter-spacing: 0; color: #626b5e; }
@@ -573,55 +532,18 @@ a.walletLink { display: block; color: #fff; }
 }
 /* Reads as a heading for the tiles under it, not a muted caption, so it carries the
    card/section weight (650) in ink rather than --muted. */
-.groupHead { font-size: 15px; font-weight: 650; color: var(--ink); margin: 16px 0 6px; letter-spacing: -0.2px; }
 /* Top margin only separates it from what's above; the card's padding handles the first one. */
-.card .groupHead:first-child { margin-top: 0; }
 /* A group heading with a note on the right ("Your cards ... Each on all $460") */
 .colHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 18px 0 2px; font-size: 12px; color: var(--muted); }
 .colHead h3 { margin: 0; font-size: 13px; font-weight: 500; }
-.dim { color: var(--muted); }
 
 /* The comparison chart: one bar per card, each the whole month on that card, on one scale. Segments: what your best
    card earns now (gray), the extra on top (green), and the share of the rewards a new card's fee takes back
    (striped). Values sit at the bar tip, in ink. */
-.chartHead { margin-top: 18px; }
-.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; font-size: 12px; color: var(--text); }
-.legend > span { display: inline-flex; align-items: center; gap: 6px; }
-.legend i { width: 12px; height: 12px; border-radius: 3px; }
-
-.barRow { display: flex; align-items: center; gap: 8px; padding: 8px 0; color: inherit; text-decoration: none; list-style: none; cursor: pointer; border-radius: 8px; }
-.barRow::-webkit-details-marker { display: none; }
-.barRow::after { content: '›'; flex-shrink: 0; width: 8px; color: #9a9a9a; transition: transform 0.15s; }
-details[open] > .barRow::after { transform: rotate(90deg); }
-.barMain { flex: 1; min-width: 0; }
-.barName { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; line-height: 1.3; }
-.barName > :first-child { min-width: 0; font-weight: 500; color: var(--ink); }
-.barCost { flex-shrink: 0; font-size: 12px; color: var(--muted); }
-.barLine { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
-.bar { display: flex; gap: 2px; flex-shrink: 0; height: 12px; min-width: 4px; transition: opacity 0.15s; }
-.bar > span { flex-basis: 0; min-width: 2px; }
-.bar > :last-child { border-radius: 0 4px 4px 0; }
-.barRow:hover .bar { opacity: 0.8; }
-.barValue { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.barValue.dim { font-weight: 500; color: var(--muted); }
-.segNow { background: #a9b0ab; }
-.segMore { background: var(--green); }
-.segFee { background: repeating-linear-gradient(45deg, #b8460f 0 1.5px, #f3dccf 1.5px 4px); }
 
 /* Why a card isn't worth it, under its bar */
-.why { display: block; margin-top: 5px; font-size: 12px; line-height: 1.35; color: var(--text); }
 
 /* Full page: the cards that aren't close to worth it, folded under one line */
-
-.math {
-  margin: 2px 16px 8px 0; padding: 10px 12px; border-radius: 12px;
-  background: #f7f7f8; font-size: 13px; color: var(--text);
-}
-.mathLine { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; font-variant-numeric: tabular-nums; }
-.mathLine > :last-child { white-space: nowrap; }
-.mathSub { display: block; font-size: 12px; color: var(--muted); }
-.mathTotal { font-weight: 600; color: var(--ink); border-top: 1px solid #e8e8ea; margin-top: 4px; padding-top: 6px; }
-.math .moreLink { margin-top: 8px; }
 
 /* Score goal: the next credit tier and the cards it opens up */
 .goal {
@@ -636,21 +558,15 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .meterBar { flex: 1; height: 6px; border-radius: 999px; background: #eceeec; overflow: hidden; }
 .meterFill { display: block; height: 100%; border-radius: inherit; background: var(--green); }
 .card > .meter { margin-top: 12px; }
-.goalTip { font-size: 12px; color: var(--muted); margin-top: 12px; line-height: 1.4; }
 
 .catTab:focus-visible, .btnText:focus-visible, .moreLink:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 .catTab:focus-visible { outline-color: var(--selection-border); }
-.barRow:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
-.row[role="button"]:focus-visible, .walletTile[role="button"]:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 2px; }
+.row[role="button"]:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 2px; }
 .row[role="button"] { cursor: pointer; }
 /* The green focus ring above is too dark to see on a dark panel, so those take the lime instead. */
 .darkCard .row[role="button"]:focus-visible, .darkCard a.row:focus-visible,
 .darkCard .btnText:focus-visible, .darkCard .locBtn:focus-visible, .darkCard .locInput:focus-visible {
   outline: 2px solid var(--lime); outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .barRow::after, .bar { transition: none; }
 }
 
 /* Manual rewards balances and visual redemption examples. */
@@ -722,7 +638,6 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 
 /* Compare cards uses the shared surfaces and reward/fee colours. The baseline is the user’s
    existing card; columns show the monthly difference after each new card’s fee. */
-.chartSub { margin: 4px 0 0; font-size: 12px; color: #626b5e; }
 .verdict { margin: 14px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--surface-soft); font-size: 12px; line-height: 1.45; color: var(--text); }
 .verdict strong { display: block; margin-bottom: 2px; font-size: 20px; font-weight: 700; letter-spacing: -0.4px; line-height: 1.2; color: var(--ink); font-variant-numeric: tabular-nums; }
 .verdictWin { background: var(--green-tint); }
@@ -788,7 +703,7 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .chartMath dl > .chartMathTotal { margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--line); font-weight: 650; }
 .chartMath p { margin: 6px 0 0; color: var(--text); }
 .chartMath p.chartVs { margin-top: 0; font-weight: 600; color: var(--ink); }
-.chartApply { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; margin-top: 12px; border-radius: 12px; background: var(--lime); color: var(--lime-ink); text-decoration: none; font-size: 13px; font-weight: 600; }
+.chartApply { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; margin-top: 12px; border-radius: 16px; background: var(--lime); color: var(--lime-ink); text-decoration: none; font-size: 15px; font-weight: 600; }
 .chartApply:hover { background: #9fee35; }
 .chartEmpty { margin: 12px 0 0; padding: 12px; border-radius: 10px; background: var(--surface-soft); font-size: 12px; line-height: 1.45; color: var(--text); }
 .chartHint { margin: 10px 0 0; font-size: 11px; color: var(--muted); }
