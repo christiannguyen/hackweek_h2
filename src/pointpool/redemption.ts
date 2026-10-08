@@ -10,18 +10,15 @@ export const REDEMPTION_EXAMPLES = [
 
 export type RedemptionId = typeof REDEMPTION_EXAMPLES[number]['id']
 
-// Cash balances get a money-back preview; additional redemption methods require card-specific eligibility.
-export function redemptionExamples(balance: Balance) {
-  return PROGRAMS[balance.programId].type === 'cashback'
-    ? REDEMPTION_EXAMPLES.filter((example) => example.id === 'credit')
-    : REDEMPTION_EXAMPLES
-}
+// Every balance gets all four of them. Cashback can't be redeemed straight into a flight the way points
+// can, but it is money: taken as a credit or deposit it covers any of these at face value, so showing a
+// cashback card only "pay down your card" undersold it.
 
 export function redemptionEstimate(balance: Balance, goal: GoalId, price: number) {
   const program = PROGRAMS[balance.programId]
   if (!hasEstimates(program) || !Number.isFinite(price) || price <= 0 || !Number.isFinite(balance.amount) || balance.amount < 0) return null
+  // Cashback is worth its face value whatever you put it toward, so every goal is 100¢ on the dollar.
   const cash = program.type === 'cashback'
-  if (cash && goal !== 'cashback') return null
   const cpp = cash ? 100 : program.cpp?.[goal]
   if (!cpp || cpp <= 0) return null
   const cents = (n: number) => Math.round(n * 100) / 100
