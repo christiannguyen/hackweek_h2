@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LuArrowUpRight, LuFuel, LuShoppingBag, LuUtensils } from 'react-icons/lu'
+import { LuArrowUpRight } from 'react-icons/lu'
 import type { CompareProps } from './CardCompare'
 import {
   catName,
@@ -8,13 +8,14 @@ import {
   fmtDollars,
   fmtMoney,
   fmtRate,
+  passesFee,
   SPEND,
-  TOP_CATEGORIES,
   type Balance,
   type CardOption,
   type CategoryId,
+  type FeeFilter,
 } from './data'
-import { Disclaimer } from './shared'
+import { Disclaimer, SpendingControls } from './shared'
 import { routeParam } from './useHashRoute'
 import styles from './pointpool.module.css'
 
@@ -24,7 +25,6 @@ interface Props {
   compare: CompareProps
 }
 
-const categoryIcons = { food: LuUtensils, shopping: LuShoppingBag, transport: LuFuel }
 const c2 = (n: number) => Math.round(n * 100) / 100
 const money = (n: number) => (n < 0 ? `−${fmtMoney(-n)}` : fmtMoney(n))
 const signed = (n: number) => (n < 0 ? `−${fmtMoney(-n)}` : `+${fmtMoney(n)}`)
@@ -36,12 +36,6 @@ const perMonth = (o: CardOption) => {
 }
 // The chart always spans at least this much a month, so a $1 gain looks small instead of filling the chart.
 const MIN_SPAN = 5
-const feeFilters = [
-  { value: 'all', label: 'All cards' },
-  { value: 'none', label: 'No annual fee' },
-  { value: 'paid', label: 'Annual fee' },
-] as const
-type FeeFilter = typeof feeFilters[number]['value']
 
 // The user's best card is the baseline, not a column: up to three new cards, measured against it. When the top three
 // all charge a fee, the last slot goes to the best no-fee card, so the fee question answers itself.
@@ -49,7 +43,7 @@ export function CoachPage({ balances, onEdit, compare: { category, onCategory } 
   const [feeFilter, setFeeFilter] = useState<FeeFilter>('all')
   const { best, worth, close, rest } = compareCards(balances, category)
   const market = [...worth, ...close, ...rest]
-    .filter((o) => feeFilter === 'all' || (feeFilter === 'none' ? o.fee === 0 : o.fee > 0))
+    .filter((o) => passesFee(o, feeFilter))
     .sort((a, b) => b.net - a.net)
   const top = market[0]
   const cards = market.slice(0, 3)
@@ -65,25 +59,7 @@ export function CoachPage({ balances, onEdit, compare: { category, onCategory } 
     </div>
     <section className={styles.card} aria-labelledby="compare-chart-title">
       <div className={styles.compareHead}>
-        <h2>Your monthly spending</h2>
-        <div className={styles.catTabs} role="group" aria-label="Spending category">
-          {TOP_CATEGORIES.map((c) => {
-            const Icon = categoryIcons[c.id]
-            return <button key={c.id} className={`${styles.catTab} ${c.id === category ? styles.active : ''}`}
-              aria-pressed={c.id === category} onClick={() => onCategory(c.id)}>
-              <Icon className={styles.categoryIcon} aria-hidden="true" />
-              <span className={styles.catLabel}>{c.label}</span>
-              <span className={styles.catSpend}>{fmtMoney(SPEND[c.id])}<small>/mo</small></span>
-            </button>
-          })}
-        </div>
-        <div className={styles.feeFilters} role="group" aria-label="New card annual fee">
-          {feeFilters.map(({ value, label }) => <button key={value}
-            className={`${styles.feeFilter} ${feeFilter === value ? styles.active : ''}`}
-            aria-pressed={feeFilter === value} onClick={() => setFeeFilter(value)}>
-            {label}
-          </button>)}
-        </div>
+        <SpendingControls category={category} onCategory={onCategory} feeFilter={feeFilter} onFeeFilter={setFeeFilter} />
       </div>
       <h2 id="compare-chart-title">{best ? 'Next to your card' : 'What you could earn'}</h2>
       <p className={styles.cardSub}>On your {fmtMoney(SPEND[category])} of {catName(category)} a month, after fees</p>

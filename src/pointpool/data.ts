@@ -1031,3 +1031,16 @@ export function scoreGoal(balances: Balance[], cat: CategoryId, score = CREDIT_S
   const cards = compareCards(balances, cat, next.id, spend).worth.filter((o) => o.credit === next.id && o.net > bar)
   return { score: next.min, from: now.min, toGo: next.min - score, best: today.best, cards }
 }
+
+// ---- Annual-fee filter ----
+// Shared by Home's hero and Card Coach so the chips mean the same thing on both.
+export const feeFilters = [
+  { value: 'all', label: 'All cards' },
+  { value: 'none', label: 'No annual fee' },
+  { value: 'paid', label: 'Annual fee' },
+] as const
+export type FeeFilter = typeof feeFilters[number]['value']
+// Whether a card belongs under the current filter. Cards the user already holds are never filtered out: their fee
+// isn't the question being asked, and dropping them would empty the column showing what they earn today.
+export const passesFee = (o: CardOption, f: FeeFilter) =>
+  o.yours || f === 'all' || (f === 'none' ? o.fee === 0 : o.fee > 0)

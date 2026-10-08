@@ -1,4 +1,5 @@
-import { isStale, type Balance } from './data'
+import { LuFuel, LuShoppingBag, LuUtensils } from 'react-icons/lu'
+import { feeFilters, fmtMoney, isStale, SPEND, TOP_CATEGORIES, type Balance, type CategoryId, type FeeFilter } from './data'
 import styles from './pointpool.module.css'
 
 // Only shown when a balance is due for an update — fresh balances stay quiet.
@@ -22,6 +23,55 @@ export function BackLink() {
     >
       ‹ Back
     </a>
+  )
+}
+
+// The controls both comparison views open on: every category with its last-30-days spend, then the annual-fee
+// filter for the new cards being suggested. Home and Card Coach share the component so the two stay in step —
+// the category carries between the pages, and the strip reads the same on both.
+const categoryIcons = { food: LuUtensils, shopping: LuShoppingBag, transport: LuFuel }
+
+interface SpendingControlsProps {
+  category: CategoryId
+  onCategory: (c: CategoryId) => void
+  feeFilter: FeeFilter
+  onFeeFilter: (f: FeeFilter) => void
+}
+
+export function SpendingControls({ category, onCategory, feeFilter, onFeeFilter }: SpendingControlsProps) {
+  return (
+    <>
+      <h2>Your monthly spending</h2>
+      <div className={styles.catTabs} role="group" aria-label="Spending category">
+        {TOP_CATEGORIES.map((c) => {
+          const Icon = categoryIcons[c.id]
+          return (
+            <button
+              key={c.id}
+              className={`${styles.catTab} ${c.id === category ? styles.active : ''}`}
+              aria-pressed={c.id === category}
+              onClick={() => onCategory(c.id)}
+            >
+              <Icon className={styles.categoryIcon} aria-hidden="true" />
+              <span className={styles.catLabel}>{c.label}</span>
+              <span className={styles.catSpend}>{fmtMoney(SPEND[c.id])}<small>/mo</small></span>
+            </button>
+          )
+        })}
+      </div>
+      <div className={styles.feeFilters} role="group" aria-label="New card annual fee">
+        {feeFilters.map(({ value, label }) => (
+          <button
+            key={value}
+            className={`${styles.feeFilter} ${feeFilter === value ? styles.active : ''}`}
+            aria-pressed={feeFilter === value}
+            onClick={() => onFeeFilter(value)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </>
   )
 }
 
