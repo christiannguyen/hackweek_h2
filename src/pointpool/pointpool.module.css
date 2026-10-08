@@ -304,6 +304,89 @@ a.row { text-decoration: none; color: inherit; }
   .walletTile:hover .cardArt { transform: none; }
 }
 
+/* Wallet deck (PointpoolPage.tsx) — the cards fanned rather than listed. The deck box is one card
+   face tall and the front card fills it; the fan hangs past it on both sides, so the margins reserve
+   exactly the rows in use (--up above, --down below, PEEK_STEP apart, counted by the component). */
+.deckWrap { display: flex; flex-direction: column; gap: 12px; }
+.deck {
+  position: relative; aspect-ratio: 1.586;
+  width: 100%; max-width: 250px;
+  margin: calc(var(--up, 0) * 15px) auto calc(var(--down, 0) * 15px);
+}
+.deckCard {
+  position: absolute; inset: 0;
+  padding: 0; border: 0; background: none; cursor: pointer;
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1), opacity 300ms ease;
+}
+.deckCard:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 4px; border-radius: 13px; }
+/* The face carries the same brand-tinted art as the wallet thumbnails (.cardArt), scaled up: a
+   diagonal gloss sweep over the program's two brand colours. Still CSS only — no issuer artwork is
+   shipped, so there's nothing to license (see cardColors.ts). */
+.deckFace {
+  position: relative; overflow: hidden;
+  display: block; width: 100%; height: 100%;
+  padding: 11px 13px; box-sizing: border-box;
+  border-radius: 13px;
+  background: linear-gradient(140deg, var(--art-from, #7b8794), var(--art-to, #39424c));
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.3), 0 5px 14px -5px rgba(0, 0, 0, 0.5);
+  text-align: left;
+}
+.deckFace::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.34) 0 26%, rgba(255, 255, 255, 0.07) 40%, transparent 58%);
+}
+/* A scrim under the name, so the card reads on the pale tints (Discover orange) as well as the dark ones. */
+.deckFace::after {
+  content: ''; position: absolute; inset: auto 0 0; height: 72%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.52) 0, rgba(0, 0, 0, 0.16) 46%, transparent);
+}
+.deckChip {
+  position: relative; z-index: 1;
+  display: block; width: 25px; height: 18px; border-radius: 3px;
+  background: linear-gradient(135deg, #f8e9ad, #c6a04a 55%, #ecd79a);
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.3);
+}
+.deckShort {
+  position: absolute; right: 12px; top: 10px; z-index: 1;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.6px;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.5);
+}
+.deckFaceFoot { position: absolute; left: 13px; right: 13px; bottom: 11px; z-index: 1; display: block; }
+.deckProgram { display: block; font-size: 9.5px; color: rgba(255, 255, 255, 0.78); }
+.deckName {
+  display: block; margin-top: 2px;
+  font-size: 15px; font-weight: 650; letter-spacing: -0.2px; line-height: 1.2; color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+.deckDots { display: flex; justify-content: center; gap: 6px; }
+.deckDot { width: 6px; height: 6px; border-radius: 50%; background: #d4d8d1; transition: background 200ms ease; }
+.deckDot.on { background: var(--dark); }
+.deckHint { margin: -4px 0 0; font-size: 12px; color: var(--muted); text-align: center; }
+.deckHint b { color: var(--text); font-weight: 600; }
+/* The whole panel is the dark surface the rest of the app uses, so the card art sits on a black slab
+   rather than a black box floating in a white one. Everything inside re-tints off that. */
+.deckPanel { background: var(--dark); color: var(--dark-text); }
+/* What the card in front has earned, ahead of what's owed on it. No box of its own now — the panel
+   is the surface, so the number just leads. */
+.deckHero { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.deckHeroLabel { font-size: 12px; font-weight: 550; color: var(--dark-muted); }
+.deckHeroValue { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; color: var(--lime); }
+.deckHero + .rowSub { margin-top: 6px; color: var(--dark-muted); }
+.deckPanel .tileSection { border-top-color: var(--dark-line); }
+.deckPanel .tileLabel { color: var(--dark-muted); }
+.deckPanel .tileValue { color: var(--dark-text); }
+.deckPanel .meterBar { background: var(--dark-line); }
+.deckFoot {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--dark-line);
+}
+.deckAge { font-size: 12px; color: var(--dark-muted); }
+.deckFoot .btnText { margin-left: auto; color: var(--lime); }
+@media (prefers-reduced-motion: reduce) {
+  .deckCard { transition: none; }
+}
+
 .disclaimer { font-size: 11px; color: var(--muted); margin: 2px 2px 0; line-height: 1.4; }
 .empty { text-align: center; color: #666; padding: 18px 0; font-size: 13px; }
 .mt { margin-top: 8px; }
@@ -455,25 +538,18 @@ a.row { text-decoration: none; color: inherit; }
 .tileDetails p { margin: 6px 0; }
 .compareEmpty { flex: 1; background: #f7f8f3; border: 1px dashed #e0e5d9; border-radius: 20px; padding: 18px 12px; font-size: 12px; line-height: 1.5; color: #626b5e; }
 .compareEmpty p { margin: 0 0 12px; }
-.compareTakeaway { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; padding: 14px; background: #eaf7e4; border-radius: 16px; font-size: 13px; line-height: 1.5; }
-.compareTakeaway > svg { flex-shrink: 0; color: var(--green-ink); width: 20px; height: 20px; margin-top: 2px; }
+/* Opens on a tap: the tiles above already carry the numbers, so the sentence reading them back waits to be asked
+   for rather than sitting between the comparison and the button. */
+.compareTakeaway { margin-top: 16px; padding: 12px 14px; background: #eaf7e4; border-radius: 16px; font-size: 13px; line-height: 1.5; }
+.compareTakeaway summary { display: flex; align-items: center; gap: 10px; min-height: 24px; cursor: pointer; font-weight: 600; color: var(--green-ink); list-style: none; }
+.compareTakeaway summary::-webkit-details-marker { display: none; }
+.compareTakeaway summary svg { flex-shrink: 0; width: 20px; height: 20px; }
+.compareTakeaway summary::after { content: '›'; margin-left: auto; font-size: 18px; line-height: 1; transform: rotate(90deg); }
+.compareTakeaway[open] summary::after { transform: rotate(-90deg); }
+.compareTakeaway > div { margin-top: 10px; padding-left: 30px; color: var(--ink); }
 .compareTakeaway strong { font-weight: 650; }
 .compareCta { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; min-height: 48px; border-radius: 16px; background: var(--lime); color: #182117; text-decoration: none; font-size: 15px; font-weight: 600; padding: 12px; }
 .compareCta:hover { background: #9fee35; }
-.cardCommitment { margin-top: 14px; border: 1px solid #e9ad83; border-left: 4px solid #dc641f; border-radius: 14px; background: #fff7ef; }
-.commitmentSummary { display: flex; align-items: center; gap: 7px; padding: 12px 14px; cursor: pointer; list-style: none; color: var(--fee-ink); }
-.commitmentSummary::-webkit-details-marker { display: none; }
-.commitmentSummary > svg:first-child { flex: none; width: 17px; height: 17px; }
-.commitmentLabel { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
-.commitmentChevron { flex: none; margin-left: auto; width: 15px; height: 15px; transition: transform 0.15s ease; }
-.cardCommitment[open] .commitmentChevron { transform: rotate(180deg); }
-.commitmentBody { padding: 0 14px 14px; }
-.commitmentFee { display: flex; align-items: baseline; gap: 7px; font-size: 22px; font-weight: 700; line-height: 1.2; color: var(--ink); }
-.commitmentFee span { font-size: 13px; font-weight: 500; }
-.cardCommitment p { margin: 9px 0 0; font-size: 12px; line-height: 1.5; color: #554332; }
-.cardCommitment strong { font-weight: 650; }
-.cardCommitment .commitmentTerms { color: var(--fee-ink); font-weight: 600; }
-.compareFootnote { font-size: 10px; line-height: 1.5; color: #626b5e; margin: 12px 0 0; }
 .firstCardIntro { margin: -8px 0 16px; font-size: 13px; line-height: 1.5; color: #626b5e; }
 .firstCardOpportunity { padding: 20px 16px 14px; border: 1.5px solid var(--selection-border); border-radius: 20px; background: #fff; box-shadow: 0 0 0 3px var(--selection-glow); }
 .firstCardEyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--green-ink); }
@@ -491,8 +567,7 @@ a.row { text-decoration: none; color: inherit; }
 .firstCardNumbers > div:last-child dd { color: var(--green-ink); }
 .firstCardAdd { margin-top: 12px; text-align: center; color: #626b5e; font-size: 12px; }
 .firstCardAdd button { color: var(--green-ink); font-size: 12px; text-decoration: underline; }
-.compareCta:focus-visible, .tileDetails summary:focus-visible,
-.commitmentSummary:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 3px; }
+.compareCta:focus-visible, .tileDetails summary:focus-visible, .compareTakeaway summary:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 3px; }
 @media (max-width: 360px) {
   .compareTile { padding: 12px 8px; }
   .compareColumn h4 { font-size: 9px; letter-spacing: 0; }
@@ -685,12 +760,38 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .colPlotLoss { margin-bottom: 26px; }
 .colBase { position: absolute; z-index: 1; left: 0; right: 0; height: 2px; margin-bottom: -1px; background: var(--green-ink); pointer-events: none; }
 .colBaseNone { background: var(--muted); }
-.colBar { position: absolute; left: 50%; width: 44px; min-height: 2px; margin-left: -22px; border-radius: 4px 4px 0 0; background: var(--green); }
+/* Each bar grows out of the baseline when the chart mounts — up for a gain, down for a loss — a column at a time,
+   left to right. The chart remounts on a category or fee-filter change, so the move replays whenever the figures
+   change, not only on the first open. The number rides the bar's growing edge; it fades in as the bar settles. */
+.colBar { position: absolute; left: 50%; width: 44px; min-height: 2px; margin-left: -22px; border-radius: 4px 4px 0 0; background: var(--green); animation: barGrow 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards; animation-delay: calc(var(--i, 0) * 80ms); }
 .colBar.colBarLoss { border-radius: 0 0 4px 4px; background: var(--fee-ink); }
-.colTop { position: absolute; left: 50%; bottom: calc(100% + 5px); transform: translateX(-50%); white-space: nowrap; font-size: 15px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+@keyframes barGrow { from { height: 0; } }
+.colTop { position: absolute; left: 50%; bottom: calc(100% + 5px); transform: translateX(-50%); white-space: nowrap; font-size: 15px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.15; font-variant-numeric: tabular-nums; animation: colLabelIn 0.3s ease-out backwards; animation-delay: calc(var(--i, 0) * 80ms + 0.3s); }
 .colBarLoss .colTop { top: calc(100% + 5px); bottom: auto; }
-.colSame { position: absolute; left: 50%; transform: translate(-50%, -8px); white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--muted); }
-.colName { margin-top: 10px; font-size: 12px; font-weight: 550; line-height: 1.3; overflow-wrap: anywhere; }
+.colSame { position: absolute; left: 50%; transform: translate(-50%, -8px); white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--muted); animation: colLabelIn 0.3s ease-out backwards; animation-delay: calc(var(--i, 0) * 80ms + 0.3s); }
+@keyframes colLabelIn { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .colBar, .colTop, .colSame { animation: none; }
+}
+/* A thumbnail card face above the name: the same brand tints, gloss sweep and orb as the wallet art, shrunk to
+   the column's width, so the bar is tied to a card you can recognise rather than to a line of text alone. */
+.chartFace {
+  position: relative; overflow: hidden;
+  display: flex; width: 100%; max-width: 54px; aspect-ratio: 1.586;
+  margin-top: 12px; padding: 5px; border-radius: 5px;
+  background: linear-gradient(140deg, var(--art-from, #7b8794), var(--art-to, #39424c));
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.3), 0 1px 3px rgba(0, 0, 0, 0.28);
+}
+.chartFace::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.3) 0 24%, rgba(255, 255, 255, 0.06) 40%, transparent 58%);
+}
+.chartFace::after {
+  content: ''; position: absolute; right: -10px; bottom: -14px;
+  width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, 0.14);
+}
+.chartFace .faceChip { position: relative; z-index: 1; width: 11px; height: 8px; border-radius: 2px; }
+.colName { margin-top: 7px; font-size: 12px; font-weight: 550; line-height: 1.3; overflow-wrap: anywhere; }
 .col > small { margin-top: 2px; font-size: 11px; color: var(--muted); }
 .col > small.chartFee { color: var(--fee-ink); }
 .chartTip { display: none; position: absolute; z-index: 3; left: 50%; bottom: calc(100% + 2px); transform: translateX(-50%); padding: 6px 9px; border-radius: 8px; background: var(--dark); color: #fff; font-size: 11px; font-weight: 400; white-space: nowrap; pointer-events: none; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
