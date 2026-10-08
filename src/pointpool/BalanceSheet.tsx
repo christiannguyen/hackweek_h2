@@ -49,7 +49,7 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
       <Portal>
         <Drawer.Backdrop />
         <Drawer.Positioner>
-          <Drawer.Content maxW="430px" mx="auto" roundedTop="20px" pb="env(safe-area-inset-bottom)">
+          <Drawer.Content maxW="430px" mx="auto" roundedTop="20px" pb="env(safe-area-inset-bottom)" bg="var(--surface)" color="var(--text)" borderTop="1px solid var(--line)">
             <Drawer.Header>
               <Drawer.Title fontSize="17px" fontWeight="500">
                 {balance ? 'Edit card' : 'Add a card'}
@@ -57,7 +57,7 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
             </Drawer.Header>
             <Drawer.Body>
               <Stack gap="4">
-                {purpose === 'rewards' && <p style={{fontSize: 13, color: '#626b5e'}}>Find your available points, miles, or cashback in your card’s app and enter them here. This balance won’t update automatically.</p>}
+                {purpose === 'rewards' && <p style={{fontSize: 13, color: 'var(--text-2)'}}>Find your available points, miles, or cashback in your card’s app and enter them here. This balance won’t update automatically.</p>}
                 <Field.Root>
                   <Field.Label fontSize="13px">Rewards program</Field.Label>
                   <NativeSelect.Root size="md">
@@ -129,13 +129,13 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
             </Drawer.Body>
             <Drawer.Footer justifyContent="space-between">
               {balance ? (
-                <Button variant="ghost" color="#f05a1a" onClick={remove}>
+                <Button variant="ghost" color="var(--danger)" onClick={remove}>
                   Remove
                 </Button>
               ) : (
                 <span />
               )}
-              <Button rounded="full" bg="#b2ff4a" color="#182117" px="6" disabled={!valid} onClick={save}>
+              <Button rounded="full" bg="var(--primary)" color="var(--on-primary)" _hover={{ bg: 'var(--primary-hover)' }} px="6" disabled={!valid} onClick={save}>
                 {purpose === 'rewards' ? 'Save balance' : 'Save'}
               </Button>
             </Drawer.Footer>

@@ -60,7 +60,7 @@ export function PointpoolPage({ balances, onEdit }: Props) {
 }
 
 function UtilBar({ pct }: { pct: number }) {
-  const color = pct > 0.7 ? 'var(--orange)' : pct > 0.3 ? '#f0ad1a' : 'var(--green)'
+  const color = pct > 0.7 ? 'var(--orange)' : pct > 0.3 ? '#f5c451' : 'var(--accent)'
   return (
     <div className={styles.meterBar} style={{ height: 8, borderRadius: 4 }}>
       <span className={styles.meterFill} style={{ width: `${Math.min(pct * 100, 100)}%`, background: color }} />

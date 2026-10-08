@@ -1,0 +1,53 @@
+/* Pointpool theme: a warm plum near-black with a mostly monochrome interface. White pills carry the primary
+   action; one soft lilac marks what's selected or picked. Color otherwise comes from the card faces
+   (cardColors.ts), not from the chrome. */
+:root {
+  color-scheme: dark;
+
+  --bg: #17141b;
+  --surface: #221e28;
+  --surface-2: #2c2732;
+  --surface-3: #38323f;
+  --line: #37323d;
+  --line-strong: #4a4351;
+
+  --text: #f6f3f8;
+  --text-2: #b8b0be;
+  --text-3: #8e8697;
+
+  /* Soft lilac: selection, badges, small highlights. Dark text on it, like the reference's "Active" pills. */
+  --accent: #c9a8ee;
+  --accent-strong: #b591e0;
+  --accent-tint: rgba(201, 168, 238, 0.12);
+  --accent-line: rgba(201, 168, 238, 0.42);
+  --accent-ink: #dcc8f4;
+  --on-accent: #1b1420;
+
+  /* Primary action: a white pill with dark text. */
+  --primary: #f6f3f8;
+  --primary-hover: #e4dfe8;
+  --on-primary: #141016;
+
+  /* The lilac corner light from the Marketplace card, for the main card on each tab. */
+  --card-glow:
+    radial-gradient(85% 65% at 100% 0%, rgba(201, 168, 238, 0.30), rgba(201, 168, 238, 0) 62%),
+    radial-gradient(70% 50% at 0% 100%, rgba(230, 169, 214, 0.08), rgba(230, 169, 214, 0) 60%),
+    var(--surface);
+
+  /* Compare chart: earns more vs earns less than your card. */
+  --gain: #4cc38a;
+  --gain-ink: #7fdcab;
+  --loss: #ef6b6b;
+  --loss-ink: #f59a9a;
+
+  --glow: radial-gradient(120% 55% at 50% 0%, rgba(201, 168, 238, 0.1), rgba(201, 168, 238, 0) 70%);
+
+  --warn-ink: #e8b27f;
+  --warn-tint: rgba(232, 178, 127, 0.12);
+  --warn-line: rgba(232, 178, 127, 0.35);
+  --danger: #ef7d7d;
+
+  --shadow-dark: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+html, body { background: var(--bg); color: var(--text); }

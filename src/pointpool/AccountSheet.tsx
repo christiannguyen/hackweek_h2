@@ -20,7 +20,7 @@ export function AccountSheet({ open, onClose, onLogout }: Props) {
       <Portal>
         <Drawer.Backdrop />
         <Drawer.Positioner>
-          <Drawer.Content maxW="430px" mx="auto" roundedTop="20px" pb="env(safe-area-inset-bottom)">
+          <Drawer.Content maxW="430px" mx="auto" roundedTop="20px" pb="env(safe-area-inset-bottom)" bg="var(--surface)" color="var(--text)" borderTop="1px solid var(--line)">
             <Drawer.Header>
               <Drawer.Title fontSize="18px" fontWeight="600">
                 {confirming ? 'Log out of Pointpool?' : 'Account'}
@@ -60,7 +60,7 @@ export function AccountSheet({ open, onClose, onLogout }: Props) {
             {confirming && (
               <Drawer.Footer justifyContent="space-between">
                 <Button variant="ghost" onClick={() => setConfirming(false)}>Cancel</Button>
-                <Button rounded="full" bg="#b2ff4a" color="#182117" px="6" onClick={() => onLogout(removeCards)}>
+                <Button rounded="full" bg="var(--primary)" color="var(--on-primary)" _hover={{ bg: 'var(--primary-hover)' }} px="6" onClick={() => onLogout(removeCards)}>
                   Log out
                 </Button>
               </Drawer.Footer>

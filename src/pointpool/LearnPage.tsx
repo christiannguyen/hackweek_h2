@@ -40,13 +40,13 @@ export function LearnPage() {
       <div className={styles.card}>
         <Accordion.Root collapsible variant="plain">
           {TOPICS.map(([q, a], i) => (
-            <Accordion.Item key={q} value={q} borderTopWidth={i ? '1px' : 0} borderColor="#efefef">
+            <Accordion.Item key={q} value={q} borderTopWidth={i ? '1px' : 0} borderColor="var(--line)">
               <Accordion.ItemTrigger py="4" fontSize="15px" fontWeight="500" cursor="pointer">
                 <span style={{ flex: 1 }}>{q}</span>
                 <Accordion.ItemIndicator />
               </Accordion.ItemTrigger>
               <Accordion.ItemContent>
-                <Accordion.ItemBody pt="0" pb="4" color="#333" fontSize="14px" lineHeight="1.55">
+                <Accordion.ItemBody pt="0" pb="4" color="var(--text-2)" fontSize="14px" lineHeight="1.55">
                   {a}
                 </Accordion.ItemBody>
               </Accordion.ItemContent>

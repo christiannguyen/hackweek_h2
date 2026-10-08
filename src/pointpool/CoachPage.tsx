@@ -58,7 +58,7 @@ export function CoachPage({ balances, onEdit, compare: { category, onCategory } 
         <p className={styles.pageSub}>New cards next to your best card, after annual fees.</p>
       </div>
     </div>
-    <section className={styles.card} aria-labelledby="compare-chart-title">
+    <section className={`${styles.card} ${styles.glowCard}`} aria-labelledby="compare-chart-title">
       <div className={styles.compareHead}>
         <SpendingControls category={category} onCategory={onCategory} feeFilter={feeFilter} onFeeFilter={setFeeFilter} />
       </div>
