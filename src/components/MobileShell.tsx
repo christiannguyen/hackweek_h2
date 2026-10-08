@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { IconType } from 'react-icons'
-import { LuCircleUserRound, LuCreditCard, LuGift, LuGraduationCap, LuHouse, LuWallet } from 'react-icons/lu'
+import { LuCircleUserRound, LuCreditCard, LuGift, LuChartNoAxesColumnIncreasing, LuHouse, LuWallet } from 'react-icons/lu'
 import styles from './MobileShell.module.css'
 
 const TABS: { label: string; icon: IconType; hash: string }[] = [
   { label: 'Home', icon: LuHouse, hash: '#home' },
-  { label: 'Card Coach', icon: LuGraduationCap, hash: '#coach' },
+  { label: 'Compare', icon: LuChartNoAxesColumnIncreasing, hash: '#coach' },
   { label: 'Use rewards', icon: LuGift, hash: '#redeem' },
   { label: 'Wallet', icon: LuWallet, hash: '#wallet' },
   { label: 'Offers', icon: LuCreditCard, hash: '#offers' },

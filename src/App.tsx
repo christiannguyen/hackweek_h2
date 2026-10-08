@@ -65,14 +65,14 @@ function App() {
     <MobileShell onAccount={() => setAccountOpen(Date.now())}>
       <main className={`${styles.root} ${styles.view}`}>
         {route === 'home' && <HomePage balances={balances} onEdit={openSheet} compare={compare} />}
-        {route === 'coach' && <CoachPage balances={balances} onEdit={openSheet} />}
+        {route === 'coach' && <CoachPage balances={balances} onEdit={openSheet} compare={compare} />}
         {route === 'pointpool' && <PointpoolPage balances={balances} onEdit={openSheet} />}
         {route === 'offers' && <OffersPage balances={balances} onEdit={openSheet} />}
         {route === 'redeem' && <RedeemPage balances={balances} onEdit={openRewardsSheet} />}
         {route === 'learn' && <LearnPage />}
       </main>
       <AccountSheet
-        key={accountOpen}
+        key={`account-${accountOpen}`}
         open={accountOpen > 0}
         onClose={() => setAccountOpen(0)}
         onLogout={(removeCards) => {
@@ -84,7 +84,7 @@ function App() {
         }}
       />
       <BalanceSheet
-        key={sheet.key}
+        key={`balance-${sheet.key}`}
         open={sheet.open}
         purpose={sheet.purpose}
         balance={balances.find((b) => b.id === sheet.id)}
