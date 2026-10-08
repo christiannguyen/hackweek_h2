@@ -58,7 +58,7 @@ export function CardCompare({ balances, category, onCategory, onEdit }: CompareP
         <SpendingControls category={category} onCategory={onCategory} feeFilter={feeFilter} onFeeFilter={setFeeFilter} />
         <div className={styles.compareHeading}>
           <h3>{categoryLabel} · {noCards ? 'what could you earn?' : 'which card wins?'}</h3>
-          <span>{fmtDollars(spend * 12)} / yr</span>
+          <span>{fmtDollars(spend * 12)} spent / yr</span>
         </div>
       </div>
       {noCards ? (
