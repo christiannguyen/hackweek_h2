@@ -1,5 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from 'react'
-import { LuCheck, LuChevronDown, LuReceipt } from 'react-icons/lu'
+import { LuCheck } from 'react-icons/lu'
 import {
   catName,
   compareCards,
@@ -51,7 +51,6 @@ export function CardCompare({ balances, category, onCategory, onEdit }: CompareP
   const gain = suggested ? Math.round((suggested.net - (selected?.net ?? 0)) * 100) / 100 : 0
   const spend = SPEND[category]
   const categoryLabel = TOP_CATEGORIES.find((c) => c.id === category)?.label ?? catName(category)
-  const incomplete = yours.length < balances.length || yours.some((o) => !o.known)
 
   return (
     <>
@@ -114,8 +113,13 @@ export function CardCompare({ balances, category, onCategory, onEdit }: CompareP
           Tap your card to compare the next one · <b>{selectedIndex + 1} of {yours.length}</b>
         </p>
       )}
-      <div className={styles.compareTakeaway} role="status">
-        <LuCheck aria-hidden="true" />
+      {/* The tiles already carry the numbers, so the sentence explaining them opens on a tap instead of taking up
+          room above the button. */}
+      <details className={styles.compareTakeaway}>
+        <summary>
+          <LuCheck aria-hidden="true" />
+          What this means
+        </summary>
         <div>
           {noCards ? (
             recommends && suggested ? (
@@ -133,43 +137,15 @@ export function CardCompare({ balances, category, onCategory, onEdit }: CompareP
               : 'New cards we looked at wouldn’t earn more here.'}</>
           ) : 'Add a card we can estimate to see how a new card compares.'}
         </div>
-      </div>
-      {recommends && suggested && <NewCardCommitment option={suggested} />}
+      </details>
       {recommends && suggested?.url && (
         <a className={styles.compareCta} href={suggested.url} target="_blank" rel="noreferrer">Review card & fees <span aria-hidden="true">↗</span></a>
       )}
       {noCards && <div className={styles.firstCardAdd}>Already have a card? <button className={styles.btnText} onClick={() => onEdit()}>Add it to compare</button></div>}
-      <p className={styles.compareFootnote}>
-        Estimates put all {fmtMoney(spend)}/mo of your last 30 days of {catName(category)} on each card, one card at a time.
-        {incomplete && ' Some card rates are estimated or unavailable.'}
-        {' '}New-card fees are included; fees on cards you have aren’t. Each category is its own example, not an amount to add to the others.
-        {noCards ? ' Potential rewards aren’t savings versus your current payment method. Pay in full each month; interest and other charges are not included. Approval isn’t guaranteed.' : ' Existing card fees are excluded because you already hold those cards.'}
-      </p>
     </>
   )
 }
 
-// Collapsed by default to keep the comparison compact. The fee isn't repeated on the summary row — the tile above
-// already carries it twice, as a tag and as a line in the math — so it leads the panel instead.
-function NewCardCommitment({ option: o }: { option: CardOption }) {
-  return (
-    <details className={styles.cardCommitment}>
-      <summary className={styles.commitmentSummary}>
-        <LuReceipt aria-hidden="true" />
-        <span className={styles.commitmentLabel}>Before you apply</span>
-        <LuChevronDown className={styles.commitmentChevron} aria-hidden="true" />
-      </summary>
-      <div className={styles.commitmentBody}>
-        <div className={styles.commitmentFee}>{fmtDollars(o.fee)}<span>annual fee</span></div>
-        {o.fee > 0 && <p>This is a yearly charge to your card, even if you earn no rewards. We subtract it in the estimate; rewards don’t automatically pay the fee.</p>}
-        {o.feeNote && <p className={styles.commitmentTerms}>{o.feeNote}.</p>}
-        {!!o.deposit && <p><strong>{fmtDollars(o.deposit)} refundable deposit also required.</strong> This is money you need up front.</p>}
-        <p><strong>You’re applying for a new credit account</strong> with its own bill. A credit check may affect your score, and approval isn’t guaranteed.</p>
-        <p>Interest and other charges can outweigh the rewards. Review the APR and full terms before applying.</p>
-      </div>
-    </details>
-  )
-}
 
 // The rate averaged over a year of steps: a 5% rotating category featured one quarter reads as about 2%, not 5%.
 const avgRate = (o: CardOption) => {
