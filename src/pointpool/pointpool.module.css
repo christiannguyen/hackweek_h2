@@ -205,6 +205,10 @@ a.row { text-decoration: none; color: inherit; }
 .catSpend { font-size: 16px; font-weight: 500; }
 .catSpend small { font-size: 10px; color: #626b5e; font-weight: 400; }
 .categoryIcon { color: #737b6c; width: 22px; height: 22px; margin: 2px 0 8px; }
+.feeFilters { display: flex; flex-wrap: wrap; gap: 6px; }
+.feeFilter { min-height: 36px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 20px; background: #fff; color: var(--text); font: inherit; font-size: 12px; font-weight: 500; cursor: pointer; }
+.feeFilter.active { border-color: var(--selection-border); background: var(--selection-tint); color: var(--selection-ink); box-shadow: inset 0 0 0 1px var(--selection-border); }
+.feeFilter:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 .compareHeading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; margin: 22px 0 18px; }
 .compareHeading h3 { font-size: 16px; font-weight: 650; margin: 0; }
 .compareHeading > span { font-size: 12px; color: #626b5e; white-space: nowrap; }
@@ -445,3 +449,54 @@ details[open] > .barRow::after { transform: rotate(90deg); }
   .rewardsBalanceBottom { align-items: flex-start; flex-direction: column; gap: 10px; }
   .rewardsAmount { font-size: 36px; }
 }
+
+/* Compare cards: your best card is the line, not a column (#196b36, the --green-ink of its chip). New cards rise
+   above it by what they'd add (#2fa83c) or hang below by what they'd lose (#9d3c12, the fee ink) — monthly, after
+   a new card's fee. The pair passes the dataviz palette checks. */
+.chartSub { margin: 4px 0 0; font-size: 12px; color: #626b5e; }
+.verdict { margin: 14px 0 0; padding: 12px 14px; border-radius: 12px; background: #f5f6f3; font-size: 12px; line-height: 1.45; color: var(--text); }
+.verdict strong { display: block; margin-bottom: 2px; font-size: 20px; font-weight: 700; letter-spacing: -0.4px; line-height: 1.2; color: var(--ink); font-variant-numeric: tabular-nums; }
+.verdictWin { background: var(--green-tint); }
+.verdictWin strong { color: var(--green-ink); }
+.verdictYours strong { color: var(--green-ink); }
+.chartBase { display: inline-flex; align-items: center; gap: 8px; margin: 16px 0 0; padding: 5px 11px 5px 9px; border-radius: 20px; background: var(--green-tint); font-size: 12px; font-weight: 600; color: var(--green-ink); font-variant-numeric: tabular-nums; }
+.chartBase i { width: 16px; height: 2px; border-radius: 1px; background: #196b36; }
+.chartBaseNone { background: #f5f6f3; color: var(--text); }
+.chartBaseNone i { background: var(--muted); }
+/* No gap between columns, so the baseline runs unbroken across the chart. */
+.cols { display: grid; margin: 4px -6px 0; }
+.col { position: relative; display: flex; flex-direction: column; align-items: center; min-width: 0; padding: 0 6px 10px; border: 0; border-radius: 12px; background: none; font: inherit; text-align: center; color: var(--ink); cursor: pointer; }
+.col:hover, .colOpen { background: #f5f6f3; }
+.colPlot { position: relative; align-self: stretch; height: 130px; margin: 30px -6px 0; }
+.colPlotLoss { margin-bottom: 26px; }
+.colBase { position: absolute; z-index: 1; left: 0; right: 0; height: 2px; margin-bottom: -1px; background: #196b36; pointer-events: none; }
+.colBaseNone { background: var(--muted); }
+.colBar { position: absolute; left: 50%; width: 44px; min-height: 2px; margin-left: -22px; border-radius: 4px 4px 0 0; background: #2fa83c; }
+.colBar.colBarLoss { border-radius: 0 0 4px 4px; background: #9d3c12; }
+.colTop { position: absolute; left: 50%; bottom: calc(100% + 5px); transform: translateX(-50%); white-space: nowrap; font-size: 15px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.colBarLoss .colTop { top: calc(100% + 5px); bottom: auto; }
+.colSame { position: absolute; left: 50%; transform: translate(-50%, -8px); white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--muted); }
+.colName { margin-top: 10px; font-size: 12px; font-weight: 550; line-height: 1.3; overflow-wrap: anywhere; }
+.col > small { margin-top: 2px; font-size: 11px; color: var(--muted); }
+.col > small.chartFee { color: var(--fee-ink); }
+.chartTip { display: none; position: absolute; z-index: 3; left: 50%; bottom: calc(100% + 2px); transform: translateX(-50%); padding: 6px 9px; border-radius: 8px; background: #1f241e; color: #fff; font-size: 11px; font-weight: 400; white-space: nowrap; pointer-events: none; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+.chartTip.tipStart { left: 0; transform: none; }
+.chartTip.tipEnd { left: auto; right: 0; transform: none; }
+@media (hover: hover) { .col:hover .chartTip { display: block; } }
+.chartMath { margin-top: 12px; padding: 12px; border-radius: 12px; background: #f5f6f3; font-size: 12px; line-height: 1.45; color: var(--text); }
+.chartMath h3 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.chartMath h3 small { flex-shrink: 0; font-size: 11px; font-weight: 500; color: var(--muted); }
+.chartMath dl { margin: 0 0 8px; padding: 8px 12px; border-radius: 10px; background: #fff; }
+.chartMath dl > div { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; }
+.chartMath dt small { display: block; font-size: 11px; color: var(--muted); }
+.chartMath dd { margin: 0; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.chartMath dl > .chartMathTotal { margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--line); font-weight: 650; }
+.chartMath p { margin: 6px 0 0; color: #4d544a; }
+.chartMath p.chartVs { margin-top: 0; font-weight: 600; color: var(--ink); }
+.chartApply { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; margin-top: 12px; border-radius: 12px; background: var(--lime); color: #182117; text-decoration: none; font-size: 13px; font-weight: 600; }
+.chartApply:hover { background: #9fee35; }
+.chartEmpty { margin: 12px 0 0; padding: 12px; border-radius: 10px; background: #f5f6f3; font-size: 12px; line-height: 1.45; color: var(--text); }
+.chartHint { margin: 10px 0 0; font-size: 11px; color: var(--muted); }
+.chartNote { margin: 0 2px; font-size: 11px; line-height: 1.5; color: #62685e; }
+.chartNote strong { font-weight: 600; color: var(--ink); }
+.col:focus-visible, .chartApply:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }

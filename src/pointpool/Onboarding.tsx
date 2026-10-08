@@ -116,7 +116,7 @@ function Logo({ light }: { light?: boolean }) {
 function Welcome({ onStart, onLogin }: { onStart: () => void; onLogin: () => void }) {
   const perks = [
     { icon: LuWallet, title: 'One place', text: 'See every card’s rewards side by side.' },
-    { icon: LuGraduationCap, title: 'Card Coach', text: 'What your spending could earn on each card.' },
+    { icon: LuGraduationCap, title: 'Compare cards', text: 'What your spending could earn on each card.' },
     { icon: LuZap, title: 'Fast', text: 'Set up in about a minute. No bank login.' },
     { icon: LuLock, title: 'Private', text: 'Balances stay in this browser.' },
   ]
