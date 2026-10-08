@@ -94,6 +94,8 @@
 .footer { margin-top: auto; padding-top: 22px; display: flex; flex-direction: column; gap: 10px; }
 .primary { width: 100%; min-height: 52px; border: 1px solid var(--lime-border); border-radius: 999px; background: var(--lime); color: #111; font-size: 16px; font-weight: 600; }
 .primary:disabled { background: #eef0ec; border-color: #eef0ec; color: #b2b7ad; cursor: default; }
+.switch { text-align: center; font-size: 14px; color: var(--muted); margin: 4px 0 0; }
+.switch button { border: 0; background: none; padding: 0; color: var(--ink); font-weight: 700; text-decoration: underline; }
 .ghost { border: 0; background: none; color: var(--green-ink); font-weight: 600; font-size: 14px; padding: 8px; }
 
 /* Card / goal pickers */

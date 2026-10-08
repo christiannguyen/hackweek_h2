@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { MobileShell } from '@/components/MobileShell'
+import { AccountSheet } from '@/pointpool/AccountSheet'
 import { BalanceSheet } from '@/pointpool/BalanceSheet'
 import { CoachPage } from '@/pointpool/CoachPage'
 import type { CompareProps } from '@/pointpool/CardCompare'
@@ -10,7 +11,7 @@ import { Onboarding } from '@/pointpool/Onboarding'
 import { OffersPage } from '@/pointpool/OffersPage'
 import { PointpoolPage } from '@/pointpool/PointpoolPage'
 import { RedeemPage } from '@/pointpool/RedeemPage'
-import { isOnboarded, useBalances } from '@/pointpool/useBalances'
+import { isOnboarded, markLoggedOut, useBalances } from '@/pointpool/useBalances'
 import { useHashRoute } from '@/pointpool/useHashRoute'
 import styles from '@/pointpool/pointpool.module.css'
 
@@ -25,6 +26,7 @@ function App() {
   // Shared so the category picked on the home hero carries into the full Coach page. Starts on the user's
   // highest-spend category.
   const [category, setCategory] = useState<CategoryId>(TOP_CATEGORY)
+  const [accountOpen, setAccountOpen] = useState(0) // 0 = closed; a new number remounts the sheet fresh
   const [sheet, setSheet] = useState<{ open: boolean; id?: number; key: number; purpose?: 'rewards' }>({ open: false, key: 0 })
 
   const openSheet = (id?: number) => setSheet((s) => ({ open: true, id, key: s.key + 1 }))
@@ -56,7 +58,7 @@ function App() {
   }
 
   return (
-    <MobileShell>
+    <MobileShell onAccount={() => setAccountOpen(Date.now())}>
       <main className={`${styles.root} ${styles.view}`}>
         {route === 'home' && <HomePage balances={balances} onEdit={openSheet} compare={compare} />}
         {route === 'coach' && <CoachPage balances={balances} onEdit={openSheet} />}
@@ -65,6 +67,18 @@ function App() {
         {route === 'redeem' && <RedeemPage balances={balances} onEdit={openRewardsSheet} />}
         {route === 'learn' && <LearnPage />}
       </main>
+      <AccountSheet
+        key={accountOpen}
+        open={accountOpen > 0}
+        onClose={() => setAccountOpen(0)}
+        onLogout={(removeCards) => {
+          markLoggedOut()
+          if (removeCards) replaceAll([])
+          setAccountOpen(0)
+          setOnboarding(true)
+          window.location.hash = '#welcome'
+        }}
+      />
       <BalanceSheet
         key={sheet.key}
         open={sheet.open}
