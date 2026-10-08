@@ -1,53 +1,56 @@
-/* Pointpool theme: a warm plum near-black with a mostly monochrome interface. White pills carry the primary
-   action; one soft lilac marks what's selected or picked. Color otherwise comes from the card faces
-   (cardColors.ts), not from the chrome. */
+/* Pointpool theme: light and blue, following 60-30-10.
+   60% neutral: an off-white page with a cool slate tint, white cards, slate text.
+   30% brand blue: the wash behind the logo and page title, the corner light on each tab's main card, the logo.
+   10% accent: one confident blue for primary actions, the active tab, "Best pick" and selected states.
+   Card faces keep their own brand tints (cardColors.ts). */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  --bg: #1e1a24;
-  --surface: #2a2530;
-  --surface-2: #342e3b;
-  --surface-3: #40394a;
-  --line: rgba(255, 255, 255, 0.08);
-  --line-strong: rgba(255, 255, 255, 0.15);
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --surface-2: #eef2f8;
+  --surface-3: #e2e8f2;
+  --line: rgba(15, 23, 42, 0.08);
+  --line-strong: rgba(15, 23, 42, 0.14);
 
-  --text: #faf7fc;
-  --text-2: #c6bfcd;
-  --text-3: #9a92a4;
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #64748b;
 
-  /* Soft lilac: selection, badges, small highlights. Dark text on it, like the reference's "Active" pills. */
-  --accent: #c9a8ee;
-  --accent-strong: #b591e0;
-  --accent-tint: rgba(201, 168, 238, 0.12);
-  --accent-line: rgba(201, 168, 238, 0.42);
-  --accent-ink: #dcc8f4;
-  --on-accent: #1b1420;
+  /* Accent blue: selection, badges, active tab, links. */
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-tint: rgba(37, 99, 235, 0.08);
+  --accent-line: rgba(37, 99, 235, 0.35);
+  --accent-ink: #1d4ed8;
+  --on-accent: #ffffff;
 
-  /* Primary action: a white pill with dark text. */
-  --primary: #f6f3f8;
-  --primary-hover: #e4dfe8;
-  --on-primary: #141016;
+  /* Primary action: the accent blue as a pill with white text. */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --on-primary: #ffffff;
 
-  /* The lilac corner light from the Marketplace card, for the main card on each tab. */
-  --card-glow: 
-    radial-gradient(85% 65% at 100% 0%, rgba(201, 168, 238, 0.36), rgba(201, 168, 238, 0) 62%),
-    radial-gradient(70% 50% at 0% 100%, rgba(230, 169, 214, 0.10), rgba(230, 169, 214, 0) 60%),
+  /* Brand wash behind the logo and page title: sky to soft blue, fading into the page. */
+  --glow: radial-gradient(130% 70% at 50% 0%, rgba(59, 130, 246, 0.2), rgba(14, 165, 233, 0.08) 45%, rgba(59, 130, 246, 0) 78%);
+
+  /* Corner light for the main card on each tab. */
+  --card-glow:
+    radial-gradient(85% 65% at 100% 0%, rgba(96, 165, 250, 0.26), rgba(96, 165, 250, 0) 62%),
+    radial-gradient(70% 50% at 0% 100%, rgba(56, 189, 248, 0.08), rgba(56, 189, 248, 0) 60%),
     var(--surface);
 
   /* Compare chart: earns more (mint) vs earns less (coral) than your card. Gradients fade toward the tip. */
-  --gain: linear-gradient(180deg, #a3f0c8 0%, #52c992 100%);
-  --gain-ink: #a8f0cb;
-  --loss: linear-gradient(180deg, #f07c8f 0%, #ffb0bc 100%);
-  --loss-ink: #ffb3be;
+  --gain: linear-gradient(180deg, #6ee7b7 0%, #10b981 100%);
+  --gain-ink: #047857;
+  --loss: linear-gradient(180deg, #f43f5e 0%, #fda4af 100%);
+  --loss-ink: #be123c;
 
-  --glow: radial-gradient(130% 70% at 50% 0%, rgba(201, 168, 238, 0.34), rgba(230, 169, 214, 0.12) 45%, rgba(201, 168, 238, 0) 78%);
+  --warn-ink: #b45309;
+  --warn-tint: rgba(245, 158, 11, 0.12);
+  --warn-line: rgba(217, 119, 6, 0.35);
+  --danger: #dc2626;
 
-  --warn-ink: #e8b27f;
-  --warn-tint: rgba(232, 178, 127, 0.12);
-  --warn-line: rgba(232, 178, 127, 0.35);
-  --danger: #ef7d7d;
-
-  --shadow-dark: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 28px rgba(10, 6, 16, 0.28);
+  --shadow-dark: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 html, body { background: var(--bg); color: var(--text); }

@@ -15,7 +15,7 @@
   /* A soft purple glow from the very top, behind the logo and page name, fading into the page. */
   background: var(--glow) no-repeat, var(--bg);
   background-size: 100% 440px, auto;
-  padding-bottom: 96px;
+  padding-bottom: 72px;
 }
 
 .topbar {
@@ -37,49 +37,19 @@
 .account:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .brand:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; border-radius: 9px; }
 
-/* Liquid glass pill: a translucent, saturated blur of the page behind it, with a bright rim and a
-   specular sheen on top. The active tab sits in its own raised glass bubble. */
 .tabbar {
-  position: fixed; left: 50%; transform: translateX(-50%);
-  bottom: calc(14px + env(safe-area-inset-bottom));
-  width: calc(100% - 40px); max-width: 370px;
-  display: flex; justify-content: space-between; align-items: center;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.05) 100%), rgba(42, 37, 48, 0.55);
-  -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 999px;
-  padding: 6px;
-  box-shadow: inset 0 1px 1px var(--line),
-    inset 0 -1px 2px var(--line),
-    inset 0 -10px 20px var(--line),
-    0 12px 32px var(--line-strong),
-    0 2px 6px var(--line-strong);
-  overflow: hidden;
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  display: flex; justify-content: space-around;
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding: 6px 2px calc(8px + env(safe-area-inset-bottom));
   z-index: 5;
 }
-/* Specular highlight across the top half of the glass. */
-.tabbar::before {
-  content: ""; position: absolute; inset: 1px 12px auto; height: 45%;
-  border-radius: 999px 999px 40px 40px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.00));
-  pointer-events: none;
-}
 .tab {
-  position: relative; z-index: 1;
-  display: grid; place-items: center;
-  width: 50px; height: 50px; border-radius: 50%;
-  color: var(--text-2); text-decoration: none;
-  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  font-size: 10px; color: var(--text-2); text-decoration: none; flex: 1; min-width: 0; padding: 4px 0; min-height: 44px;
 }
-.tab svg { width: 22px; height: 22px; }
-.tab:hover { color: var(--text); }
-.tab:active { transform: scale(0.94); }
-.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.active {
-  color: var(--on-accent);
-  background: linear-gradient(180deg, #e2cdf7, var(--accent));
-  box-shadow: inset 0 1px 1px var(--line),
-    inset 0 -2px 4px rgba(60, 30, 90, 0.18),
-    0 4px 14px var(--line-strong);
-}
-.active:hover { color: var(--on-accent); }
+.tab svg { width: 20px; height: 20px; color: var(--text-2); }
+/* The active label is bold so the tab bar and the page title agree on which section you're on. */
+.active { color: var(--accent-ink); font-weight: 600; }
+.active svg { color: var(--accent-ink); background: var(--accent-tint); box-shadow: 0 0 0 4px var(--accent-tint); border-radius: 6px; }

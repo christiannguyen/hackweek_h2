@@ -6,7 +6,7 @@ import './theme.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Provider forcedTheme="dark">
+    <Provider forcedTheme="light">
       <App />
     </Provider>
   </StrictMode>,

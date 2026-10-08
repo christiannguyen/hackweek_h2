@@ -5,15 +5,15 @@
   --lime: var(--primary);
   --lime-border: var(--primary);
   --green-ink: var(--accent-ink);
-  --new-card: #7d63ad;
-  --new-card-light: #c4abe6;
+  --new-card: #2f6fe0;
+  --new-card-light: #a9c9ff;
   --selection-ink: var(--accent-ink);
   --selection-border: var(--accent);
   --selection-glow: var(--accent-tint);
   --selection-tint: var(--accent-tint);
   --fee-ink: var(--warn-ink);
   --fee-tint: var(--warn-tint);
-  --ink: #ffffff;
+  --ink: var(--text);
   --muted: var(--text-2);
   --surface-soft: var(--surface-2);
   --orange: #ff8a5c;

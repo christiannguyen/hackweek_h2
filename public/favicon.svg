@@ -6,29 +6,29 @@
     <linearGradient id="fade" x1="0" y1="660" x2="0" y2="1024" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0.15"/></linearGradient>
     <mask id="fadeMask"><rect width="1024" height="1024" fill="url(#fade)"/></mask>
     <g id="p">
-      <rect x="248" y="150" width="172" height="720" rx="86" fill="#c9a8ee"/>
-      <circle cx="562" cy="386" r="230" fill="#c9a8ee"/>
-      <circle cx="562" cy="386" r="108" fill="#221e28"/>
-      <circle cx="562" cy="386" r="56" fill="#e6a9d6"/>
+      <rect x="248" y="150" width="172" height="720" rx="86" fill="#93c5fd"/>
+      <circle cx="562" cy="386" r="230" fill="#93c5fd"/>
+      <circle cx="562" cy="386" r="108" fill="#0f1b3d"/>
+      <circle cx="562" cy="386" r="56" fill="#38bdf8"/>
     </g>
   </defs>
   <g clip-path="url(#tile)">
-    <rect width="1024" height="1024" fill="#221e28"/>
+    <rect width="1024" height="1024" fill="#0f1b3d"/>
     <!-- the pool -->
-    <path d="M0 660 C180 630 260 630 380 660 S600 690 720 660 S900 630 1024 660 V1024 H0 Z" fill="#4a3566"/>
+    <path d="M0 660 C180 630 260 630 380 660 S600 690 720 660 S900 630 1024 660 V1024 H0 Z" fill="#1e40af"/>
     <!-- reflection of the bowl -->
     <g clip-path="url(#pool)" mask="url(#fadeMask)" opacity="0.4">
       <use href="#p" transform="translate(0 1320) scale(1 -1)"/>
     </g>
     <!-- submerged stem, seen through the water -->
     <g clip-path="url(#pool)">
-      <rect x="264" y="150" width="172" height="720" rx="86" fill="#c9a8ee" opacity="0.55"/>
+      <rect x="264" y="150" width="172" height="720" rx="86" fill="#93c5fd" opacity="0.55"/>
     </g>
     <!-- the p above water -->
     <g clip-path="url(#air)">
       <use href="#p"/>
     </g>
     <!-- surface -->
-    <path d="M0 660 C180 630 260 630 380 660 S600 690 720 660 S900 630 1024 660" fill="none" stroke="#e6a9d6" stroke-width="16" stroke-linecap="round"/>
+    <path d="M0 660 C180 630 260 630 380 660 S600 690 720 660 S900 630 1024 660" fill="none" stroke="#38bdf8" stroke-width="16" stroke-linecap="round"/>
   </g>
 </svg>

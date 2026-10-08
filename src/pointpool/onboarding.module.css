@@ -9,7 +9,7 @@
   --muted: var(--text-2);
   --error: var(--danger);
   min-height: 100svh;
-  background: #141118;
+  background: #e9edf4;
   font-family: "Figtree", -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
