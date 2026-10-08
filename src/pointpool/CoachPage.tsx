@@ -127,13 +127,29 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
   return actions
 }
 
+function walletScore(insights: CategoryInsight[]): number {
+  if (insights.length === 0) return 0
+  let totalSpend = 0
+  let weightedRate = 0
+  for (const i of insights) {
+    totalSpend += i.spend
+    const rate = i.bestCard?.rate ?? 1
+    const maxRate = Math.max(rate, 5)
+    weightedRate += i.spend * (rate / maxRate)
+  }
+  return totalSpend > 0 ? Math.round((weightedRate / totalSpend) * 100) : 0
+}
+
 // --- Component ---
 
 export function CoachPage({ balances, onEdit }: Props) {
   const insights = analyzeSpending(balances, SPEND)
+  const score = walletScore(insights)
   const actions = generateActions(balances, insights)
   const tips = coachTips(balances).filter((t) => t.kind !== 'bonus' && t.kind !== 'rotating')
 
+  const totalMonthlyRewards = insights.reduce((sum, i) => sum + i.monthlyReward, 0)
+  const totalYearlyRewards = totalMonthlyRewards * 12
   const hasCards = balances.some((b) => hasEstimates(PROGRAMS[b.programId]))
 
   const stacking = cardStacking(balances)
@@ -147,6 +163,47 @@ export function CoachPage({ balances, onEdit }: Props) {
     <>
       <div className={styles.pageHead}>
         <div className={styles.pageTitle}>Card Coach</div>
+      </div>
+
+      {/* Rewards score + summary */}
+      <div className={styles.card}>
+        <div className={styles.coachScore}>
+          <div className={styles.scoreCircle}>
+            <svg viewBox="0 0 80 80" className={styles.scoreSvg}>
+              <circle cx="40" cy="40" r="35" fill="none" stroke="var(--line)" strokeWidth="6" />
+              <circle
+                cx="40" cy="40" r="35"
+                fill="none" stroke="var(--green)" strokeWidth="6"
+                strokeLinecap="round"
+                strokeDasharray={`${(score / 100) * 220} 220`}
+                transform="rotate(-90 40 40)"
+              />
+            </svg>
+            <div className={styles.scoreNum}>{score}</div>
+          </div>
+          <div>
+            <div className={styles.scoreTitle}>Rewards score</div>
+            <div className={styles.rowSub}>
+              {score >= 70 ? "Great — your cards are well-matched to your spending."
+                : score >= 40 ? 'Room to improve. Follow the tips below to earn more.'
+                : hasCards ? "Low — your spending categories don't match your card bonuses."
+                : 'Add your cards to get a personalized score.'}
+            </div>
+          </div>
+        </div>
+
+        {hasCards && (
+          <div className={styles.tileSection}>
+            <div className={styles.tileStat}>
+              <span className={styles.tileLabel}>Monthly rewards</span>
+              <span className={styles.tileValue}>{fmtMoney(totalMonthlyRewards)}</span>
+            </div>
+            <div className={styles.tileStat}>
+              <span className={styles.tileLabel}>Yearly estimate</span>
+              <span className={styles.tileValue}>{fmtMoney(totalYearlyRewards)}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {!hasCards && (
