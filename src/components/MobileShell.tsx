@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { IconType } from 'react-icons'
-import { LuCreditCard, LuGift, LuGraduationCap, LuHouse, LuWallet } from 'react-icons/lu'
+import { LuCircleUserRound, LuCreditCard, LuGift, LuGraduationCap, LuHouse, LuWallet } from 'react-icons/lu'
 import styles from './MobileShell.module.css'
 
 const TABS: { label: string; icon: IconType; hash: string }[] = [
@@ -12,7 +12,7 @@ const TABS: { label: string; icon: IconType; hash: string }[] = [
   { label: 'Offers', icon: LuCreditCard, hash: '#offers' },
 ]
 
-export function MobileShell({ children }: { children: ReactNode }) {
+export function MobileShell({ children, onAccount }: { children: ReactNode; onAccount: () => void }) {
   const [hash, setHash] = useState(window.location.hash || '#home')
   useEffect(() => {
     const onHash = () => setHash(window.location.hash || '#home')
@@ -31,6 +31,9 @@ export function MobileShell({ children }: { children: ReactNode }) {
             <img src="/favicon.svg" alt="" width="38" height="38" />
             <span>pointpool</span>
           </a>
+          <button type="button" className={styles.account} onClick={onAccount} aria-label="Account">
+            <LuCircleUserRound />
+          </button>
         </header>
 
         {children}

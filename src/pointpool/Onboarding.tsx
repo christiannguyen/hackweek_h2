@@ -73,7 +73,7 @@ const GOAL_OPTIONS: GoalOption[] = [
   { id: 'charity', label: 'Charity', sub: 'Donate your rewards', icon: LuHeartHandshake, points: 'cashback', cash: 'cashback', phrase: 'to charity' },
 ]
 
-type Step = 'welcome' | 'account' | 'cards' | 'balances' | 'goal' | 'setup' | 'done'
+type Step = 'welcome' | 'login' | 'account' | 'cards' | 'balances' | 'goal' | 'setup' | 'done'
 const PROGRESS: Step[] = ['account', 'cards', 'balances', 'goal']
 
 interface Picked {
@@ -125,7 +125,7 @@ export function Onboarding({ onFinish, onLogin }: OnboardingProps) {
     setStep(s)
     window.scrollTo(0, 0)
   }
-  const back: Partial<Record<Step, Step>> = { account: 'welcome', cards: 'account', balances: 'cards', goal: 'balances' }
+  const back: Partial<Record<Step, Step>> = { login: 'welcome', account: 'welcome', cards: 'account', balances: 'cards', goal: 'balances' }
 
   // A short "setting up" beat before the summary.
   useEffect(() => {
@@ -146,29 +146,36 @@ export function Onboarding({ onFinish, onLogin }: OnboardingProps) {
   return (
     <div className={styles.backdrop}>
       <div className={`${styles.phone} ${step === 'welcome' ? styles.dark : ''}`}>
-        {stepIndex >= 0 && (
+        {(stepIndex >= 0 || step === 'login') && (
           <header className={styles.top}>
             <button className={styles.backBtn} onClick={() => go(back[step]!)} aria-label="Back">
               <LuArrowLeft />
             </button>
-            <div className={styles.progress} aria-label={`Step ${stepIndex + 1} of ${PROGRESS.length}`}>
-              {PROGRESS.map((s, i) => (
-                <span key={s} className={i <= stepIndex ? styles.on : ''} />
-              ))}
-            </div>
+            {/* Logging in isn't one of the setup steps, so it has no progress bar. */}
+            {stepIndex >= 0 && (
+              <div className={styles.progress} aria-label={`Step ${stepIndex + 1} of ${PROGRESS.length}`}>
+                {PROGRESS.map((s, i) => (
+                  <span key={s} className={i <= stepIndex ? styles.on : ''} />
+                ))}
+              </div>
+            )}
           </header>
         )}
 
-        {step === 'welcome' && <Welcome
-            onStart={() => go('account')}
-            onLogin={() => {
+        {step === 'welcome' && <Welcome onStart={() => go('account')} onLogin={() => go('login')} />}
+        {step === 'login' && (
+          <AuthForm
+            mode="login"
+            onSwitch={() => go('account')}
+            onNext={() => {
               // A returning user keeps the cards already saved in this browser.
               markOnboarded()
               sessionStorage.removeItem(FLOW_KEY)
               onLogin()
             }}
-          />}
-        {step === 'account' && <Account onNext={() => go('cards')} />}
+          />
+        )}
+        {step === 'account' && <AuthForm mode="signup" onSwitch={() => go('login')} onNext={() => go('cards')} />}
         {step === 'cards' && <Cards picked={picked} setPicked={setPicked} onNext={() => go('balances')} />}
         {step === 'balances' && <Balances picked={picked} setPicked={setPicked} onNext={() => go('goal')} />}
         {step === 'goal' && <Goal goals={goals} setGoals={setGoals} onNext={() => go('setup')} />}
@@ -242,24 +249,30 @@ function Pool() {
   )
 }
 
-function Account({ onNext }: { onNext: () => void }) {
+// Sign-up and log-in share one form. Both are SIMULATED: the fields are only checked for shape, never stored or sent.
+function AuthForm({ mode, onNext, onSwitch }: { mode: 'signup' | 'login'; onNext: () => void; onSwitch: () => void }) {
+  const login = mode === 'login'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
   const [touched, setTouched] = useState({ email: false, password: false })
 
   const emailError = !email.trim() ? 'Email is required' : !isEmail(email) ? 'Enter a valid email' : ''
-  const passwordError = password.length < 8 ? 'Use at least 8 characters' : ''
+  const passwordError = login ? (password ? '' : 'Password is required') : password.length < 8 ? 'Use at least 8 characters' : ''
   const valid = !emailError && !passwordError
 
   return (
     <div className={styles.body}>
       <Logo />
-      <div className={styles.banner}>
-        <b>💰 Rewards, made simple</b>
-        <span>See what your points and cashback could cover, all in one place.</span>
-      </div>
-      <h1 className={styles.title}>Create your account</h1>
+      {login ? (
+        <p className={styles.sub} style={{ marginTop: 20 }}>Welcome back. Your cards are saved in this browser.</p>
+      ) : (
+        <div className={styles.banner}>
+          <b>💰 Rewards, made simple</b>
+          <span>See what your points and cashback could cover, all in one place.</span>
+        </div>
+      )}
+      <h1 className={styles.title}>{login ? 'Log in' : 'Create your account'}</h1>
 
       <label className={`${styles.field} ${touched.email && emailError ? styles.fieldError : ''}`}>
         <span>Email <i>*</i></span>
@@ -278,7 +291,7 @@ function Account({ onNext }: { onNext: () => void }) {
         <span>Password <i>*</i></span>
         <input
           type={show ? 'text' : 'password'}
-          autoComplete="new-password"
+          autoComplete={login ? 'current-password' : 'new-password'}
           value={password}
           onChange={(e) => setPassword(e.currentTarget.value)}
           onBlur={() => setTouched((t) => ({ ...t, password: true }))}
@@ -290,11 +303,15 @@ function Account({ onNext }: { onNext: () => void }) {
       {touched.password && passwordError && <p className={styles.error}>{passwordError}</p>}
 
       <p className={styles.fine}>
-        Demo only: no account is created and nothing you type is saved or sent.
+        Demo only: {login ? 'no account is checked' : 'no account is created'} and nothing you type is saved or sent.
       </p>
 
       <div className={styles.footer}>
-        <button className={styles.primary} disabled={!valid} onClick={onNext}>Sign up</button>
+        <button className={styles.primary} disabled={!valid} onClick={onNext}>{login ? 'Log in' : 'Sign up'}</button>
+        <p className={styles.switch}>
+          {login ? 'New to Pointpool? ' : 'Already have an account? '}
+          <button onClick={onSwitch}>{login ? 'Create an account' : 'Log in'}</button>
+        </p>
       </div>
     </div>
   )

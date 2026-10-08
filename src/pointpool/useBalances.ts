@@ -7,6 +7,8 @@ const ONBOARDED_KEY = 'pointpool.onboarded.v1'
 
 export const isOnboarded = () => localStorage.getItem(ONBOARDED_KEY) === '1'
 export const markOnboarded = () => localStorage.setItem(ONBOARDED_KEY, '1')
+// Logging out (simulated) sends the user back to Welcome; cards are only cleared if they ask.
+export const markLoggedOut = () => localStorage.removeItem(ONBOARDED_KEY)
 
 // Where the user said they'd like rewards to go in onboarding (GOAL_OPTIONS ids), so Use rewards can open there.
 const GOALS_KEY = 'pointpool.goals.v1'
