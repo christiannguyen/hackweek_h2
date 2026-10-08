@@ -16,7 +16,7 @@ import {
   type CategoryId,
   type FeeFilter,
 } from './data'
-import { Disclaimer, SpendingControls } from './shared'
+import { SpendingControls } from './shared'
 import { routeParam } from './useHashRoute'
 import styles from './pointpool.module.css'
 
@@ -87,10 +87,10 @@ export function ComparePage({ balances, onEdit, compare: { category, onCategory 
 
     <p className={styles.chartNote}>
       <strong>A new card is a new bill.</strong> Annual fees are charged even in months you earn little. Applying is a
-      credit check, and approval isn’t guaranteed. Estimates use your last 30 days of spending and sample card terms,
-      without interest or welcome bonuses. Fees on cards you already have aren’t counted.
+      credit check, and approval isn’t guaranteed. Estimates use sample spending from the last 30 days and illustrative
+      card terms, without interest or welcome bonuses. Fees on cards you already have aren’t counted. Each program’s
+      points are used within that program.
     </p>
-    <Disclaimer />
   </>
 }
 
@@ -197,7 +197,7 @@ function CardMath({ option: o, category, best }: { option: CardOption; category:
     <h3>{o.name}<small>New card</small></h3>
     <dl>
       <div>
-        <dt>Rewards<small>{fmtRate(o.type, o.rate)} {o.type === 'cashback' ? 'cash back' : 'points'} on {catName(category)}{o.steps.length > 1 ? ', with a cap' : ''}</small></dt>
+        <dt>Rewards<small>{fmtRate(o.type, o.rate)} {o.type === 'cashback' ? 'cashback' : o.unit === 'miles' ? 'miles' : 'points'} on {catName(category)}{o.steps.length > 1 ? ', with a cap' : ''}</small></dt>
         <dd>{fmtMoney(m.rewards)}</dd>
       </div>
       <div>

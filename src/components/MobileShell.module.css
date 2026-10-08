@@ -21,7 +21,7 @@
 .topbar {
   display: flex;
   align-items: center;
-  padding: 20px 18px 16px;
+  padding: 20px 16px 16px;
 }
 .brand {
   display: inline-flex; align-items: center; gap: 9px;

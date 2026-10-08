@@ -51,8 +51,8 @@ export function PointpoolPage({ balances, onEdit, onRewards }: Props) {
         </a>
       </div>
 
-      {balances.length > 0 && <RewardsFinePrint />}
-      <Disclaimer />
+      {/* One block of fine print: the rewards one already says values are illustrative and points aren't pooled. */}
+      {balances.length > 0 ? <RewardsFinePrint /> : <Disclaimer />}
     </>
   )
 }

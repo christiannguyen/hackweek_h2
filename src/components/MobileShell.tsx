@@ -46,7 +46,7 @@ export function MobileShell({ children, onAccount }: { children: ReactNode; onAc
 
         {children}
 
-        <nav className={styles.tabbar}>
+        <nav className={styles.tabbar} aria-label="Main">
           {TABS.map(({ label, icon: Icon, hash: h }) => (
             <a
               key={label}
