@@ -2,14 +2,24 @@ import { useState } from 'react'
 import { LuArrowUpRight, LuChevronDown, LuCoins, LuGift, LuHotel, LuPencil, LuPlane, LuPlus, LuWallet } from 'react-icons/lu'
 import { ageDays, fmtBalance, isStale, fmtDollars, fmtPts, fmtUSD, GOALS, hasEstimates, isCash, PROGRAMS, type Balance } from './data'
 import { redemptionEstimate, redemptionExamples, REDEMPTION_EXAMPLES, type RedemptionId } from './redemption'
+import { savedGoals } from './useBalances'
+import { routeParam } from './useHashRoute'
 import styles from './pointpool.module.css'
+
+// Onboarding's "where would you like your rewards to go?" picks, as the example this page opens on.
+const GOAL_EXAMPLE: Record<string, RedemptionId> = {
+  flights: 'flight', hotels: 'hotel', dining: 'gift', shopping: 'gift', gift: 'gift', events: 'gift',
+  groceries: 'credit', bill: 'credit', bank: 'credit', charity: 'credit',
+}
+const goalExample = (): RedemptionId => GOAL_EXAMPLE[savedGoals()[0]] ?? 'credit'
 
 const rewardMoney = (value: number) => Number.isInteger(value) ? fmtDollars(value) : fmtUSD(value)
 
 const ICONS = { flight: LuPlane, hotel: LuHotel, gift: LuGift, credit: LuWallet }
 
 export function RedeemPage({ balances, onEdit }: { balances: Balance[]; onEdit: (id?: number) => void }) {
-  const [selectedId, setSelectedId] = useState<number>()
+  // "#redeem/<id>" opens on that card (linked from Offers); otherwise the most recently updated one.
+  const [selectedId, setSelectedId] = useState<number | undefined>(() => Number(routeParam()) || undefined)
   const selected = balances.find((b) => b.id === selectedId) ?? [...balances].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0]
   return (
     <>
@@ -53,7 +63,7 @@ export function RedeemPage({ balances, onEdit }: { balances: Balance[]; onEdit: 
 }
 
 function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdit: () => void }) {
-  const [choice, setChoice] = useState<RedemptionId>('credit')
+  const [choice, setChoice] = useState<RedemptionId>(goalExample)
   const [prices, setPrices] = useState<Partial<Record<RedemptionId, string>>>({})
   const p = PROGRAMS[b.programId]
   const cash = isCash(b)

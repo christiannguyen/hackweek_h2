@@ -11,6 +11,7 @@ import {
   type Balance,
 } from './data'
 import { CardCompare, ScoreGoal, type CompareProps } from './CardCompare'
+import { pressable } from './a11y'
 import { Disclaimer, FreshnessTag } from './shared'
 import styles from './pointpool.module.css'
 
@@ -35,7 +36,7 @@ export function HomePage({ balances, onEdit, compare }: Props) {
         <CardCompare {...compare} />
         <ScoreGoal balances={compare.balances} category={compare.category} />
         <a className={styles.moreLink} href="#coach">
-          See all cards and the math ›
+          See your spending breakdown ›
         </a>
       </div>
 
@@ -99,12 +100,12 @@ function CardRow({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numbe
 
   let sub: string
   if (uses.length === 0) sub = 'Estimates coming soon'
-  else if (!(b.amount > 0)) sub = 'Update this balance to see where it could go'
+  else if (!(b.amount > 0)) sub = 'Add your balance to see where it could go'
   else if (isCash(b)) sub = 'Comes off what you owe; options vary by card'
   else sub = `Could be ≈${fmtMoney(travel!.value)} in travel or ≈${fmtMoney(credit!.value)} as a statement credit`
 
   return (
-    <div className={styles.row} onClick={() => onEdit(b.id)}>
+    <div className={styles.row} {...pressable(() => onEdit(b.id), `Edit ${b.cardName}`)}>
       <div className={styles.rowIcon}>{p.short}</div>
       <div className={styles.rowMain}>
         <div className={styles.rowTitleLine}>

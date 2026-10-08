@@ -8,6 +8,17 @@ const ONBOARDED_KEY = 'pointpool.onboarded.v1'
 export const isOnboarded = () => localStorage.getItem(ONBOARDED_KEY) === '1'
 export const markOnboarded = () => localStorage.setItem(ONBOARDED_KEY, '1')
 
+// Where the user said they'd like rewards to go in onboarding (GOAL_OPTIONS ids), so Use rewards can open there.
+const GOALS_KEY = 'pointpool.goals.v1'
+export const saveGoals = (goals: string[]) => localStorage.setItem(GOALS_KEY, JSON.stringify(goals))
+export const savedGoals = (): string[] => {
+  try {
+    return JSON.parse(localStorage.getItem(GOALS_KEY) ?? '[]')
+  } catch {
+    return []
+  }
+}
+
 export function useBalances() {
   const [balances, setBalances] = useState<Balance[]>(() => {
     const saved = localStorage.getItem(STORE_KEY)
@@ -23,7 +34,7 @@ export function useBalances() {
     setBalances((prev) =>
       id
         ? prev.map((b) => (b.id === id ? { ...b, ...entry, updatedAt } : b))
-        : [...prev, { id: Date.now(), ...entry, updatedAt }],
+        : [...prev, { id: Math.max(Date.now(), ...prev.map((b) => b.id + 1)), ...entry, updatedAt }],
     )
   }
 

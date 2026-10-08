@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Drawer, Field, Input, NativeSelect, Portal, Stack } from '@chakra-ui/react'
+import { Button, CloseButton, Drawer, Field, Input, NativeSelect, Portal, Stack } from '@chakra-ui/react'
 import { PROGRAMS, type Balance, type ProgramId } from './data'
 
 interface Props {
@@ -13,7 +13,7 @@ interface Props {
 
 // Bottom sheet for adding / editing a balance. Remount (via key) on each open to reset the form.
 export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove }: Props) {
-  const [programId, setProgramId] = useState<ProgramId>(balance?.programId ?? 'chase_ur')
+  const [programId, setProgramId] = useState<ProgramId>(balance?.programId ?? 'discover')
   const [cardName, setCardName] = useState(balance?.cardName ?? '')
   const [amount, setAmount] = useState(balance ? String(balance.amount) : '')
   const [creditLimit, setCreditLimit] = useState(balance?.creditLimit ? String(balance.creditLimit) : '')
@@ -21,6 +21,8 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
 
   const cash = PROGRAMS[programId].type === 'cashback'
   const value = Number(amount)
+  // Shown once something's typed: why Save is off, instead of a silently disabled button.
+  const amountError = amount.trim() === '' ? '' : !Number.isFinite(value) || value < 0 ? 'Enter 0 or more.' : !cash && !Number.isInteger(value) ? 'Enter a whole number of points or miles.' : ''
   const valid = cardName.trim() !== '' && amount.trim() !== '' && Number.isFinite(value) && value >= 0 && (cash || Number.isInteger(value))
 
   const save = () => {
@@ -82,7 +84,7 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
                     rounded="12px"
                   />
                 </Field.Root>
-                <Field.Root>
+                <Field.Root invalid={!!amountError}>
                   <Field.Label fontSize="13px">{cash ? 'Cashback balance ($)' : PROGRAMS[programId].unit === 'miles' ? 'Miles balance' : 'Points balance'}</Field.Label>
                   <Input
                     type="number"
@@ -94,7 +96,9 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
                     placeholder={cash ? '42.18' : '50000'}
                     rounded="12px"
                   />
-                  <Field.HelperText fontSize="12px">Saved in this browser. {cash ? 'Enter dollars and cents.' : 'Enter a whole number of points or miles.'}</Field.HelperText>
+                  {amountError
+                    ? <Field.ErrorText fontSize="12px">{amountError}</Field.ErrorText>
+                    : <Field.HelperText fontSize="12px">Saved in this browser. {cash ? 'Enter dollars and cents.' : 'Enter a whole number of points or miles.'}</Field.HelperText>}
                 </Field.Root>
                 <Field.Root>
                   <Field.Label fontSize="13px">Credit limit ($), optional</Field.Label>
@@ -135,7 +139,9 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
                 {purpose === 'rewards' ? 'Save balance' : 'Save'}
               </Button>
             </Drawer.Footer>
-            <Drawer.CloseTrigger />
+            <Drawer.CloseTrigger asChild>
+              <CloseButton size="sm" aria-label="Close" />
+            </Drawer.CloseTrigger>
           </Drawer.Content>
         </Drawer.Positioner>
       </Portal>

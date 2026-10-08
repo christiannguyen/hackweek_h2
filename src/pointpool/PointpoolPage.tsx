@@ -6,6 +6,7 @@ import {
   utilization,
   type Balance,
 } from './data'
+import { pressable } from './a11y'
 import { Disclaimer, FreshnessTag } from './shared'
 import styles from './pointpool.module.css'
 
@@ -74,7 +75,7 @@ function CardTile({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numb
   const utilPct = util !== null ? Math.round(util * 100) : null
 
   return (
-    <div className={`${styles.card} ${styles.walletTile}`} onClick={() => onEdit(b.id)} style={{ cursor: 'pointer' }}>
+    <div className={`${styles.card} ${styles.walletTile}`} {...pressable(() => onEdit(b.id), `Edit ${b.cardName}`)} style={{ cursor: 'pointer' }}>
       <div className={styles.cardHead}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           <div className={styles.rowIcon}>{p.short}</div>

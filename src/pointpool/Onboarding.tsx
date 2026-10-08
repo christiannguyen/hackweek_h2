@@ -22,7 +22,7 @@ import {
 } from 'react-icons/lu'
 import type { IconType } from 'react-icons'
 import { balanceUses, fmtMoney, PROGRAMS, type Balance, type ProgramId } from './data'
-import { markOnboarded } from './useBalances'
+import { markOnboarded, saveGoals } from './useBalances'
 import styles from './onboarding.module.css'
 
 // SIMULATED onboarding for the prototype: no account is created and nothing leaves the browser. The email and
@@ -92,10 +92,34 @@ const cleanAmount = (p: Picked) => {
 
 const isEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim())
 
-export function Onboarding({ onFinish }: { onFinish: (cards: Omit<Balance, 'id' | 'updatedAt'>[]) => void }) {
-  const [step, setStep] = useState<Step>('welcome')
-  const [picked, setPicked] = useState<Picked[]>([])
-  const [goals, setGoals] = useState<string[]>([])
+// Progress survives a refresh mid-flow (this tab only), so a reload doesn't send the user back to Welcome with their
+// picks gone. Cleared on finish. The email and password are never part of it.
+const FLOW_KEY = 'pointpool.onboarding.v1'
+interface Flow { step: Step; picked: Picked[]; goals: string[] }
+const loadFlow = (): Flow | null => {
+  try {
+    const f = JSON.parse(sessionStorage.getItem(FLOW_KEY) ?? 'null') as Flow | null
+    // The account step holds nothing to restore, and setup is a timed beat: both resume one step on.
+    return f && { ...f, step: f.step === 'account' ? 'cards' : f.step === 'setup' ? 'done' : f.step }
+  } catch {
+    return null
+  }
+}
+
+interface OnboardingProps {
+  onFinish: (cards: Omit<Balance, 'id' | 'updatedAt'>[]) => void
+  onLogin: () => void
+}
+
+export function Onboarding({ onFinish, onLogin }: OnboardingProps) {
+  const [initial] = useState(loadFlow)
+  const [step, setStep] = useState<Step>(initial?.step ?? 'welcome')
+  const [picked, setPicked] = useState<Picked[]>(initial?.picked ?? [])
+  const [goals, setGoals] = useState<string[]>(initial?.goals ?? [])
+
+  useEffect(() => {
+    sessionStorage.setItem(FLOW_KEY, JSON.stringify({ step, picked, goals }))
+  }, [step, picked, goals])
 
   const go = (s: Step) => {
     setStep(s)
@@ -112,6 +136,8 @@ export function Onboarding({ onFinish }: { onFinish: (cards: Omit<Balance, 'id' 
 
   const finish = () => {
     markOnboarded()
+    saveGoals(goals)
+    sessionStorage.removeItem(FLOW_KEY)
     onFinish(picked.map((p) => ({ programId: p.programId, cardName: p.name, amount: cleanAmount(p) })))
   }
 
@@ -133,13 +159,21 @@ export function Onboarding({ onFinish }: { onFinish: (cards: Omit<Balance, 'id' 
           </header>
         )}
 
-        {step === 'welcome' && <Welcome onStart={() => go('account')} onLogin={() => go('cards')} />}
+        {step === 'welcome' && <Welcome
+            onStart={() => go('account')}
+            onLogin={() => {
+              // A returning user keeps the cards already saved in this browser.
+              markOnboarded()
+              sessionStorage.removeItem(FLOW_KEY)
+              onLogin()
+            }}
+          />}
         {step === 'account' && <Account onNext={() => go('cards')} />}
         {step === 'cards' && <Cards picked={picked} setPicked={setPicked} onNext={() => go('balances')} />}
         {step === 'balances' && <Balances picked={picked} setPicked={setPicked} onNext={() => go('goal')} />}
         {step === 'goal' && <Goal goals={goals} setGoals={setGoals} onNext={() => go('setup')} />}
         {step === 'setup' && <Setup />}
-        {step === 'done' && <Done picked={picked} goals={goals} onFinish={finish} />}
+        {step === 'done' && <Done picked={picked} goals={goals} onFinish={finish} onEditBalances={() => go('balances')} />}
       </div>
     </div>
   )
@@ -404,7 +438,7 @@ function Setup() {
   )
 }
 
-function Done({ picked, goals, onFinish }: { picked: Picked[]; goals: string[]; onFinish: () => void }) {
+function Done({ picked, goals, onFinish, onEditBalances }: { picked: Picked[]; goals: string[]; onFinish: () => void; onEditBalances: () => void }) {
   // Up to two of the user's picks per card ("Not sure yet" shows a statement credit), side by side, no ranking.
   const chosen = GOAL_OPTIONS.filter((o) => goals.includes(o.id))
   return (
@@ -430,7 +464,7 @@ function Done({ picked, goals, onFinish }: { picked: Picked[]; goals: string[]; 
             .filter(Boolean)
             .slice(0, 2)
           const line = !(b.amount > 0)
-            ? 'Add a balance to see where it could go'
+            ? 'Add your balance to see where it could go'
             : parts.length
               ? `Could be ${parts.join(' or ')}`
               : 'Estimates coming soon'
@@ -445,6 +479,7 @@ function Done({ picked, goals, onFinish }: { picked: Picked[]; goals: string[]; 
       <p className={styles.fine}>Estimates only, based on illustrative rates.</p>
       <div className={styles.footer}>
         <button className={styles.primary} onClick={onFinish}>Go to my Pointpool</button>
+        <button className={styles.ghost} onClick={onEditBalances}>Edit balances</button>
       </div>
     </div>
   )

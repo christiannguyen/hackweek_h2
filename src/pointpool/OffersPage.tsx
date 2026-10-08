@@ -128,13 +128,15 @@ function useLocation() {
     )
   }, [])
 
+  const reset = useCallback(() => setLoc({ status: 'idle' }), [])
+
   const setManual = useCallback((zip: string) => {
     if (zip.length === 5 && /^\d{5}$/.test(zip)) {
       setLoc({ status: 'resolved', label: `Near ${zip}`, coords: null })
     }
   }, [])
 
-  return { loc, detect, setManual }
+  return { loc, detect, reset, setManual }
 }
 
 // --- Redemption offers (existing logic, kept below nearby) ---
@@ -178,7 +180,7 @@ function redemptionOffers(b: Balance): RedemptionOffer[] {
 // --- Component ---
 
 export function OffersPage({ balances, onEdit }: Props) {
-  const { loc, detect, setManual } = useLocation()
+  const { loc, detect, reset, setManual } = useLocation()
   const [zip, setZip] = useState('')
 
   const resolved = loc.status === 'resolved'
@@ -255,7 +257,7 @@ export function OffersPage({ balances, onEdit }: Props) {
               <span className={styles.locLabel}>📍 {loc.label}</span>
               <button
                 className={styles.btnText}
-                onClick={() => { setZip(''); detect() }}
+                onClick={() => { setZip(''); reset() }}
               >
                 Change
               </button>
@@ -312,7 +314,7 @@ export function OffersPage({ balances, onEdit }: Props) {
               </div>
               <div className={styles.mt}>
                 {offers.map((o) => (
-                  <div key={o.id} className={styles.row}>
+                  <a key={o.id} className={styles.row} href={`#redeem/${b.id}`}>
                     <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>{o.emoji}</div>
                     <div className={styles.rowMain}>
                       <div className={styles.rowTitleLine}>
@@ -321,7 +323,7 @@ export function OffersPage({ balances, onEdit }: Props) {
                       <div className={styles.rowSub}>{o.desc}</div>
                     </div>
                     <span className={styles.chev}>›</span>
-                  </div>
+                  </a>
                 ))}
               </div>
             </div>
