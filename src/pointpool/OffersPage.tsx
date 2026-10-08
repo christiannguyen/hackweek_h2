@@ -1,14 +1,7 @@
 import { useCallback, useState } from 'react'
 import {
-  balanceUses,
   cardEarnings,
-  fmtBalance,
-  fmtMoney,
   fmtRate,
-  fmtUSD,
-  hasEstimates,
-  isCash,
-  PROGRAMS,
   type Balance,
   type CategoryId,
   type Spend,
@@ -139,44 +132,6 @@ function useLocation() {
   return { loc, detect, reset, setManual }
 }
 
-// --- Redemption offers (existing logic, kept below nearby) ---
-
-interface RedemptionOffer {
-  id: string
-  emoji: string
-  title: string
-  desc: string
-}
-
-function redemptionOffers(b: Balance): RedemptionOffer[] {
-  const p = PROGRAMS[b.programId]
-  if (!hasEstimates(p)) return []
-  const uses = balanceUses(b)
-  const travel = uses.find((u) => u.id === 'travel')
-  const credit = uses.find((u) => u.id === 'cashback')
-  const offers: RedemptionOffer[] = []
-
-  if (isCash(b)) {
-    offers.push({ id: `${b.id}-statement`, emoji: '💵', title: 'Statement credit', desc: `Apply ${fmtUSD(b.amount)} to your next statement. Minimums vary by card.` })
-    offers.push({ id: `${b.id}-deposit`, emoji: '🏦', title: 'Bank deposit', desc: `Deposit ${fmtUSD(b.amount)} to your bank account. Minimums vary by card.` })
-    offers.push({ id: `${b.id}-checkout`, emoji: '🛍️', title: 'Pay at checkout', desc: 'Use cashback at Amazon or PayPal checkout.' })
-  } else {
-    if (travel && b.amount > 0) {
-      offers.push({ id: `${b.id}-travel`, emoji: '✈️', title: 'Book travel', desc: `${fmtBalance(b)} could cover ≈${fmtMoney(travel.value)} of flights or hotels.` })
-    }
-    if (b.amount > 0) {
-      offers.push({ id: `${b.id}-giftcard`, emoji: '🎁', title: 'Gift cards', desc: 'Use points for gift cards at popular retailers.' })
-    }
-    if (credit && b.amount > 0) {
-      offers.push({ id: `${b.id}-credit`, emoji: '💵', title: 'Statement credit', desc: `Takes ≈${fmtMoney(credit.value)} off what you owe on this card.` })
-    }
-    if (p.brand === 'Chase' || p.brand === 'Amex') {
-      offers.push({ id: `${b.id}-transfer`, emoji: '🔄', title: 'Transfer to airlines', desc: `Move ${p.brand} points to airline or hotel partners.` })
-    }
-  }
-  return offers
-}
-
 // --- Component ---
 
 export function OffersPage({ balances, onEdit }: Props) {
@@ -186,10 +141,6 @@ export function OffersPage({ balances, onEdit }: Props) {
   const resolved = loc.status === 'resolved'
   const places = resolved ? getPlaces(loc.coords) : []
   const nearbyOffers = resolved ? matchPlacesToCards(places, balances) : []
-
-  const cardsWithRedemptions = balances
-    .map((b) => ({ balance: b, offers: redemptionOffers(b) }))
-    .filter((c) => c.offers.length > 0)
 
   return (
     <>
@@ -300,36 +251,7 @@ export function OffersPage({ balances, onEdit }: Props) {
         )}
       </div>
 
-      {/* Redemption offers per card */}
-      {cardsWithRedemptions.length > 0 && (
-        <>
-          <div className={styles.sectionHead}>
-            <span className={styles.sectionTitle}>Ways to use your rewards</span>
-          </div>
-          {cardsWithRedemptions.map(({ balance: b, offers }) => (
-            <div key={b.id} className={`${styles.card} ${styles.darkCard}`}>
-              <div className={styles.cardHead}>
-                <h2 className={styles.ellipsis}>{b.cardName}</h2>
-                <span className={`${styles.tag} ${styles.sm}`}>{fmtBalance(b)}</span>
-              </div>
-              <div className={styles.mt}>
-                {offers.map((o) => (
-                  <a key={o.id} className={styles.row} href={`#redeem/${b.id}`}>
-                    <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>{o.emoji}</div>
-                    <div className={styles.rowMain}>
-                      <div className={styles.rowTitleLine}>
-                        <span className={styles.rowTitle}>{o.title}</span>
-                          </div>
-                      <div className={styles.rowSub}>{o.desc}</div>
-                    </div>
-                    <span className={styles.chev}>›</span>
-                  </a>
-                ))}
-              </div>
-            </div>
-          ))}
-        </>
-      )}
+      {/* "Ways to use your rewards" lives on the Use rewards tab; Offers is about where to earn. */}
 
       <Disclaimer />
     </>

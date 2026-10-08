@@ -10,18 +10,17 @@ import {
   SPEND,
   type Balance,
 } from './data'
+import { CardArt } from './CardArt'
 import { CardCompare, ScoreGoal, type CompareProps } from './CardCompare'
-import { pressable } from './a11y'
 import { Disclaimer, FreshnessTag } from './shared'
 import styles from './pointpool.module.css'
 
 interface Props {
   balances: Balance[]
-  onEdit: (id?: number) => void
   compare: CompareProps
 }
 
-export function HomePage({ balances, onEdit, compare }: Props) {
+export function HomePage({ balances, compare }: Props) {
   const market = marketplaceCategory(balances)
 
   return (
@@ -38,40 +37,26 @@ export function HomePage({ balances, onEdit, compare }: Props) {
         <a className={styles.moreLink} href="#coach">Compare more cards ›</a>
       </div>
 
-      {/* The user's own cards, on the dark surface the wallet tiles use */}
-      <div className={`${styles.card} ${styles.darkCard}`}>
+      {/* The wallet in miniature, on the dark surface the deck uses: the same card faces, one per row.
+          The whole tile opens the Wallet tab, so adding and editing happen there rather than twice. */}
+      <a className={`${styles.card} ${styles.darkCard} ${styles.walletLink}`} href="#wallet">
         <div className={styles.cardHead}>
-          <h2>Your cards</h2>
-          <button className={`${styles.btnText} ${styles.add}`} onClick={() => onEdit()}>
-            + Add
-          </button>
+          <div>
+            <h2>Wallet</h2>
+            <span className={styles.walletLinkSub}>Your cards</span>
+          </div>
+          <span className={styles.chev}>›</span>
         </div>
         <div className={styles.mt}>
           {balances.length === 0 && <div className={styles.empty}>Add a card to get started.</div>}
           {balances.map((b) => (
-            <CardRow key={b.id} balance={b} onEdit={onEdit} />
+            <CardRow key={b.id} balance={b} />
           ))}
         </div>
-      </div>
+      </a>
 
-      <div className={styles.card} style={{ paddingTop: 4, paddingBottom: 4 }}>
-        <a className={styles.row} href="#redeem">
-          <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>🎯</div>
-          <div className={styles.rowMain}>
-            <div className={styles.rowTitle}>Ways to use your points</div>
-            <div className={styles.rowSub}>What they could cover on a trip, everyday buys or as cash</div>
-          </div>
-          <span className={styles.chev}>›</span>
-        </a>
-        <a className={styles.row} href="#learn">
-          <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>📘</div>
-          <div className={styles.rowMain}>
-            <div className={styles.rowTitle}>Rewards 101</div>
-            <div className={styles.rowSub}>How points and cashback work, in 2 minutes</div>
-          </div>
-          <span className={styles.chev}>›</span>
-        </a>
-      </div>
+      {/* "Ways to use your points" and "Rewards 101" live on the wallet page; Home linked to the same
+          two places a tab away. */}
 
       <a className={styles.promo} href="https://kikoff.com/login" target="_blank" rel="noopener noreferrer">
         <div className={styles.rowMain}>
@@ -91,8 +76,8 @@ export function HomePage({ balances, onEdit, compare }: Props) {
 }
 
 
-// One line per card: the balance, plus where it could go — side by side, no ranking.
-function CardRow({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: number) => void }) {
+// One line per card: the card's face, its balance, and where it could go — side by side, no ranking.
+function CardRow({ balance: b }: { balance: Balance }) {
   const p = PROGRAMS[b.programId]
   const uses = balanceUses(b)
   const travel = uses.find((u) => u.id === 'travel')
@@ -105,8 +90,8 @@ function CardRow({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numbe
   else sub = `Could be ≈${fmtMoney(travel!.value)} in travel or ≈${fmtMoney(credit!.value)} as a statement credit`
 
   return (
-    <div className={styles.row} {...pressable(() => onEdit(b.id), `Edit ${b.cardName}`)}>
-      <div className={styles.rowIcon}>{p.short}</div>
+    <div className={styles.row}>
+      <CardArt balance={b} />
       <div className={styles.rowMain}>
         <div className={styles.rowTitleLine}>
           <span className={`${styles.rowTitle} ${styles.ellipsis}`}>{b.cardName}</span>

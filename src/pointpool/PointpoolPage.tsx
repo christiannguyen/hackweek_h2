@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react'
+import { useState } from 'react'
 import {
   ageDays,
   fmtPts,
@@ -8,42 +8,38 @@ import {
   utilization,
   type Balance,
 } from './data'
-import { artFor } from './cardColors'
+import { CardDeck } from './CardDeck'
+import { RewardsFinePrint, RewardsPreview, RewardsWelcome } from './Rewards'
 import { Disclaimer, FreshnessTag } from './shared'
+import { routeParam } from './useHashRoute'
 import styles from './pointpool.module.css'
 
 interface Props {
   balances: Balance[]
   onEdit: (id?: number) => void
+  onRewards: (id?: number) => void
 }
 
-export function PointpoolPage({ balances, onEdit }: Props) {
+// One page for the whole wallet: the deck picks a card, and everything below it — what's owed on it
+// and what its rewards could cover — is about that card. Those used to be two tabs showing the same
+// balance twice.
+export function PointpoolPage({ balances, onEdit, onRewards }: Props) {
   return (
     <>
       <div className={styles.pageHead}>
         <div className={styles.pageTitle}>Wallet</div>
-        <button className={`${styles.btnText} ${styles.add}`} onClick={() => onEdit()}>
-          + Add
-        </button>
+        {balances.length > 0 && (
+          <button className={`${styles.btnText} ${styles.add}`} onClick={() => onEdit()}>
+            + Add
+          </button>
+        )}
       </div>
 
-      {balances.length === 0 && (
-        <div className={styles.card}>
-          <div className={styles.empty}>Add a card to get started.</div>
-        </div>
-      )}
+      {balances.length === 0 && <RewardsWelcome onAdd={() => onEdit()} />}
 
-      {balances.length > 0 && <CardDeck balances={balances} onEdit={onEdit} />}
+      {balances.length > 0 && <WalletDeck balances={balances} onEdit={onEdit} onRewards={onRewards} />}
 
       <div className={styles.card} style={{ paddingTop: 4, paddingBottom: 4 }}>
-        <a className={styles.row} href="#redeem">
-          <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>🎯</div>
-          <div className={styles.rowMain}>
-            <div className={styles.rowTitle}>Ways to use your points</div>
-            <div className={styles.rowSub}>What they could cover on a trip, everyday buys or as cash</div>
-          </div>
-          <span className={styles.chev}>›</span>
-        </a>
         <a className={styles.row} href="#learn">
           <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>📘</div>
           <div className={styles.rowMain}>
@@ -54,6 +50,7 @@ export function PointpoolPage({ balances, onEdit }: Props) {
         </a>
       </div>
 
+      {balances.length > 0 && <RewardsFinePrint />}
       <Disclaimer />
     </>
   )
@@ -68,90 +65,23 @@ function UtilBar({ pct }: { pct: number }) {
   )
 }
 
-// How far from the front a card can sit before it's tucked out of sight. Two each way keeps the fan
-// shallow no matter how many cards are in the wallet; the rest wait behind the outermost layer.
-const PEEK_SPAN = 2
-// Each step away from the front moves a card this far and shrinks it by this much.
-const PEEK_STEP = 15
-const PEEK_SCALE = 0.055
-// The cards still to come sit below the front one; the ones already seen stay above it. Signed, so
-// the fan opens in both directions instead of growing into one long stack.
-const offsetFrom = (i: number, top: number, n: number) => {
-  const ahead = (i - top + n) % n
-  return ahead * 2 > n ? ahead - n : ahead
-}
-
-// The wallet as a deck rather than a list: one card face at a time, the next ones fanned below it
-// and the ones behind you peeking out above. Tapping the front card deals the next one; tapping any
-// card that's peeking out brings that one forward. The panel below describes whichever is in front.
-function CardDeck({ balances, onEdit }: { balances: Balance[]; onEdit: (id?: number) => void }) {
-  const [top, setTop] = useState(0)
-  const n = balances.length
-  const front = balances[top]
-  // The fan's reach in each direction, so the deck box can reserve exactly the room it needs.
-  const offsets = balances.map((_, i) => offsetFrom(i, top, n))
-  const up = Math.min(PEEK_SPAN, -Math.min(0, ...offsets))
-  const down = Math.min(PEEK_SPAN, Math.max(0, ...offsets))
+// Whichever card is in front drives the panel and the redemption examples under it. Clamped against
+// a shrinking wallet, so removing the front card doesn't strand the index.
+function WalletDeck({ balances, onEdit, onRewards }: Props) {
+  // "#wallet/<id>" (and the old "#redeem/<id>") opens on that card; otherwise the first one.
+  const [top, setTop] = useState(() => Math.max(0, balances.findIndex((b) => b.id === Number(routeParam()))))
+  const index = Math.min(top, balances.length - 1)
+  const front = balances[index]
 
   return (
-    <div className={styles.deckWrap}>
-      <div className={styles.deck} style={{ '--up': up, '--down': down } as CSSProperties}>
-        {balances.map((b, i) => {
-          const offset = offsets[i]
-          const depth = Math.abs(offset)
-          const hidden = depth > PEEK_SPAN
-          const step = Math.sign(offset) * Math.min(depth, PEEK_SPAN)
-          return (
-            <button
-              key={b.id}
-              className={styles.deckCard}
-              style={{
-                transform: `translateY(${step * PEEK_STEP}px) scale(${1 - Math.abs(step) * PEEK_SCALE})`,
-                zIndex: n - depth,
-                // The cards behind sit back a little in the light, so the fan reads as depth.
-                filter: depth > 0 ? `brightness(${1 - Math.min(depth, PEEK_SPAN) * 0.12})` : undefined,
-                opacity: hidden ? 0 : 1,
-                pointerEvents: hidden ? 'none' : undefined,
-              }}
-              aria-hidden={hidden}
-              tabIndex={hidden ? -1 : undefined}
-              onClick={() => setTop(offset === 0 ? (top + 1) % n : i)}
-              aria-label={offset === 0
-                ? `${b.cardName}, card ${top + 1} of ${n}. Tap for the next card.`
-                : `Bring ${b.cardName} to the front`}
-            >
-              <DeckFace balance={b} />
-            </button>
-          )
-        })}
+    <>
+      <div className={styles.deckWrap}>
+        <CardDeck balances={balances} top={index} onTop={setTop} />
+        <DeckDetails balance={front} onEdit={onEdit} onRewards={onRewards} />
       </div>
-      {n > 1 && (
-        <div className={styles.deckDots} aria-hidden="true">
-          {balances.map((b, i) => (
-            <span key={b.id} className={`${styles.deckDot} ${i === top ? styles.on : ''}`} />
-          ))}
-        </div>
-      )}
-      {n > 1 && <p className={styles.deckHint}>Tap the deck for the next card · <b>{top + 1} of {n}</b></p>}
-      <DeckDetails balance={front} onEdit={onEdit} />
-    </div>
-  )
-}
-
-// The face itself: the program's brand-tinted art, the same look the wallet thumbnails use, so the
-// cards stay apart while they're stacked.
-function DeckFace({ balance: b }: { balance: Balance }) {
-  const p = PROGRAMS[b.programId]
-  const art = artFor(p.short)
-  return (
-    <span className={styles.deckFace} style={{ '--art-from': art.from, '--art-to': art.to } as CSSProperties}>
-      <span className={styles.deckChip} aria-hidden="true" />
-      <span className={styles.deckShort} aria-hidden="true">{p.short}</span>
-      <span className={styles.deckFaceFoot}>
-        <span className={styles.deckProgram}>{p.name}</span>
-        <strong className={styles.deckName}>{b.cardName}</strong>
-      </span>
-    </span>
+      {/* Remounted per card so the chosen example and any typed-in price start fresh. */}
+      <RewardsPreview key={front.id} balance={front} onEdit={() => onRewards(front.id)} />
+    </>
   )
 }
 
@@ -161,7 +91,7 @@ const updated = (b: Balance) => {
 }
 
 // Everything about the card in front: what it has earned first, then what's owed against it.
-function DeckDetails({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: number) => void }) {
+function DeckDetails({ balance: b, onEdit, onRewards }: { balance: Balance; onEdit: (id?: number) => void; onRewards: (id?: number) => void }) {
   const p = PROGRAMS[b.programId]
   const cash = isCash(b)
   const util = utilization(b)
@@ -199,11 +129,15 @@ function DeckDetails({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: n
         </div>
       )}
 
-      {/* Tapping the deck cycles it, so editing needs a control of its own. */}
+      {/* Tapping the deck cycles it, so editing needs controls of its own. The balance is entered by
+          hand, so it gets its own shortcut rather than only living behind "Edit card". */}
       <div className={styles.deckFoot}>
         <span className={styles.deckAge}>Updated {updated(b)}</span>
         <FreshnessTag balance={b} />
-        <button className={styles.btnText} onClick={() => onEdit(b.id)}>Edit card</button>
+        <span className={styles.deckActions}>
+          <button className={styles.btnText} onClick={() => onRewards(b.id)}>Update balance</button>
+          <button className={styles.btnText} onClick={() => onEdit(b.id)}>Edit card</button>
+        </span>
       </div>
     </div>
   )

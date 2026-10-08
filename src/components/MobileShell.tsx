@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { IconType } from 'react-icons'
-import { LuCircleUserRound, LuCreditCard, LuGift, LuChartNoAxesColumnIncreasing, LuHouse, LuWallet } from 'react-icons/lu'
+import { LuCircleUserRound, LuCreditCard, LuChartNoAxesColumnIncreasing, LuHouse, LuWallet } from 'react-icons/lu'
 import styles from './MobileShell.module.css'
 
 const TABS: { label: string; icon: IconType; hash: string }[] = [
   { label: 'Home', icon: LuHouse, hash: '#home' },
   { label: 'Compare', icon: LuChartNoAxesColumnIncreasing, hash: '#coach' },
-  { label: 'Use rewards', icon: LuGift, hash: '#redeem' },
   { label: 'Wallet', icon: LuWallet, hash: '#wallet' },
   { label: 'Offers', icon: LuCreditCard, hash: '#offers' },
 ]
+
+// Both old names for the wallet, so a "#redeem" or "#pointpool" link still lights up its tab.
+const TAB_ALIAS: Record<string, string> = { '#pointpool': '#wallet', '#redeem': '#wallet' }
 
 export function MobileShell({ children, onAccount }: { children: ReactNode; onAccount: () => void }) {
   const [hash, setHash] = useState(window.location.hash || '#home')
@@ -20,7 +22,8 @@ export function MobileShell({ children, onAccount }: { children: ReactNode; onAc
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
-  const routeHash = hash.split('/')[0] === '#pointpool' ? '#wallet' : hash.split('/')[0]
+  const base = hash.split('/')[0]
+  const routeHash = TAB_ALIAS[base] ?? base
   const isTab = TABS.some((t) => t.hash === routeHash)
 
   return (

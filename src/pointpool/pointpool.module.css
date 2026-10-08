@@ -216,6 +216,14 @@ a.row { text-decoration: none; color: inherit; }
    a panel doesn't need per-page overrides. Light cards are still the default — tips, promos and
    the comparison tiles stay light so the card faces and rate numbers keep their contrast. */
 .darkCard, .walletTile { background: var(--dark); color: #fff; box-shadow: none; }
+/* Home's wallet summary: the whole tile is the link to the Wallet tab, so the rows inside are a
+   preview rather than controls of their own. */
+/* `a.card` sets `color: inherit`, which outranks .darkCard's white on its own element. */
+a.walletLink { display: block; color: #fff; }
+.walletLinkSub { display: block; margin-top: 1px; font-size: 11.5px; color: var(--dark-muted); }
+.walletLink .cardHead { align-items: flex-start; }
+.walletLink .chev { font-size: 20px; line-height: 1; }
+@media (hover: hover) { .walletLink:hover .chev { color: var(--lime); } }
 .darkCard .rowIcon, .walletTile .rowIcon { background: var(--dark-raised); color: var(--lime); }
 .darkCard .rowSub, .walletTile .rowSub { color: var(--dark-muted); }
 .darkCard .cardSub { color: var(--dark-text); }
@@ -382,7 +390,8 @@ a.row { text-decoration: none; color: inherit; }
   margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--dark-line);
 }
 .deckAge { font-size: 12px; color: var(--dark-muted); }
-.deckFoot .btnText { margin-left: auto; color: var(--lime); }
+.deckActions { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+.deckFoot .btnText { color: var(--lime); }
 @media (prefers-reduced-motion: reduce) {
   .deckCard { transition: none; }
 }
@@ -657,19 +666,7 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 }
 
 /* Manual rewards balances and visual redemption examples. */
-.rewardsProgramRow { display: flex; align-items: flex-end; gap: 12px; }
-.rewardsProgramRow label { flex: 1; min-width: 0; font-size: 11px; color: #626b5e; }
-.rewardsProgramRow select { display: block; width: 100%; margin-top: 5px; padding: 10px; border: 1px solid #dfdfd8; border-radius: 10px; background: white; color: var(--ink); font: inherit; font-size: 13px; }
-.rewardsProgramRow button { display: flex; align-items: center; gap: 4px; padding-bottom: 10px; color: var(--green-ink); }
-.rewardsBalance { background: var(--dark); border-radius: 20px; padding: 20px; color: white; }
-.rewardsBalanceTop { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--dark-text); }
-.rewardsBalanceTop > svg { flex-shrink: 0; color: #ffc857; width: 28px; height: 28px; }
-.rewardsAmount { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin: 8px 0 18px; font-size: 42px; font-weight: 650; letter-spacing: -1.5px; line-height: 1.2; color: var(--lime); overflow-wrap: anywhere; }
-.rewardsAmount > span { color: var(--dark-text); font-size: 13px; font-weight: 400; letter-spacing: 0; }
-.rewardsBalanceBottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--dark-line); padding-top: 12px; }
-.rewardsBalanceBottom > span { font-size: 11px; line-height: 1.4; color: var(--dark-text); }
-.rewardsBalanceBottom small { display: block; font-size: 10px; color: var(--dark-muted); margin-top: 3px; }
-.rewardsBalanceBottom button { flex-shrink: 0; display: flex; align-items: center; gap: 5px; border: 0; background: var(--lime); color: var(--lime-ink); padding: 8px 10px; border-radius: 9px; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+/* The balance block this section used to open with now lives on the deck panel above it. */
 .rewardsSectionHead { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
 .rewardsSectionHead h2 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.2px; }
 .rewardsSectionHead span { color: #626b5e; font-size: 11px; }
@@ -731,14 +728,9 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .rewardsTeasers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; border-top: 1px solid #eee; padding-top: 20px; margin-top: 22px; }
 .rewardsTeasers > div { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 10px; color: #626b5e; }
 .rewardsTeasers svg { width: 22px; height: 22px; color: #8c6724; }
-.redemptionTile:focus-visible, .rewardsProgramRow select:focus-visible { outline: 2px solid var(--selection-border); outline-offset: 3px; }
-.rewardsBalanceBottom button:focus-visible, .rewardsCustomPrice summary:focus-visible, .rewardsCustomPrice input:focus-visible,
+.redemptionTile:focus-visible { outline: 2px solid var(--selection-border); outline-offset: 3px; }
+.rewardsCustomPrice summary:focus-visible, .rewardsCustomPrice input:focus-visible,
 .rewardsFinePrint summary:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
-@media (max-width: 360px) {
-  .rewardsBalance { padding: 16px; }
-  .rewardsBalanceBottom { align-items: flex-start; flex-direction: column; gap: 10px; }
-  .rewardsAmount { font-size: 36px; }
-}
 
 /* Compare cards uses the shared surfaces and reward/fee colours. The baseline is the user’s
    existing card; columns show the monthly difference after each new card’s fee. */
