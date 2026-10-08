@@ -1,16 +1,9 @@
 import { useState } from 'react'
 import { LuArrowUpRight, LuChevronDown, LuCoins, LuGift, LuHotel, LuPlane, LuPlus, LuWallet } from 'react-icons/lu'
-import { fmtBalance, isStale, fmtDollars, fmtPts, fmtUSD, GOALS, hasEstimates, isCash, PROGRAMS, type Balance } from './data'
-import { redemptionEstimate, REDEMPTION_EXAMPLES, type RedemptionId } from './redemption'
+import { fmtBalance, isStale, fmtDollars, fmtPts, fmtUSD, hasEstimates, isCash, PROGRAMS, type Balance } from './data'
+import { preferredRedemption, redemptionEstimate, redemptionSteps, REDEMPTION_EXAMPLES, type RedemptionId } from './redemption'
 import { savedGoals } from './useBalances'
 import styles from './pointpool.module.css'
-
-// Onboarding's "where would you like your rewards to go?" picks, as the example this page opens on.
-const GOAL_EXAMPLE: Record<string, RedemptionId> = {
-  flights: 'flight', hotels: 'hotel', dining: 'gift', shopping: 'gift', gift: 'gift', events: 'gift',
-  groceries: 'credit', bill: 'credit', bank: 'credit', charity: 'credit',
-}
-const goalExample = (): RedemptionId => GOAL_EXAMPLE[savedGoals()[0]] ?? 'credit'
 
 const rewardMoney = (value: number) => Number.isInteger(value) ? fmtDollars(value) : fmtUSD(value)
 
@@ -48,7 +41,7 @@ export function RewardsFinePrint() {
 // What the card in front could cover. This sits under the wallet's deck, so it opens straight into
 // the examples instead of restating the balance the panel above it already shows.
 export function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdit: () => void }) {
-  const [choice, setChoice] = useState<RedemptionId>(goalExample)
+  const [choice, setChoice] = useState<RedemptionId>(() => preferredRedemption(savedGoals()))
   const [prices, setPrices] = useState<Partial<Record<RedemptionId, string>>>({})
   const p = PROGRAMS[b.programId]
   const cash = isCash(b)
@@ -62,11 +55,7 @@ export function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdi
   const cashCredit = cash && example.id === 'credit'
   const estimate = redemptionEstimate(b, example.goal, price)
   // Cashback has to be taken out of the program before it can go anywhere, so its steps start there.
-  const steps = cash
-    ? ["Open your card’s app and find your cashback balance", ...GOALS[example.goal].cashback, 'Check any minimum before you redeem']
-    : choice === 'hotel'
-    ? ["Open your card’s rewards portal", 'Look for hotels under travel and compare the cash and points prices', 'Check availability, taxes, and fees before redeeming']
-    : GOALS[example.goal].points
+  const steps = redemptionSteps(b, choice)
 
   return (
     <>

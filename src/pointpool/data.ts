@@ -828,6 +828,26 @@ export interface CardComparison {
 // hard credit check, a new bill to track and a new card to carry.
 export const MIN_GAIN = 2
 
+// Round each monthly line before subtracting, so Home and Compare show the same amount.
+export const monthlyCardValue = (o: CardOption) => {
+  const rewards = cents(o.rewards / 12)
+  const fee = cents(o.fee / 12)
+  return { rewards, fee, net: cents(rewards - fee) }
+}
+
+// Lead with the largest meaningful gain. Otherwise reassure on the highest-spend category we can estimate.
+export function homeOpportunity(balances: Balance[]) {
+  const categories = TOP_CATEGORIES.map(({ id }) => {
+    const { best, worth, close, rest } = compareCards(balances, id)
+    const top = [...worth, ...close, ...rest].sort((a, b) => b.net - a.net)[0]
+    const gain = top && best ? cents(monthlyCardValue(top).net - monthlyCardValue(best).net) : 0
+    return { category: id, best, top, gain }
+  })
+  return categories.filter((o) => o.best && o.top?.worth).sort((a, b) => b.gain - a.gain)[0]
+    ?? categories.find((o) => o.best)
+    ?? categories[0]
+}
+
 const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
 // A card name as a user might type it, with or without the issuer.
 const isCard = (cardName: string, c: MarketCard) => sameName(cardName, c.name) || sameName(cardName, `${c.issuer} ${c.name}`)

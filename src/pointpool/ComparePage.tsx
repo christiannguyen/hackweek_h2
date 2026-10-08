@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import { LuArrowUpRight } from 'react-icons/lu'
-import type { CompareProps } from './CardCompare'
+import { ScoreGoal, type CompareProps } from './CardCompare'
 import { artFor } from './cardColors'
 import {
   catName,
@@ -9,6 +9,7 @@ import {
   fmtDollars,
   fmtMoney,
   fmtRate,
+  monthlyCardValue as perMonth,
   passesFee,
   SPEND,
   type Balance,
@@ -29,12 +30,6 @@ interface Props {
 const c2 = (n: number) => Math.round(n * 100) / 100
 const money = (n: number) => (n < 0 ? `−${fmtMoney(-n)}` : fmtMoney(n))
 const signed = (n: number) => (n < 0 ? `−${fmtMoney(-n)}` : `+${fmtMoney(n)}`)
-// A card's month: each line is rounded to cents first, so the math adds up to the column's number.
-const perMonth = (o: CardOption) => {
-  const rewards = c2(o.rewards / 12)
-  const fee = c2(o.fee / 12)
-  return { rewards, fee, net: c2(rewards - fee) }
-}
 // The chart always spans at least this much a month, so a $1 gain looks small instead of filling the chart.
 const MIN_SPAN = 5
 
@@ -84,6 +79,8 @@ export function ComparePage({ balances, onEdit, compare: { category, onCategory 
         {' '}<button className={styles.btnText} onClick={() => onEdit()}>Add a card</button>
       </p>}
     </section>
+
+    <ScoreGoal balances={balances} category={category} />
 
     <p className={styles.chartNote}>
       <strong>A new card is a new bill.</strong> Annual fees are charged even in months you earn little. Applying is a

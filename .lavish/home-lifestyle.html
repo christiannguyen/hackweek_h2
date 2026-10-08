@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pointpool · A more useful Home</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400..800&display=swap" rel="stylesheet">
+<style>
+:root{font-family:Figtree,-apple-system,BlinkMacSystemFont,sans-serif;color:#111;--green:#196b36;--lime:#b2ff4a;--muted:#6e7569;--dark:#1c241b;--line:#edf0e8}*{box-sizing:border-box}body{margin:0;background:#edf0e8}button,a{-webkit-tap-highlight-color:transparent}button{font:inherit;cursor:pointer}a{color:inherit}button:focus-visible,a:focus-visible{outline:3px solid #2fa83c;outline-offset:4px}svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}.board{max-width:1050px;margin:auto;padding:42px 32px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,430px);gap:70px;align-items:start}.intro{padding-top:30px;position:sticky;top:30px}.eyebrow{color:var(--green);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}.intro h1{font-size:46px;letter-spacing:-1.8px;line-height:1.05;margin:20px 0}.intro>p{color:#596251;font-size:17px;line-height:1.55;max-width:365px}.notes{margin-top:38px;display:grid;gap:26px}.note{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px}.n{display:grid;place-items:center;background:#dde9d2;color:var(--green);border-radius:50%;height:26px;font-size:12px;font-weight:650}.note h2{font-size:16px;margin:1px 0 5px}.note p{font-size:14px;line-height:1.5;color:#596251;margin:0}.design-note{margin-top:36px;padding-top:20px;border-top:1px solid #d6ddcf;font-size:12px;line-height:1.6;color:var(--muted)}.phone{min-width:0;border-radius:30px;overflow:hidden;background:linear-gradient(180deg,#e6f4d8,transparent 230px),#fafbf7;box-shadow:0 12px 48px #263c1710;border:1px solid #e0e7d8}.topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 18px 12px}.brand{display:flex;align-items:center;gap:9px;font-size:27px;font-weight:750;letter-spacing:-1.2px}.brand img{width:36px;height:36px}.account{background:none;border:0;color:#111;padding:8px}.account svg{width:25px;height:25px}main{padding:0 14px 14px}.pagehead{padding:6px 3px 18px}.pagehead h2{font-size:26px;letter-spacing:-.7px;margin:0}.pagehead p{margin:5px 0 0;color:#5d6a55;font-size:13px}.card{background:#fff;border-radius:18px;padding:17px 17px;box-shadow:0 1px 8px #00000008;margin-bottom:12px}.head{display:flex;align-items:center;justify-content:space-between;gap:8px}.head h3{font-size:17px;letter-spacing:-.2px;margin:0;font-weight:650}.period{font-size:11px;color:var(--muted)}.spend-sub{font-size:12px;color:var(--muted);margin:6px 0 4px}.spend-row{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #f0f0f0}.spend-row:last-of-type{border-bottom:0}.icon{width:32px;height:32px;display:grid;place-items:center;background:#f2f5ee;border-radius:10px;color:#596b4b}.row-title{font-size:13px;font-weight:600}.best{font-size:11px;color:var(--muted);margin-top:4px}.spend{font-size:14px;font-weight:600;align-self:start;padding-top:1px}.textlink{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--green);font-size:12px;font-weight:600;background:none;border:none;padding:5px 0 0;min-height:28px}.textlink svg{width:15px;height:15px}.gain{padding:17px 18px 16px;border:1px solid #d6edc8;background:linear-gradient(115deg,#fff 55%,#f2fae9)}.kicker{display:flex;align-items:center;gap:6px;color:var(--green);font-size:11px;font-weight:600;margin-bottom:8px}.kicker svg{width:15px;height:15px}.gain h3{font-size:16px;letter-spacing:-.2px;margin:0;font-weight:500}.amount{font-size:34px;font-weight:700;color:var(--green);letter-spacing:-1px}.per{font-size:14px;letter-spacing:0;color:#111;font-weight:500}.gain p{font-size:12px;line-height:1.5;color:#5d6a55;margin:7px 0 12px}.cta{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--lime);border:0;border-radius:12px;min-height:42px;text-decoration:none;font-size:13px;font-weight:650;width:100%;padding:10px}.cta svg{width:17px;height:17px}.reward{background:var(--dark);color:#fff;padding:18px}.reward .head h3{font-size:15px}.wallet-link{color:#c5d0bd;text-decoration:none;font-size:11px;display:flex;align-items:center;gap:3px}.wallet-link svg{width:14px;height:14px}.reward-product{display:flex;gap:7px;align-items:center;margin:15px 0 8px;color:#c6d3bc;font-size:11px}.mini-card{width:25px;height:16px;border-radius:3px;background:linear-gradient(125deg,#ffab54,#d76118);position:relative}.mini-card:after{content:'';width:5px;height:4px;background:#f4d6a1;position:absolute;left:4px;top:5px;border-radius:1px}.reward h4{font-size:23px;line-height:1.2;font-weight:550;letter-spacing:-.4px;margin:0;max-width:295px}.reward h4 strong{color:var(--lime);font-weight:650}.reward p{font-size:12px;color:#b5c2ad;margin:8px 0 10px;line-height:1.45}.reward .textlink{color:var(--lime);font-size:13px}.disclaimer{font-size:10px;color:#76806f;line-height:1.5;margin:14px 6px 2px}.tabbar{display:flex;justify-content:space-around;background:#fff;padding:11px 0 13px;border-top:1px solid var(--line)}.tab{font-size:10px;text-decoration:none;color:#626b5e;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}.tab.active{color:var(--green);font-weight:700}.tab.active svg{background:#e7f8e9;border-radius:4px;box-shadow:0 0 0 4px #e7f8e9}dialog{border:0;border-radius:22px;max-width:380px;width:calc(100% - 32px);padding:24px;color:#111;box-shadow:0 16px 80px #14200c30}dialog::backdrop{background:#1c241b70}dialog .close{float:right;border:0;background:#f0f3ed;border-radius:50%;width:32px;height:32px;font-size:22px}dialog h2{font-size:24px;letter-spacing:-.6px;margin:18px 0 10px}dialog p,dialog li{font-size:14px;line-height:1.6;color:#5d6a55}dialog ol{padding-left:20px}dialog li{padding:5px 0}dialog .small{font-size:11px;margin-bottom:0}@media(max-width:790px){.board{grid-template-columns:minmax(0,430px);justify-content:center;padding:22px 16px;gap:22px}.intro{position:static;padding:0}.intro h1{font-size:32px;margin:12px 0}.intro>p{font-size:15px;margin-bottom:0}.notes,.design-note{display:none}}@media(prefers-reduced-motion:no-preference){.cta,.textlink{transition:filter .15s}.cta:hover,.textlink:hover{filter:brightness(.93)}}
+</style>
+</head>
+<body>
+<svg style="display:none" aria-hidden="true"><defs>
+<symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+<symbol id="home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v11h-6v-8H9v8H3Z"/></symbol>
+<symbol id="chart" viewBox="0 0 24 24"><path d="M5 20v-7m7 7V8m7 12V3"/></symbol>
+<symbol id="wallet" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M4 5V3h14m3 8h-6v5h6m-3-2.5h.1"/></symbol>
+<symbol id="card" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M2 9h20M6 15h4"/></symbol>
+<symbol id="coach" viewBox="0 0 24 24"><path d="m2 8 10-5 10 5-10 5Z M6 10v7l6 3 6-3v-7m4-2v8"/></symbol>
+<symbol id="food" viewBox="0 0 24 24"><path d="M4 3v6c0 3 6 3 6 0V3M7 3v18M20 3c-4 3-5 7 0 8V3v18"/></symbol>
+<symbol id="bag" viewBox="0 0 24 24"><path d="M4 8h16l1 13H3ZM8 8V6a4 4 0 0 1 8 0v2"/></symbol>
+<symbol id="fuel" viewBox="0 0 24 24"><path d="M4 21V3h10v18M2 21h14M4 9h10m0 3h3v6a2 2 0 0 0 4 0V8l-3-3"/></symbol>
+<symbol id="spark" viewBox="0 0 24 24"><path d="m12 3 2.6 6.4L21 12l-6.4 2.6L12 21l-2.6-6.4L3 12l6.4-2.6Z"/></symbol>
+<symbol id="user" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="9" r="3"/><path d="M6 19v-2a6 4 0 0 1 12 0v2"/></symbol>
+</defs></svg>
+<div class="board">
+<aside class="intro">
+  <div class="eyebrow">Home concept · sample data</div>
+  <h1>Your everyday,<br>working harder.</h1>
+  <p>A quick read on your spending, one way to earn more, and something your rewards can do today.</p>
+  <div class="notes">
+    <div class="note"><span class="n">1</span><div><h2>Start with their life</h2><p>Top spending categories, paired with the best card already in their wallet.</p></div></div>
+    <div class="note"><span class="n">2</span><div><h2>Give them one next move</h2><p>A concise gain estimate. Compare holds the options, fees, and detailed math.</p></div></div>
+    <div class="note"><span class="n">3</span><div><h2>Make rewards feel useful</h2><p>“Put $18.40 toward your bill” gives a balance a purpose. Tap to see the redemption walkthrough.</p></div></div>
+  </div>
+  <div class="design-note">Uses Pointpool’s existing Figtree typography, green palette, soft cards, and dark wallet surface.<br><br>Card suggestions describe what to use next. They don’t claim to know which card paid for past purchases. This concept uses the app’s illustrative estimates.</div>
+</aside>
+<div class="phone">
+  <header class="topbar"><div class="brand"><img src="pointpool.svg" alt="">pointpool</div><a class="account" href="http://127.0.0.1:5173/#home" aria-label="Open Pointpool"><svg><use href="#user"/></svg></a></header>
+  <main>
+    <div class="pagehead"><h2>Your everyday, rewarded</h2><p>A little more from what you already spend.</p></div>
+    <section class="card" aria-labelledby="spending-title">
+      <div class="head"><h3 id="spending-title">Your spending</h3><span class="period">Last 30 days</span></div>
+      <p class="spend-sub">Top categories · best cards in your wallet</p>
+      <div class="spend-row"><div class="icon"><svg><use href="#food"/></svg></div><div><div class="row-title">Food &amp; drink</div><div class="best">Use Discover it Secured</div></div><span class="spend">$460</span></div>
+      <div class="spend-row"><div class="icon"><svg><use href="#bag"/></svg></div><div><div class="row-title">Shopping</div><div class="best">Use Discover it Secured</div></div><span class="spend">$216</span></div>
+      <div class="spend-row"><div class="icon"><svg><use href="#fuel"/></svg></div><div><div class="row-title">Gas &amp; transit</div><div class="best">Use Discover it Secured</div></div><span class="spend">$164</span></div>
+      <a class="textlink" href="http://127.0.0.1:5173/#coach">See your card strategy <svg><use href="#arrow"/></svg></a>
+    </section>
+    <section class="card gain" aria-labelledby="gain-title">
+      <div class="kicker"><svg><use href="#spark"/></svg> A new-card opportunity</div>
+      <h3 id="gain-title">You could earn <span class="amount">$8.74<span class="per"> more / mo</span></span></h3>
+      <p>On food &amp; drink, compared with your best card.<br>Estimated after annual fees.</p>
+      <a class="cta" href="http://127.0.0.1:5173/#compare">Compare cards <svg><use href="#arrow"/></svg></a>
+    </section>
+    <section class="card reward" aria-labelledby="reward-title">
+      <div class="head"><h3 id="reward-title">Ready to use</h3><a class="wallet-link" href="http://127.0.0.1:5173/#wallet">Wallet <svg><use href="#arrow"/></svg></a></div>
+      <div class="reward-product"><span class="mini-card" aria-hidden="true"></span> Discover it Secured · cashback</div>
+      <h4>Put <strong>$18.40</strong><br>toward your card bill.</h4>
+      <p>Your cashback can become a statement credit.</p>
+      <button class="textlink" id="redeem">See how to redeem <svg><use href="#arrow"/></svg></button>
+    </section>
+    <p class="disclaimer">Sample spending and illustrative rates. Reward balances are entered by you; check the issuer for your current balance and redemption options.</p>
+  </main>
+  <nav class="tabbar" aria-label="Main navigation">
+    <a class="tab active" href="#" aria-current="page"><svg><use href="#home"/></svg>Home</a>
+    <a class="tab" href="http://127.0.0.1:5173/#compare"><svg><use href="#chart"/></svg>Compare</a>
+    <a class="tab" href="http://127.0.0.1:5173/#coach"><svg><use href="#coach"/></svg>Card Coach</a>
+    <a class="tab" href="http://127.0.0.1:5173/#wallet"><svg><use href="#wallet"/></svg>Wallet</a>
+    <a class="tab" href="http://127.0.0.1:5173/#offers"><svg><use href="#card"/></svg>Offers</a>
+  </nav>
+</div>
+</div>
+<dialog id="redemption" aria-labelledby="redemption-title">
+  <button class="close" aria-label="Close redemption guide">×</button>
+  <div class="eyebrow">Discover · statement credit</div>
+  <h2 id="redemption-title">Make that cashback count.</h2>
+  <p>Your saved balance is <strong>$18.40</strong>. Redeem through Discover to put it toward what you owe.</p>
+  <ol><li>Open Discover and sign in.</li><li>Find your Cashback Bonus rewards.</li><li>Choose statement credit and confirm the amount there.</li></ol>
+  <button class="cta close-guide">Got it</button>
+  <p class="small">Preview only. Nothing is redeemed here. Check your current balance, available options, and required payments with Discover.</p>
+</dialog>
+<script>
+const dialog=document.querySelector('#redemption');document.querySelector('#redeem').addEventListener('click',()=>dialog.showModal());document.querySelectorAll('.close,.close-guide').forEach(b=>b.addEventListener('click',()=>dialog.close()));dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close()}});
+</script>
+</body>
+</html>

@@ -141,6 +141,46 @@ a.row { text-decoration: none; color: inherit; }
 /* Earn more on your spending (hero card) */
 .coachHero h2 { font-size: 20px; }
 .coachHero { border: none; background: #fff; }
+.homeInsight { padding: 17px 18px 16px; border: 1px solid #d6edc8; background: linear-gradient(115deg, #fff 55%, #f2fae9); }
+.insightEyebrow { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; color: var(--green-ink); font-size: 11px; font-weight: 600; }
+.insightEyebrow svg { width: 15px; height: 15px; }
+.homeInsight h2 { font-size: 21px; line-height: 1.3; }
+.homeInsight .insightGainTitle { font-size: 16px; font-weight: 500; }
+.insightAmount { display: inline-block; font-size: 34px; font-weight: 700; letter-spacing: -1px; color: var(--green-ink); font-variant-numeric: tabular-nums; }
+.insightAmount small { font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--ink); }
+.insightBody { margin: 7px 0 0; font-size: 12px; line-height: 1.5; color: #5d6a55; }
+.homeInsight .compareCta { margin-top: 12px; min-height: 44px; padding: 10px; border-radius: 12px; font-size: 13px; width: 100%; border: none; font-family: inherit; cursor: pointer; }
+
+/* Home is a glance: current spending, one opportunity, and one usable rewards balance. */
+.homeSpending { padding: 17px; }
+.homeSpending h2 { font-size: 17px; }
+.homePeriod { font-size: 11px; color: var(--muted); }
+.homeSpendingSub { font-size: 12px; color: var(--muted); margin: 6px 0 4px; }
+.homeSpendList { list-style: none; padding: 0; margin: 0; }
+.homeSpendRow { display: flex; gap: 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.homeSpendRow:last-child { border-bottom: 0; }
+.homeCategoryIcon { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; background: #f2f5ee; color: #596b4b; }
+.homeCategoryIcon svg { width: 21px; height: 21px; }
+.homeCategoryName { font-size: 13px; font-weight: 600; }
+.homeCardSuggestion { font-size: 11px; color: var(--muted); margin-top: 4px; overflow-wrap: anywhere; }
+.homeSpendAmount { flex: none; align-self: flex-start; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.homeTextLink { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; color: var(--green-ink); font: inherit; font-size: 12px; font-weight: 600; text-decoration: none; background: none; border: none; padding: 4px 0; cursor: pointer; }
+.homeTextLink svg, .homeWalletLink svg { width: 15px; height: 15px; flex: none; }
+.homeRewards { padding: 18px; }
+.homeRewards h2 { font-size: 15px; }
+.homeWalletLink { display: inline-flex; align-items: center; gap: 3px; min-height: 28px; font-size: 11px; color: var(--dark-muted); text-decoration: none; }
+.homeRewardProduct { display: flex; align-items: center; gap: 7px; margin: 12px 0 8px; color: var(--dark-muted); font-size: 11px; overflow-wrap: anywhere; }
+.homeRewardProduct .cardArt { width: 25px; height: 16px; border-radius: 3px; }
+.homeRewardProduct .cardChip { width: 5px; height: 4px; left: 4px; top: 5px; }
+.homeRewardProduct .cardBrand, .homeRewardProduct .cardNet { display: none; }
+.homeRewardHeadline { font-size: 23px; line-height: 1.2; font-weight: 550; letter-spacing: -0.4px; margin: 0; overflow-wrap: anywhere; }
+.homeRewardHeadline strong { font-weight: 650; color: var(--lime); }
+.homeRewardBody { font-size: 12px; color: var(--dark-muted); margin: 8px 0 6px; line-height: 1.45; }
+.homeRewards .homeTextLink { color: var(--lime); font-size: 13px; }
+.homeRedemptionProgram { color: var(--green-ink); font-size: 12px; margin-bottom: 8px; }
+.homeRedemptionNote { font-size: 12px; color: var(--muted); line-height: 1.5; margin: 16px 0 8px; }
+.homeTextLink:focus-visible, .homeWalletLink:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; border-radius: 3px; }
+.homeRewards .homeTextLink:focus-visible, .homeWalletLink:focus-visible { outline-color: var(--lime); }
 .note { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
 .sample { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.4; }
 .moreLink { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 500; color: var(--green-ink); text-decoration: none; }

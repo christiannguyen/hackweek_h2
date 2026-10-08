@@ -1,4 +1,4 @@
-import { PROGRAMS, hasEstimates, type Balance, type GoalId } from './data'
+import { GOALS, PROGRAMS, hasEstimates, isCash, isStale, type Balance, type GoalId } from './data'
 
 // Illustrative purchase prices, not live fares, hotel availability, or award quotes.
 export const REDEMPTION_EXAMPLES = [
@@ -9,6 +9,32 @@ export const REDEMPTION_EXAMPLES = [
 ] as const satisfies readonly { id: string; title: string; subtitle: string; price: number; goal: GoalId; emoji: string }[]
 
 export type RedemptionId = typeof REDEMPTION_EXAMPLES[number]['id']
+
+const GOAL_EXAMPLE: Record<string, RedemptionId> = {
+  flights: 'flight', hotels: 'hotel', dining: 'gift', shopping: 'gift', gift: 'gift', events: 'gift',
+  groceries: 'credit', bill: 'credit', bank: 'credit', charity: 'credit',
+}
+export const preferredRedemption = (goals: string[]): RedemptionId => GOAL_EXAMPLE[goals[0]] ?? 'credit'
+
+export function redemptionSteps(balance: Balance, choice: RedemptionId) {
+  const example = REDEMPTION_EXAMPLES.find((e) => e.id === choice)!
+  return isCash(balance)
+    ? ["Open your card’s app and find your cashback balance", ...GOALS[example.goal].cashback, 'Check any minimum before you redeem']
+    : choice === 'hotel'
+      ? ["Open your card’s rewards portal", 'Look for hotels under travel and compare the cash and points prices', 'Check availability, taxes, and fees before redeeming']
+      : GOALS[example.goal].points
+}
+
+// Feature one usable balance, never pool programs. Prefer fresh balances, then their estimated value.
+export function homeReward(balances: Balance[], goals: string[]) {
+  return balances.flatMap((balance) => {
+    const choice = isCash(balance) ? 'credit' : preferredRedemption(goals)
+    const example = REDEMPTION_EXAMPLES.find((e) => e.id === choice)!
+    const price = choice === 'credit' && balance.cardBalance && balance.cardBalance > 0 ? balance.cardBalance : example.price
+    const estimate = redemptionEstimate(balance, example.goal, price)
+    return estimate && estimate.value > 0 ? [{ balance, example, estimate }] : []
+  }).sort((a, b) => Number(isStale(a.balance)) - Number(isStale(b.balance)) || b.estimate.value - a.estimate.value)[0]
+}
 
 // Every balance gets all four of them. Cashback can't be redeemed straight into a flight the way points
 // can, but it is money: taken as a credit or deposit it covers any of these at face value, so showing a
