@@ -17,18 +17,41 @@
   --text: #2b2b2b;
   --muted: #8a8a8e;
   --line: #f0f0f0;
+  --surface-soft: #f5f6f3;
   --orange: #f05a1a;
   --orange-tint: #fdeee8;
+  /* The dark surface (see .darkCard) that carries "something of yours" everywhere in the app: the
+     wallet tiles, the rewards balance, and the per-card panels on Home, Card Coach and Offers. */
+  --dark: #1c241b;
+  --dark-raised: #2f3b2d;
+  --dark-line: #3d4939;
+  --dark-text: #e2e9db;
+  --dark-muted: #b5c2ad;
+  --dark-warn: #46331f;
+  --dark-warn-ink: #ffbe7a;
+  --lime-ink: #182117;
   --radius: 18px;
   --shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
 }
 
 .view { padding: 4px 14px 16px; display: flex; flex-direction: column; gap: 14px; }
 
-.pageTitle { font-size: 22px; font-weight: 500; margin: 4px 2px 0; letter-spacing: -0.2px; }
+/* Headings step down in weight: the page name (700) names the section you're on,
+   card and section headings (650) sit a step below it. */
+.pageTitle { font-size: 26px; font-weight: 700; margin: 4px 2px 0; letter-spacing: -0.5px; }
 .pageSub { color: var(--muted); font-size: 13px; margin: 2px 2px 0; }
+
+/* Layout only — the tint behind the page name comes from the shell's top wash (.phone),
+   so the heading sits on the page background rather than in a box of its own.
+   Holds a page-level action (e.g. "+ Add") on the same row as the name. */
+.pageHead {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin: 2px 2px 0; padding-bottom: 2px;
+}
+.pageHead .pageTitle { margin: 0; }
+.pageHead .pageSub { margin: 4px 0 0; color: #5d6a55; }
 .sectionHead { display: flex; justify-content: space-between; align-items: center; margin: 10px 2px -4px; }
-.sectionTitle { font-size: 17px; font-weight: 500; margin: 0; letter-spacing: -0.2px; }
+.sectionTitle { font-size: 18px; font-weight: 650; margin: 0; letter-spacing: -0.2px; }
 
 .back {
   display: inline-flex; align-items: center; gap: 4px; width: fit-content;
@@ -43,12 +66,11 @@
 }
 a.card { text-decoration: none; color: inherit; display: block; }
 .cardHead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.cardHead h2, .card h2 { margin: 0; font-size: 17px; font-weight: 500; }
+.cardHead h2, .card h2 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.2px; }
 .cardHead h2 { min-width: 0; }
 .cardHead > :last-child:not(:first-child) { flex-shrink: 0; }
 .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chev { color: #9a9a9a; font-size: 20px; line-height: 1; text-decoration: none; }
-.label { color: var(--muted); font-size: 12px; }
 .body { color: var(--text); font-size: 14px; line-height: 1.45; }
 
 .tag {
@@ -60,7 +82,6 @@ a.card { text-decoration: none; color: inherit; display: block; }
 .tag.warn { background: var(--orange-tint); color: var(--orange); }
 .tag.gray { background: #f0f0f0; color: #777; }
 
-.green { color: var(--green); }
 
 /* Smart-tasks style banner (lime border + lime arrow) */
 .tip {
@@ -116,45 +137,45 @@ a.row { text-decoration: none; color: inherit; }
 .add { font-weight: 600; }
 
 /* Chips (category / goal pickers) */
-.chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
-.chips::-webkit-scrollbar { display: none; }
-/* Inside a card, chips scroll edge to edge (like the carousel) instead of clipping at the card padding. */
-.card .chips { margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; scroll-padding: 0 16px; }
-.chip {
-  font: inherit; font-size: 13px; white-space: nowrap;
-  border: 1px solid #e6e6e6; background: #fff; color: var(--ink);
-  padding: 6px 12px; border-radius: 999px; cursor: pointer;
+
+/* Card Coach: score + spending analysis */
+.coachScore {
+  display: flex; align-items: center; gap: 14px;
 }
-.chip.active { background: var(--selection-tint); color: var(--selection-ink); border-color: var(--selection-border); }
+.scoreCircle { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
+.scoreSvg { width: 100%; height: 100%; }
+.scoreNum {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 20px; font-weight: 600; color: var(--ink);
+}
+.scoreTitle { font-size: 15px; font-weight: 600; }
 
 /* Earn more on your spending (hero card) */
-.coachHero h2 { font-size: 18px; }
+.coachHero h2 { font-size: 20px; }
 .coachHero { border: none; background: #fff; }
 .note { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
 .sample { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.4; }
 .moreLink { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 500; color: var(--green); text-decoration: none; }
+/* Card Coach: spending analysis */
+.coachCatRow { padding: 12px 0; border-top: 1px solid var(--line); }
+.coachCatRow:first-of-type { border-top: none; margin-top: 10px; }
+.coachCatHead {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 14px; font-weight: 500;
+}
+.coachCatSpend { font-variant-numeric: tabular-nums; }
+.coachCatDetail {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  margin-top: 4px; font-size: 13px; color: var(--text);
+}
+.coachCatDetail b { font-weight: 600; }
+.coachCatCard { min-width: 0; }
+.coachCatEarn { flex-shrink: 0; font-weight: 600; color: var(--green); }
 
 /* Where your points could go */
 .cardSub { font-size: 13px; color: var(--text); margin-top: 4px; line-height: 1.4; }
-.useBlock { padding: 12px 0 2px; border-top: 1px solid var(--line); margin-top: 12px; }
-.useHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-.useTitle { flex: 1; min-width: 0; font-size: 15px; font-weight: 500; }
-.useHead > span { flex-shrink: 0; }
-.useLine { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 1.4; margin-top: 6px; }
-.useLine b { font-weight: 600; }
-.useEmoji { flex-shrink: 0; width: 20px; text-align: center; }
-.useDetail { display: block; font-size: 12px; color: var(--muted); }
-.tie { font-size: 13px; color: var(--green); margin-top: 8px; line-height: 1.35; }
 
 /* Redeem */
-.priceInput { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
-.priceInput input {
-  font: inherit; font-size: 15px; width: 100%;
-  padding: 9px 12px; border: 1px solid #e2e2e2; border-radius: 12px; background: #fff;
-}
-.estimate { background: #f5fbf3; border-radius: 12px; padding: 10px 12px; margin-top: 10px; font-size: 13px; line-height: 1.45; }
-.assumptions { font-size: 11px; color: var(--muted); margin-top: 4px; }
-.steps { margin: 10px 0 0; padding-left: 18px; color: var(--text); line-height: 1.6; font-size: 13px; }
 
 /* Location / nearby offers (Offers tab) */
 .locActions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 14px; }
@@ -188,11 +209,136 @@ a.row { text-decoration: none; color: inherit; }
 .tileValue { font-size: 16px; font-weight: 600; }
 .tileSection > .meterBar { width: 100%; margin-top: 4px; }
 
+/* The dark + lime surface, first used by the rewards balance card on the Use points page and the
+   wallet tiles, now the app-wide treatment for a panel about the user's own cards: Home's "Your
+   cards", Card Coach's spending breakdown, and both Offers panels. Add it alongside .card; it
+   recolours the primitives (rows, tags, meters, text buttons) that those panels are built from, so
+   a panel doesn't need per-page overrides. Light cards are still the default — tips, promos and
+   the comparison tiles stay light so the card faces and rate numbers keep their contrast. */
+.darkCard, .walletTile { background: var(--dark); color: #fff; box-shadow: none; }
+.darkCard .rowIcon, .walletTile .rowIcon { background: var(--dark-raised); color: var(--lime); }
+.darkCard .rowSub, .walletTile .rowSub { color: var(--dark-muted); }
+.darkCard .cardSub { color: var(--dark-text); }
+.darkCard .empty { color: var(--dark-muted); }
+.darkCard .row { border-top-color: var(--dark-line); }
+.darkCard .chev { color: var(--dark-muted); }
+.darkCard .rowSub b { color: var(--dark-text); }
+.darkCard .rowAmount { color: var(--lime); }
+.darkCard .btnText { color: var(--lime); }
+.darkCard .tag { background: var(--dark-raised); color: var(--lime); }
+.darkCard .tag.gray { background: var(--dark-raised); color: var(--dark-muted); }
+.walletTile .tileSection { border-top-color: var(--dark-line); }
+.walletTile .tileLabel { color: var(--dark-muted); }
+.walletTile .tileValue { color: #fff; }
+.walletTile .tileSection:last-child .tileValue { color: var(--lime); }
+.darkCard .meterBar, .walletTile .meterBar { background: var(--dark-line); }
+.darkCard .tag.warn, .walletTile .tag.warn { background: var(--dark-warn); color: var(--dark-warn-ink); }
+
+/* Card Coach's spending breakdown on the dark surface. */
+.darkCard .coachCatRow { border-top-color: var(--dark-line); }
+.darkCard .coachCatDetail { color: var(--dark-text); }
+.darkCard .coachCatEarn { color: var(--lime); }
+
+/* Offers' location controls on the dark surface: the detect button takes the lime the dark cards use
+   for their primary action, and the ZIP field becomes a raised panel rather than a white cut-out. */
+.darkCard .locBtn { background: var(--lime); color: var(--lime-ink); }
+.darkCard .locOr, .darkCard .locStatus { color: var(--dark-muted); }
+.darkCard .locInput { background: var(--dark-raised); border-color: var(--dark-line); color: #fff; }
+.darkCard .locInput::placeholder { color: var(--dark-muted); }
+.darkCard .locResolved { background: var(--dark-raised); }
+
+/* Mini card face (CardArt.tsx) — stands in for issuer artwork on the wallet tiles. Brand colours
+   arrive as --art-from / --art-to so one rule set covers every program. */
+.cardArt {
+  position: relative;
+  width: 58px; height: 37px; flex-shrink: 0;
+  border-radius: 6px;
+  background: linear-gradient(140deg, var(--art-from, #7b8794), var(--art-to, #39424c));
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 5px 12px -3px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+/* Diagonal gloss sweep across the face. */
+.cardArt::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.36) 0 26%, rgba(255, 255, 255, 0.07) 40%, transparent 58%);
+}
+/* Soft brand orb tucked into the bottom-right, the way most card faces carry a highlight. */
+.cardArt::after {
+  content: '';
+  position: absolute; right: -11px; bottom: -15px;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+}
+.cardChip {
+  position: absolute; left: 6px; top: 12px; z-index: 1;
+  width: 11px; height: 8px; border-radius: 2px;
+  background: linear-gradient(135deg, #f8e9ad, #c6a04a 55%, #ecd79a);
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.3);
+}
+.cardBrand {
+  position: absolute; right: 5px; top: 4px; z-index: 1;
+  font-size: 8px; font-weight: 700; letter-spacing: 0.3px;
+  color: rgba(255, 255, 255, 0.96);
+  text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.45);
+}
+.cardNet {
+  position: absolute; right: 5px; bottom: 4px; z-index: 1;
+  font-size: 6px; font-weight: 800; letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.45);
+}
+.walletTile:hover .cardArt {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.4),
+    0 2px 3px rgba(0, 0, 0, 0.4),
+    0 8px 16px -4px rgba(0, 0, 0, 0.5);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cardArt { transition: none; }
+  .walletTile:hover .cardArt { transform: none; }
+}
+
 .disclaimer { font-size: 11px; color: var(--muted); margin: 2px 2px 0; line-height: 1.4; }
 .empty { text-align: center; color: #666; padding: 18px 0; font-size: 13px; }
 .mt { margin-top: 8px; }
 
 /* Card compare: the last 30 days in one of the user's top categories, and what each card earns on it a month */
+
+/* The hero's header rides on the dark surface, so Home opens the same way the wallet tiles and the
+   rewards balance read. It's the hero card's first child, and the negative margins bleed it out to
+   the card's edges. Only the header is dark: the comparison tiles below stay light so the card faces
+   and the rate numbers keep their contrast. */
+.compareHead {
+  margin: -16px -16px 16px; padding: 16px 16px 18px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--dark); color: #fff;
+}
+.compareHead .groupHead { margin-top: 0; color: #fff; }
+.compareHead .compareHeading { margin: 0; }
+.compareHead .compareHeading > span { color: var(--dark-muted); }
+/* Category tabs become raised panels on the dark band; the picked one takes the lime rather than the
+   green tint, which would disappear against it. */
+.compareHead .catTab { background: var(--dark-raised); border-color: transparent; color: #fff; }
+.compareHead .catLabel { color: #fff; }
+.compareHead .categoryIcon { color: var(--dark-muted); }
+.compareHead .catSpend small { color: var(--dark-muted); }
+.compareHead .catTab.active {
+  background: var(--dark-raised); border-color: var(--lime-border);
+  box-shadow: inset 0 0 0 1px var(--lime-border);
+}
+.compareHead .catTab.active .catLabel, .compareHead .catTab.active .categoryIcon { color: var(--lime); }
+.compareHead .catTab:focus-visible { outline-color: var(--lime); }
+.compareHead .feeFilters { margin-top: 14px; }
+.compareHead .feeFilter { background: var(--dark-raised); border-color: var(--dark-line); color: var(--dark-text); }
+.compareHead .feeFilter.active { background: var(--lime); border-color: var(--lime); color: var(--lime-ink); box-shadow: none; }
+.compareHead .feeFilter:focus-visible { outline-color: var(--lime); }
+
 .catTabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; margin-top: 8px; }
 .catTab {
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0;
@@ -201,20 +347,23 @@ a.row { text-decoration: none; color: inherit; }
 }
 .catTab.active { border-color: var(--selection-border); box-shadow: inset 0 0 0 1px var(--selection-border); background: var(--selection-tint); }
 .catTab.active .categoryIcon { color: var(--selection-ink); }
-.catLabel { max-width: 100%; font-size: 12px; font-weight: 600; color: var(--text); }
+.catLabel { max-width: 100%; font-size: 13px; font-weight: 700; color: var(--ink); }
 .catSpend { font-size: 16px; font-weight: 500; }
 .catSpend small { font-size: 10px; color: #626b5e; font-weight: 400; }
 .categoryIcon { color: #737b6c; width: 22px; height: 22px; margin: 2px 0 8px; }
 .feeFilters { display: flex; flex-wrap: wrap; gap: 6px; }
-.feeFilter { min-height: 36px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 20px; background: #fff; color: var(--text); font: inherit; font-size: 12px; font-weight: 500; cursor: pointer; }
+.feeFilter { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--text); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
 .feeFilter.active { border-color: var(--selection-border); background: var(--selection-tint); color: var(--selection-ink); box-shadow: inset 0 0 0 1px var(--selection-border); }
 .feeFilter:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 .compareHeading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; margin: 22px 0 18px; }
 .compareHeading h3 { font-size: 16px; font-weight: 650; margin: 0; }
 .compareHeading > span { font-size: 12px; color: #626b5e; white-space: nowrap; }
-.compareGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.compareColumn { display: flex; flex-direction: column; min-width: 0; }
-.compareColumn h4 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; font-weight: 700; color: #626b5e; margin: 0 2px 14px; }
+/* Two rows — heading, then tile — shared by both columns via subgrid, so a longer heading on one
+   side ("Highest estimate in your wallet" vs "Your selected card", which the card picker switches
+   between) can't push that column's tile out of line with the other. */
+.compareGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto 1fr; gap: 10px; }
+.compareColumn { display: grid; grid-template-rows: subgrid; grid-row: span 2; min-width: 0; }
+.compareColumn h4 { align-self: end; font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; font-weight: 700; color: #626b5e; margin: 0 2px 4px; }
 .compareColumn:nth-child(2) h4 { color: var(--selection-ink); }
 /* Shared neutral eyebrow: both columns are advice, so the axis of comparison is the action, not the endorsement. */
 .colEyebrow { display: block; font-size: 9px; font-weight: 650; letter-spacing: 0.8px; color: #8d948a; margin-bottom: 3px; }
@@ -222,11 +371,54 @@ a.row { text-decoration: none; color: inherit; }
 .compareTile { position: relative; flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 12px 10px; background: #f7f8f3; border: 1.5px solid #e0e5d9; border-radius: 20px; }
 .compareWinner { border-color: var(--selection-border); box-shadow: 0 0 0 3px var(--selection-glow); }
 .winnerBadge { position: absolute; top: -12px; right: 8px; background: var(--lime); color: #182117; border: 1px solid var(--lime-border); padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-.cardFace { min-height: 110px; display: flex; flex-direction: column; gap: 6px; padding: 12px 10px; border-radius: 12px; color: white; background: linear-gradient(130deg, #252c25, #596351); }
-.newCardFace { color: #182117; background: linear-gradient(130deg, var(--new-card-light), var(--new-card)); }
-.cardIssuer { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.85; }
-.cardFace strong { margin-top: auto; font-size: 13px; font-weight: 650; line-height: 1.2; overflow-wrap: anywhere; }
-.cardOwnership { font-size: 9px; opacity: 0.85; }
+/* Comparison card faces — the wallet's brand-tinted card art (.cardArt above) at tile size, so
+   "Discover it Secured" reads as a Discover card rather than a generic green panel. Colours arrive
+   as --art-from / --art-to from artFor() in cardColors.ts. The height is fixed, not min-height, so
+   a card whose name wraps to more lines than the one beside it still lines up with it. */
+.cardFace {
+  position: relative; overflow: hidden;
+  height: 126px; display: flex; flex-direction: column; gap: 6px;
+  padding: 12px 10px; border-radius: 12px; color: white;
+  background: linear-gradient(140deg, var(--art-from, #7b8794), var(--art-to, #39424c));
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 6px 14px -5px rgba(0, 0, 0, 0.4);
+}
+/* Diagonal gloss sweep, then a soft brand orb in the bottom-right. */
+.cardFace::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.3) 0 24%, rgba(255, 255, 255, 0.06) 40%, transparent 58%);
+}
+.cardFace::after {
+  content: '';
+  position: absolute; right: -26px; bottom: -34px;
+  width: 84px; height: 84px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+}
+.cardFace > * { position: relative; z-index: 1; }
+/* A new card keeps the issuer's face and is marked by the accent ring instead. */
+.newCardFace {
+  box-shadow:
+    inset 0 0 0 1.5px var(--new-card),
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 6px 14px -5px rgba(0, 0, 0, 0.4);
+}
+.faceChip {
+  width: 17px; height: 12px; flex-shrink: 0;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #f8e9ad, #c6a04a 55%, #ecd79a);
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.3);
+}
+.cardIssuer { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.9; text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.35); }
+/* Three lines fit the fixed face; the few longer names clamp rather than overflow it. */
+.cardFace strong {
+  margin-top: auto; font-size: 13px; font-weight: 650; line-height: 1.2;
+  overflow-wrap: anywhere; text-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.4);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+}
+.cardOwnership { font-size: 9px; opacity: 0.88; text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.35); }
 .pickerSpace { min-height: 33px; }
 .cardPicker { position: relative; display: block; margin: 8px 0; color: var(--selection-ink); }
 .cardPicker > span { display: flex; align-items: center; justify-content: space-between; gap: 2px; font-size: 10px; font-weight: 500; }
@@ -299,7 +491,11 @@ a.row { text-decoration: none; color: inherit; }
   .cardPicker > span { font-size: 9px; }
   .catTab { padding: 8px 6px; }
 }
-.groupHead { font-size: 13px; font-weight: 500; color: var(--muted); margin: 16px 0 2px; }
+/* Reads as a heading for the tiles under it, not a muted caption, so it carries the
+   card/section weight (650) in ink rather than --muted. */
+.groupHead { font-size: 15px; font-weight: 650; color: var(--ink); margin: 16px 0 6px; letter-spacing: -0.2px; }
+/* Top margin only separates it from what's above; the card's padding handles the first one. */
+.card .groupHead:first-child { margin-top: 0; }
 /* A group heading with a note on the right ("Your cards ... Each on all $460") */
 .colHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 18px 0 2px; font-size: 12px; color: var(--muted); }
 .colHead h3 { margin: 0; font-size: 13px; font-weight: 500; }
@@ -309,8 +505,6 @@ a.row { text-decoration: none; color: inherit; }
    card earns now (gray), the extra on top (green), and the share of the rewards a new card's fee takes back
    (striped). Values sit at the bar tip, in ink. */
 .chartHead { margin-top: 18px; }
-.chartTitle { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.3; color: var(--ink); }
-.chartSub { margin: 3px 0 0; font-size: 12px; line-height: 1.4; color: var(--muted); }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; font-size: 12px; color: var(--text); }
 .legend > span { display: inline-flex; align-items: center; gap: 6px; }
 .legend i { width: 12px; height: 12px; border-radius: 3px; }
@@ -338,13 +532,6 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .why { display: block; margin-top: 5px; font-size: 12px; line-height: 1.35; color: var(--text); }
 
 /* Full page: the cards that aren't close to worth it, folded under one line */
-.skip { border-top: 1px solid var(--line); }
-.colHead + .skip { border-top: none; }
-.skip > summary + .barItem { margin-top: 2px; }
-.skip > summary { list-style: none; cursor: pointer; width: fit-content; padding: 11px 0 3px; font-size: 13px; font-weight: 500; color: var(--muted); border-radius: 6px; }
-.skip > summary::-webkit-details-marker { display: none; }
-.skip > summary::after { content: '›'; display: inline-block; margin-left: 6px; transition: transform 0.15s; }
-.skip[open] > summary::after { transform: rotate(90deg); }
 
 .math {
   margin: 2px 16px 8px 0; padding: 10px 12px; border-radius: 12px;
@@ -371,32 +558,37 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .card > .meter { margin-top: 12px; }
 .goalTip { font-size: 12px; color: var(--muted); margin-top: 12px; line-height: 1.4; }
 
-.catTab:focus-visible, .chip:focus-visible, .btnText:focus-visible, .moreLink:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
-.catTab:focus-visible, .chip:focus-visible { outline-color: var(--selection-border); }
-.barRow:focus-visible, .skip > summary:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
+.catTab:focus-visible, .btnText:focus-visible, .moreLink:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.catTab:focus-visible { outline-color: var(--selection-border); }
+.barRow:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
+.row[role="button"]:focus-visible, .walletTile[role="button"]:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 2px; }
+.row[role="button"] { cursor: pointer; }
+/* The green focus ring above is too dark to see on a dark panel, so those take the lime instead. */
+.darkCard .row[role="button"]:focus-visible, .darkCard a.row:focus-visible,
+.darkCard .btnText:focus-visible, .darkCard .locBtn:focus-visible, .darkCard .locInput:focus-visible {
+  outline: 2px solid var(--lime); outline-offset: 2px;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .barRow::after, .bar, .skip > summary::after { transition: none; }
+  .barRow::after, .bar { transition: none; }
 }
 
 /* Manual rewards balances and visual redemption examples. */
-.rewardsEntryNote { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.5; color: #626b5e; padding: 0 2px; }
-.rewardsEntryNote > svg { flex-shrink: 0; width: 15px; height: 15px; margin-top: 2px; }
 .rewardsProgramRow { display: flex; align-items: flex-end; gap: 12px; }
 .rewardsProgramRow label { flex: 1; min-width: 0; font-size: 11px; color: #626b5e; }
 .rewardsProgramRow select { display: block; width: 100%; margin-top: 5px; padding: 10px; border: 1px solid #dfdfd8; border-radius: 10px; background: white; color: var(--ink); font: inherit; font-size: 13px; }
 .rewardsProgramRow button { display: flex; align-items: center; gap: 4px; padding-bottom: 10px; color: var(--green-ink); }
-.rewardsBalance { background: #1c241b; border-radius: 20px; padding: 20px; color: white; }
-.rewardsBalanceTop { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; color: #e2e9db; }
+.rewardsBalance { background: var(--dark); border-radius: 20px; padding: 20px; color: white; }
+.rewardsBalanceTop { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--dark-text); }
 .rewardsBalanceTop > svg { flex-shrink: 0; color: #ffc857; width: 28px; height: 28px; }
 .rewardsAmount { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin: 8px 0 18px; font-size: 42px; font-weight: 650; letter-spacing: -1.5px; line-height: 1.2; color: var(--lime); overflow-wrap: anywhere; }
-.rewardsAmount > span { color: #e2e9db; font-size: 13px; font-weight: 400; letter-spacing: 0; }
-.rewardsBalanceBottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid #3d4939; padding-top: 12px; }
-.rewardsBalanceBottom > span { font-size: 11px; line-height: 1.4; color: #e2e9db; }
-.rewardsBalanceBottom small { display: block; font-size: 10px; color: #b5c2ad; margin-top: 3px; }
-.rewardsBalanceBottom button { flex-shrink: 0; display: flex; align-items: center; gap: 5px; border: 0; background: var(--lime); color: #182117; padding: 8px 10px; border-radius: 9px; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+.rewardsAmount > span { color: var(--dark-text); font-size: 13px; font-weight: 400; letter-spacing: 0; }
+.rewardsBalanceBottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--dark-line); padding-top: 12px; }
+.rewardsBalanceBottom > span { font-size: 11px; line-height: 1.4; color: var(--dark-text); }
+.rewardsBalanceBottom small { display: block; font-size: 10px; color: var(--dark-muted); margin-top: 3px; }
+.rewardsBalanceBottom button { flex-shrink: 0; display: flex; align-items: center; gap: 5px; border: 0; background: var(--lime); color: var(--lime-ink); padding: 8px 10px; border-radius: 9px; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
 .rewardsSectionHead { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-.rewardsSectionHead h2 { margin: 0; font-size: 17px; font-weight: 600; }
+.rewardsSectionHead h2 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.2px; }
 .rewardsSectionHead span { color: #626b5e; font-size: 11px; }
 .redemptionGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .redemptionGrid > :only-child { grid-column: 1 / -1; }
@@ -423,13 +615,27 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .rewardsEstimate { margin-top: 12px; font-size: 13px; line-height: 1.5; }
 .rewardsEstimate > strong { color: var(--green-ink); font-size: 18px; }
 .rewardsEstimate > span { display: block; margin-top: 7px; color: #626b5e; font-size: 11px; }
-.rewardsCustomPrice { margin-top: 12px; font-size: 12px; }
-.rewardsCustomPrice summary { cursor: pointer; color: var(--green-ink); }
-.rewardsCustomPrice label { display: flex; align-items: center; gap: 10px; margin-top: 10px; color: #626b5e; }
+.rewardsCoverage { margin-top: 14px; padding: 12px; border-radius: 12px; background: #f4f7f0; }
+.rewardsCoverage > div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 11px; color: #626b5e; }
+.rewardsCoverage strong { flex: none; font-size: 12px; font-weight: 650; color: var(--green-ink); }
+.rewardsCoverage .redemptionProgress { margin: 8px 0 0; }
+/* One disclosure look for every collapsible on this page, so the page reads as a stack of rows. */
+.rewardsCustomPrice { margin-top: 10px; border-top: 1px solid #edf0e8; font-size: 12px; }
+.rewardsCustomPrice summary { display: flex; align-items: center; gap: 6px; padding: 11px 0 2px; cursor: pointer; list-style: none; color: var(--green-ink); font-weight: 600; }
+.rewardsCustomPrice summary::-webkit-details-marker { display: none; }
+.rewardsCustomPrice summary > svg { flex: none; margin-left: auto; width: 15px; height: 15px; transition: transform 0.15s ease; }
+.rewardsCustomPrice[open] summary > svg { transform: rotate(180deg); }
+.rewardsCustomPrice label { display: flex; align-items: center; gap: 10px; margin: 10px 0 12px; color: #626b5e; }
 .rewardsCustomPrice input { min-width: 0; width: 120px; border: 1px solid #c8cdbf; border-radius: 8px; padding: 8px; font: inherit; color: var(--ink); }
-.rewardsCustomPrice p { color: var(--selection-ink); }
-.rewardsHow { margin: 18px 0 10px; font-size: 13px; font-weight: 650; }
-.rewardsSteps { margin: 0 0 14px; padding-left: 21px; font-size: 12px; line-height: 1.5; }
+.rewardsCustomPrice > p { color: var(--selection-ink); }
+.rewardsCustomPrice .rewardsAlternatives { margin: 8px 0 12px; }
+.rewardsFinePrint { font-size: 11px; color: #626b5e; padding: 0 2px; }
+.rewardsFinePrint summary { display: flex; align-items: center; gap: 5px; cursor: pointer; list-style: none; }
+.rewardsFinePrint summary::-webkit-details-marker { display: none; }
+.rewardsFinePrint summary > svg { width: 14px; height: 14px; transition: transform 0.15s ease; }
+.rewardsFinePrint[open] summary > svg { transform: rotate(180deg); }
+.rewardsFinePrint p { margin: 8px 0 0; line-height: 1.5; }
+.rewardsSteps { margin: 10px 0 12px; padding-left: 21px; font-size: 12px; line-height: 1.5; }
 .rewardsSteps li { margin: 8px 0; padding-left: 4px; }
 .rewardsSteps li::marker { color: var(--green-ink); font-weight: 650; }
 .rewardsRefresh { background: #fff1df; border-radius: 10px; padding: 12px; color: #7b471d; font-size: 12px; line-height: 1.5; }
@@ -443,47 +649,47 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .rewardsTeasers > div { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 10px; color: #626b5e; }
 .rewardsTeasers svg { width: 22px; height: 22px; color: #8c6724; }
 .redemptionTile:focus-visible, .rewardsProgramRow select:focus-visible { outline: 2px solid var(--selection-border); outline-offset: 3px; }
-.rewardsBalanceBottom button:focus-visible, .rewardsCustomPrice summary:focus-visible, .rewardsCustomPrice input:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+.rewardsBalanceBottom button:focus-visible, .rewardsCustomPrice summary:focus-visible, .rewardsCustomPrice input:focus-visible,
+.rewardsFinePrint summary:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
 @media (max-width: 360px) {
   .rewardsBalance { padding: 16px; }
   .rewardsBalanceBottom { align-items: flex-start; flex-direction: column; gap: 10px; }
   .rewardsAmount { font-size: 36px; }
 }
 
-/* Compare cards: your best card is the line, not a column (#196b36, the --green-ink of its chip). New cards rise
-   above it by what they'd add (#2fa83c) or hang below by what they'd lose (#9d3c12, the fee ink) — monthly, after
-   a new card's fee. The pair passes the dataviz palette checks. */
+/* Compare cards uses the shared surfaces and reward/fee colours. The baseline is the user’s
+   existing card; columns show the monthly difference after each new card’s fee. */
 .chartSub { margin: 4px 0 0; font-size: 12px; color: #626b5e; }
-.verdict { margin: 14px 0 0; padding: 12px 14px; border-radius: 12px; background: #f5f6f3; font-size: 12px; line-height: 1.45; color: var(--text); }
+.verdict { margin: 14px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--surface-soft); font-size: 12px; line-height: 1.45; color: var(--text); }
 .verdict strong { display: block; margin-bottom: 2px; font-size: 20px; font-weight: 700; letter-spacing: -0.4px; line-height: 1.2; color: var(--ink); font-variant-numeric: tabular-nums; }
 .verdictWin { background: var(--green-tint); }
 .verdictWin strong { color: var(--green-ink); }
 .verdictYours strong { color: var(--green-ink); }
 .chartBase { display: inline-flex; align-items: center; gap: 8px; margin: 16px 0 0; padding: 5px 11px 5px 9px; border-radius: 20px; background: var(--green-tint); font-size: 12px; font-weight: 600; color: var(--green-ink); font-variant-numeric: tabular-nums; }
-.chartBase i { width: 16px; height: 2px; border-radius: 1px; background: #196b36; }
-.chartBaseNone { background: #f5f6f3; color: var(--text); }
+.chartBase i { width: 16px; height: 2px; border-radius: 1px; background: var(--green-ink); }
+.chartBaseNone { background: var(--surface-soft); color: var(--text); }
 .chartBaseNone i { background: var(--muted); }
 /* No gap between columns, so the baseline runs unbroken across the chart. */
 .cols { display: grid; margin: 4px -6px 0; }
 .col { position: relative; display: flex; flex-direction: column; align-items: center; min-width: 0; padding: 0 6px 10px; border: 0; border-radius: 12px; background: none; font: inherit; text-align: center; color: var(--ink); cursor: pointer; }
-.col:hover, .colOpen { background: #f5f6f3; }
+.col:hover, .colOpen { background: var(--surface-soft); }
 .colPlot { position: relative; align-self: stretch; height: 130px; margin: 30px -6px 0; }
 .colPlotLoss { margin-bottom: 26px; }
-.colBase { position: absolute; z-index: 1; left: 0; right: 0; height: 2px; margin-bottom: -1px; background: #196b36; pointer-events: none; }
+.colBase { position: absolute; z-index: 1; left: 0; right: 0; height: 2px; margin-bottom: -1px; background: var(--green-ink); pointer-events: none; }
 .colBaseNone { background: var(--muted); }
-.colBar { position: absolute; left: 50%; width: 44px; min-height: 2px; margin-left: -22px; border-radius: 4px 4px 0 0; background: #2fa83c; }
-.colBar.colBarLoss { border-radius: 0 0 4px 4px; background: #9d3c12; }
+.colBar { position: absolute; left: 50%; width: 44px; min-height: 2px; margin-left: -22px; border-radius: 4px 4px 0 0; background: var(--green); }
+.colBar.colBarLoss { border-radius: 0 0 4px 4px; background: var(--fee-ink); }
 .colTop { position: absolute; left: 50%; bottom: calc(100% + 5px); transform: translateX(-50%); white-space: nowrap; font-size: 15px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.15; font-variant-numeric: tabular-nums; }
 .colBarLoss .colTop { top: calc(100% + 5px); bottom: auto; }
 .colSame { position: absolute; left: 50%; transform: translate(-50%, -8px); white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--muted); }
 .colName { margin-top: 10px; font-size: 12px; font-weight: 550; line-height: 1.3; overflow-wrap: anywhere; }
 .col > small { margin-top: 2px; font-size: 11px; color: var(--muted); }
 .col > small.chartFee { color: var(--fee-ink); }
-.chartTip { display: none; position: absolute; z-index: 3; left: 50%; bottom: calc(100% + 2px); transform: translateX(-50%); padding: 6px 9px; border-radius: 8px; background: #1f241e; color: #fff; font-size: 11px; font-weight: 400; white-space: nowrap; pointer-events: none; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+.chartTip { display: none; position: absolute; z-index: 3; left: 50%; bottom: calc(100% + 2px); transform: translateX(-50%); padding: 6px 9px; border-radius: 8px; background: var(--dark); color: #fff; font-size: 11px; font-weight: 400; white-space: nowrap; pointer-events: none; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
 .chartTip.tipStart { left: 0; transform: none; }
 .chartTip.tipEnd { left: auto; right: 0; transform: none; }
 @media (hover: hover) { .col:hover .chartTip { display: block; } }
-.chartMath { margin-top: 12px; padding: 12px; border-radius: 12px; background: #f5f6f3; font-size: 12px; line-height: 1.45; color: var(--text); }
+.chartMath { margin-top: 12px; padding: 12px; border-radius: 12px; background: var(--surface-soft); font-size: 12px; line-height: 1.45; color: var(--text); }
 .chartMath h3 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--ink); }
 .chartMath h3 small { flex-shrink: 0; font-size: 11px; font-weight: 500; color: var(--muted); }
 .chartMath dl { margin: 0 0 8px; padding: 8px 12px; border-radius: 10px; background: #fff; }
@@ -491,12 +697,12 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .chartMath dt small { display: block; font-size: 11px; color: var(--muted); }
 .chartMath dd { margin: 0; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .chartMath dl > .chartMathTotal { margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--line); font-weight: 650; }
-.chartMath p { margin: 6px 0 0; color: #4d544a; }
+.chartMath p { margin: 6px 0 0; color: var(--text); }
 .chartMath p.chartVs { margin-top: 0; font-weight: 600; color: var(--ink); }
-.chartApply { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; margin-top: 12px; border-radius: 12px; background: var(--lime); color: #182117; text-decoration: none; font-size: 13px; font-weight: 600; }
+.chartApply { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; margin-top: 12px; border-radius: 12px; background: var(--lime); color: var(--lime-ink); text-decoration: none; font-size: 13px; font-weight: 600; }
 .chartApply:hover { background: #9fee35; }
-.chartEmpty { margin: 12px 0 0; padding: 12px; border-radius: 10px; background: #f5f6f3; font-size: 12px; line-height: 1.45; color: var(--text); }
+.chartEmpty { margin: 12px 0 0; padding: 12px; border-radius: 10px; background: var(--surface-soft); font-size: 12px; line-height: 1.45; color: var(--text); }
 .chartHint { margin: 10px 0 0; font-size: 11px; color: var(--muted); }
-.chartNote { margin: 0 2px; font-size: 11px; line-height: 1.5; color: #62685e; }
+.chartNote { margin: 0 2px; font-size: 11px; line-height: 1.5; color: var(--text); }
 .chartNote strong { font-weight: 600; color: var(--ink); }
 .col:focus-visible, .chartApply:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }

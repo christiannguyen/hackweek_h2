@@ -57,32 +57,36 @@ export function CoachPage({ balances, onEdit, compare: { category, onCategory } 
   if (noFee) cards.splice(2, 1, noFee)
 
   return <>
-    <div>
-      <h1 className={styles.pageTitle}>Compare cards</h1>
-      <p className={styles.pageSub}>New cards next to your best card, after annual fees.</p>
+    <div className={styles.pageHead}>
+      <div>
+        <h1 className={styles.pageTitle}>Compare cards</h1>
+        <p className={styles.pageSub}>New cards next to your best card, after annual fees.</p>
+      </div>
     </div>
-    <div className={styles.catTabs} role="group" aria-label="Spending category">
-      {TOP_CATEGORIES.map((c) => {
-        const Icon = categoryIcons[c.id]
-        return <button key={c.id} className={`${styles.catTab} ${c.id === category ? styles.active : ''}`}
-          aria-pressed={c.id === category} onClick={() => onCategory(c.id)}>
-          <Icon className={styles.categoryIcon} aria-hidden="true" />
-          <span className={styles.catLabel}>{c.label}</span>
-          <span className={styles.catSpend}>{fmtMoney(SPEND[c.id])}<small>/mo</small></span>
-        </button>
-      })}
-    </div>
-    <div className={styles.feeFilters} role="group" aria-label="New card annual fee">
-      {feeFilters.map(({ value, label }) => <button key={value}
-        className={`${styles.feeFilter} ${feeFilter === value ? styles.active : ''}`}
-        aria-pressed={feeFilter === value} onClick={() => setFeeFilter(value)}>
-        {label}
-      </button>)}
-    </div>
-
     <section className={styles.card} aria-labelledby="compare-chart-title">
+      <div className={styles.compareHead}>
+        <h2>Your monthly spending</h2>
+        <div className={styles.catTabs} role="group" aria-label="Spending category">
+          {TOP_CATEGORIES.map((c) => {
+            const Icon = categoryIcons[c.id]
+            return <button key={c.id} className={`${styles.catTab} ${c.id === category ? styles.active : ''}`}
+              aria-pressed={c.id === category} onClick={() => onCategory(c.id)}>
+              <Icon className={styles.categoryIcon} aria-hidden="true" />
+              <span className={styles.catLabel}>{c.label}</span>
+              <span className={styles.catSpend}>{fmtMoney(SPEND[c.id])}<small>/mo</small></span>
+            </button>
+          })}
+        </div>
+        <div className={styles.feeFilters} role="group" aria-label="New card annual fee">
+          {feeFilters.map(({ value, label }) => <button key={value}
+            className={`${styles.feeFilter} ${feeFilter === value ? styles.active : ''}`}
+            aria-pressed={feeFilter === value} onClick={() => setFeeFilter(value)}>
+            {label}
+          </button>)}
+        </div>
+      </div>
       <h2 id="compare-chart-title">{best ? 'Next to your card' : 'What you could earn'}</h2>
-      <p className={styles.chartSub}>On your {fmtMoney(SPEND[category])} of {catName(category)} a month, after fees</p>
+      <p className={styles.cardSub}>On your {fmtMoney(SPEND[category])} of {catName(category)} a month, after fees</p>
       <div role="status">
         {top ? <Verdict category={category} best={best} top={top} worth={top.worth} /> : (
           <p className={styles.chartEmpty}>
@@ -158,7 +162,7 @@ function ColumnChart({ cards, category, best }: { cards: CardOption[]; category:
         const label = same ? 'Same' : best ? signed(d) : money(d)
         const isOpen = open === o.key
         return <button key={o.key} className={`${styles.col} ${isOpen ? styles.colOpen : ''}`}
-          aria-expanded={isOpen} aria-controls="compare-math" onClick={() => setOpen(isOpen ? '' : o.key)}
+          aria-expanded={isOpen} aria-controls={isOpen ? 'compare-math' : undefined} onClick={() => setOpen(isOpen ? '' : o.key)}
           aria-label={`${o.name}: ${best ? `${same ? 'same as' : `${signed(d)} a month versus`} your card, ` : ''}${money(m.net)} a month after fees`}>
           <span className={`${styles.colPlot} ${lo < 0 ? styles.colPlotLoss : ''}`} aria-hidden="true">
             <span className={`${styles.colBase} ${best ? '' : styles.colBaseNone}`} style={{ bottom: at(0) }} />

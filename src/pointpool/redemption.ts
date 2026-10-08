@@ -2,7 +2,7 @@ import { PROGRAMS, hasEstimates, type Balance, type GoalId } from './data'
 
 // Illustrative purchase prices, not live fares, hotel availability, or award quotes.
 export const REDEMPTION_EXAMPLES = [
-  { id: 'credit', title: 'Your card bill', subtitle: 'Money back toward your balance', price: 100, goal: 'cashback', emoji: '💸' },
+  { id: 'credit', title: 'Pay down your card', subtitle: 'Lowers the amount you owe', price: 100, goal: 'cashback', emoji: '💸' },
   { id: 'gift', title: 'A gift card', subtitle: 'Help with everyday essentials', price: 50, goal: 'everyday', emoji: '🎁' },
   { id: 'flight', title: 'A flight', subtitle: 'A little closer to takeoff', price: 300, goal: 'travel', emoji: '✈️' },
   { id: 'hotel', title: 'A hotel night', subtitle: 'Make room for a getaway', price: 180, goal: 'travel', emoji: '🏨' },

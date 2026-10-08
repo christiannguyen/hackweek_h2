@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 
-export type Route = 'home' | 'redeem' | 'learn' | 'coach' | 'pointpool' | 'offers' | 'welcome'
-const ROUTES: Route[] = ['home', 'redeem', 'learn', 'coach', 'pointpool', 'offers', 'welcome']
+export type Route = 'home' | 'redeem' | 'learn' | 'coach' | 'pointpool' | 'offers' | 'welcome' | 'demo'
+const ROUTES: Route[] = ['home', 'redeem', 'learn', 'coach', 'pointpool', 'offers', 'welcome', 'demo']
 
 // "#coach/market-Savor" is the coach route, opened at one card.
+// "#wallet" is the Wallet tab; "#pointpool", its old name, still opens it.
 const parse = (): Route => {
-  const h = window.location.hash.slice(1).split('/')[0] as Route
+  const raw = window.location.hash.slice(1).split('/')[0]
+  const h = (raw === 'wallet' ? 'pointpool' : raw) as Route
   return ROUTES.includes(h) ? h : 'home'
 }
 

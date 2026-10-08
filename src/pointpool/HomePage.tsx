@@ -14,6 +14,7 @@ import {
   type CategoryId,
 } from './data'
 import { CardCompare, ScoreGoal, type CompareProps } from './CardCompare'
+import { pressable } from './a11y'
 import { Disclaimer, FreshnessTag } from './shared'
 import styles from './pointpool.module.css'
 
@@ -29,9 +30,12 @@ export function HomePage({ balances, onEdit, compare }: Props) {
 
   return (
     <>
+      <div className={styles.pageHead}>
+        <h1 className={styles.pageTitle}>Earn more on your spending</h1>
+      </div>
+
       {/* Leads the page: one example, where a new card would add the most on the user's (sample) spending */}
       <div className={`${styles.card} ${styles.coachHero}`}>
-        <h2>Earn more on your spending</h2>
         <CardCompare {...compare} category={spotlight} />
         <ScoreGoal balances={compare.balances} category={spotlight} />
         <a className={styles.moreLink} href="#coach" onClick={() => compare.onCategory(spotlight)}>
@@ -39,7 +43,8 @@ export function HomePage({ balances, onEdit, compare }: Props) {
         </a>
       </div>
 
-      <div className={styles.card}>
+      {/* The user's own cards, on the dark surface the wallet tiles use */}
+      <div className={`${styles.card} ${styles.darkCard}`}>
         <div className={styles.cardHead}>
           <h2>Your cards</h2>
           <button className={`${styles.btnText} ${styles.add}`} onClick={() => onEdit()}>
@@ -110,12 +115,12 @@ function CardRow({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numbe
 
   let sub: string
   if (uses.length === 0) sub = 'Estimates coming soon'
-  else if (!(b.amount > 0)) sub = 'Update this balance to see where it could go'
-  else if (isCash(b)) sub = 'Cashback toward your card bill; options vary by card'
+  else if (!(b.amount > 0)) sub = 'Add your balance to see where it could go'
+  else if (isCash(b)) sub = 'Comes off what you owe; options vary by card'
   else sub = `Could be ≈${fmtMoney(travel!.value)} in travel or ≈${fmtMoney(credit!.value)} as a statement credit`
 
   return (
-    <div className={styles.row} onClick={() => onEdit(b.id)}>
+    <div className={styles.row} {...pressable(() => onEdit(b.id), `Edit ${b.cardName}`)}>
       <div className={styles.rowIcon}>{p.short}</div>
       <div className={styles.rowMain}>
         <div className={styles.rowTitleLine}>

@@ -1,5 +1,4 @@
 import {
-  fmtMoney,
   fmtPts,
   fmtUSD,
   isCash,
@@ -7,6 +6,8 @@ import {
   utilization,
   type Balance,
 } from './data'
+import { pressable } from './a11y'
+import { CardArt } from './CardArt'
 import { Disclaimer, FreshnessTag } from './shared'
 import styles from './pointpool.module.css'
 
@@ -18,8 +19,8 @@ interface Props {
 export function PointpoolPage({ balances, onEdit }: Props) {
   return (
     <>
-      <div className={styles.cardHead} style={{ margin: '4px 2px 0' }}>
-        <div className={styles.pageTitle}>Pointpool</div>
+      <div className={styles.pageHead}>
+        <div className={styles.pageTitle}>Wallet</div>
         <button className={`${styles.btnText} ${styles.add}`} onClick={() => onEdit()}>
           + Add
         </button>
@@ -75,10 +76,10 @@ function CardTile({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numb
   const utilPct = util !== null ? Math.round(util * 100) : null
 
   return (
-    <div className={styles.card} onClick={() => onEdit(b.id)} style={{ cursor: 'pointer' }}>
+    <div className={`${styles.card} ${styles.walletTile}`} {...pressable(() => onEdit(b.id), `Edit ${b.cardName}`)} style={{ cursor: 'pointer' }}>
       <div className={styles.cardHead}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-          <div className={styles.rowIcon}>{p.short}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
+          <CardArt balance={b} />
           <div style={{ minWidth: 0 }}>
             <div className={`${styles.rowTitle} ${styles.ellipsis}`}>{b.cardName}</div>
             <div className={styles.rowSub}>{p.name}</div>
@@ -90,18 +91,18 @@ function CardTile({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numb
       {(b.cardBalance != null || b.creditLimit != null) && (
         <div className={styles.tileSection}>
           <div className={styles.tileStat}>
-            <span className={styles.tileLabel}>Balance</span>
-            <span className={styles.tileValue}>{fmtUSD(b.cardBalance ?? 0)}</span>
+            <span className={styles.tileLabel}>You owe</span>
+            <span className={styles.tileValue}>{b.cardBalance != null ? fmtUSD(b.cardBalance) : '—'}</span>
           </div>
           {b.creditLimit != null && b.creditLimit > 0 && (
             <div className={styles.tileStat}>
               <span className={styles.tileLabel}>Limit</span>
-              <span className={styles.tileValue}>{fmtMoney(b.creditLimit)}</span>
+              <span className={styles.tileValue}>{fmtUSD(b.creditLimit)}</span>
             </div>
           )}
           {utilPct !== null && (
             <div className={styles.tileStat}>
-              <span className={styles.tileLabel}>Utilization</span>
+              <span className={styles.tileLabel}>Limit used</span>
               <span className={styles.tileValue}>{utilPct}%</span>
             </div>
           )}
@@ -111,14 +112,14 @@ function CardTile({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numb
 
       <div className={styles.tileSection}>
         <div className={styles.tileStat}>
-          <span className={styles.tileLabel}>{cash ? 'Cashback' : 'Rewards'}</span>
+          <span className={styles.tileLabel}>{cash ? 'Cashback' : p.unit === 'miles' ? 'Miles' : 'Points'}</span>
           <span className={styles.tileValue}>
             {cash
               ? fmtUSD(b.amount)
               : `${fmtPts(b.amount)} ${p.unit === 'points' ? 'pts' : p.unit}`}
           </span>
         </div>
-        {cash && <div className={styles.rowSub}>Cashback toward your card bill; options vary by card</div>}
+        {cash && <div className={styles.rowSub}>Comes off what you owe; options vary by card</div>}
       </div>
     </div>
   )

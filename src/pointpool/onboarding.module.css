@@ -16,7 +16,7 @@
   -webkit-font-smoothing: antialiased;
 }
 .phone { position: relative; max-width: 430px; min-height: 100svh; margin: 0 auto; background: #fff; display: flex; flex-direction: column; overflow: hidden; }
-.phone.dark { background: #111; color: #fff; }
+.phone.dark { background: #08240f; color: #fff; }
 .phone button { font: inherit; cursor: pointer; }
 
 /* Top bar: back + progress */
@@ -27,28 +27,47 @@
 .progress span { flex: 1; height: 4px; border-radius: 999px; background: #eceeea; }
 .progress span.on { background: var(--green); }
 
-/* Logo */
-.logo { display: flex; align-items: center; gap: 8px; font-size: 28px; font-weight: 700; letter-spacing: -1px; }
-.logoMark { display: grid; place-items: center; width: 28px; height: 28px; background: var(--lime); color: #111; font-size: 16px; font-weight: 800; letter-spacing: 0; }
-.logoPlus { font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--muted); margin-left: 2px; align-self: flex-end; padding-bottom: 4px; }
-.logoLight .logoPlus { color: #b9c2b3; }
+/* Logo — same mark and wordmark as the app header */
+.logo { display: flex; align-items: center; gap: 9px; font-size: 28px; line-height: 1; font-weight: 700; letter-spacing: -1.2px; color: #111410; }
+.logo img { display: block; border-radius: 9px; }
+.logoLight { color: #fff; }
 
-/* Welcome */
-.welcome { position: relative; flex: 1; display: flex; flex-direction: column; padding: 28px 20px calc(24px + env(safe-area-inset-bottom)); }
-.chevron {
-  position: absolute; inset: -36px -20px; pointer-events: none; z-index: 0;
-  background: var(--lime);
-  clip-path: polygon(30% 0, 62% 0, 100% 48%, 62% 100%, 30% 100%, 66% 48%);
-  opacity: 0.95;
+/* Welcome — the Pointpool logo as a scene: dark sky, the p's bowl, and a lime-edged pool */
+.welcome { position: relative; flex: 1; display: flex; flex-direction: column; padding: 28px 20px calc(24px + env(safe-area-inset-bottom)); background: radial-gradient(120% 60% at 50% 46%, rgba(0, 196, 52, 0.18), transparent 60%), #131413; }
+.welcome > * { position: relative; z-index: 1; }
+.welcome > .bowl { position: absolute; z-index: 0; }
+.welcomeTitle { font-size: 32px; line-height: 1.1; font-weight: 700; letter-spacing: -0.8px; margin: 28px 0 40px; max-width: 320px; }
+.welcomeTitle em { font-style: normal; color: var(--lime); }
+
+/* The p's bowl, large and faint, rising behind the headline */
+.bowl {
+  top: -70px; right: -90px; width: 260px; height: 260px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, #00c434 0 12%, #131413 12.5% 24%, rgba(181, 252, 79, 0.16) 24.5% 50%, transparent 50.5%);
 }
-.welcomeTitle { font-size: 30px; line-height: 1.12; font-weight: 700; letter-spacing: -0.6px; margin: 28px 0 52px; max-width: 320px; }
+
 .perks { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.perk { position: relative; z-index: 1; background: #fff; color: var(--ink); border-radius: 18px; padding: 18px 14px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; min-height: 150px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15); }
-.perk b { font-size: 18px; font-weight: 700; }
-.perk span { font-size: 13px; line-height: 1.4; color: #444; }
-.perkIcon { width: 26px; height: 26px; margin-bottom: 4px; }
+.perk { position: relative; z-index: 1; background: #fff; color: var(--ink); border-radius: 18px; padding: 18px 14px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; min-height: 150px; box-shadow: 0 10px 24px rgba(0, 20, 8, 0.35), 0 0 0 1px rgba(181, 252, 79, 0.12); }
+.perk b { font-size: 17px; font-weight: 700; }
+.perk span { font-size: 13px; line-height: 1.4; color: #4a4f47; }
+.perkIcon { width: 40px; height: 40px; padding: 9px; border-radius: 50%; background: var(--green-tint); color: var(--green-ink); margin-bottom: 4px; }
+
+/* The pool: waterline sits mid-way down the first row so the cards look like they're floating */
+.pool { position: absolute; z-index: 0; top: 64px; left: -20px; right: -20px; height: 1400px; pointer-events: none; }
+.wave { position: absolute; top: 0; left: 0; width: 200%; height: 28px; fill: #0f4a24; animation: drift 9s linear infinite; }
+.waveBack { top: -8px; fill: #1b6b34; opacity: 0.55; animation-duration: 14s; animation-direction: reverse; }
+.surface { fill: none; stroke: #00c434; stroke-width: 3px; stroke-linecap: round; }
+.water {
+  position: absolute; top: 27px; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(60% 14% at 30% 8%, rgba(181, 252, 79, 0.16), transparent 70%),
+    radial-gradient(50% 10% at 75% 22%, rgba(181, 252, 79, 0.1), transparent 70%),
+    linear-gradient(#0f4a24, #0a3319 260px, #08240f 600px);
+}
+@keyframes drift { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .wave { animation: none; } }
+
 .welcomeFoot { margin-top: auto; padding-top: 24px; }
-.welcomeLogin { text-align: center; font-size: 14px; margin: 14px 0 0; color: #e4e9df; }
+.welcomeLogin { text-align: center; font-size: 14px; margin: 14px 0 0; color: #cfe8d3; }
 .welcomeLogin button { border: 0; background: none; color: #fff; font-weight: 700; text-decoration: underline; padding: 0; }
 
 /* Form screens */
@@ -75,6 +94,8 @@
 .footer { margin-top: auto; padding-top: 22px; display: flex; flex-direction: column; gap: 10px; }
 .primary { width: 100%; min-height: 52px; border: 1px solid var(--lime-border); border-radius: 999px; background: var(--lime); color: #111; font-size: 16px; font-weight: 600; }
 .primary:disabled { background: #eef0ec; border-color: #eef0ec; color: #b2b7ad; cursor: default; }
+.switch { text-align: center; font-size: 14px; color: var(--muted); margin: 4px 0 0; }
+.switch button { border: 0; background: none; padding: 0; color: var(--ink); font-weight: 700; text-decoration: underline; }
 .ghost { border: 0; background: none; color: var(--green-ink); font-weight: 600; font-size: 14px; padding: 8px; }
 
 /* Card / goal pickers */
@@ -86,6 +107,12 @@
 .optIcon { width: 38px; height: 38px; border-radius: 50%; background: #f1f3ee; display: grid; place-items: center; font-size: 13px; font-weight: 600; flex-shrink: 0; }
 .optIcon svg { width: 18px; height: 18px; }
 .selected .optIcon { background: #fff; color: var(--green-ink); }
+
+/* Mini card face: credit-card proportions, issuer name, chip */
+.cardArt { position: relative; width: 58px; height: 37px; border-radius: 6px; flex-shrink: 0; padding: 4px 5px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.18); overflow: hidden; }
+.cardArt::after { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.22) 50%, transparent 60%); }
+.cardIssuer { display: block; font-size: 6.5px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cardChip { position: absolute; left: 5px; bottom: 6px; width: 10px; height: 8px; border-radius: 2px; background: linear-gradient(135deg, #f3dd9a, #c9a24c); }
 .optMain { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .optMain b { font-size: 15px; font-weight: 600; }
 .optMain span { font-size: 12px; color: var(--muted); }
@@ -96,6 +123,14 @@
 .otherRow input { flex: 1; min-width: 0; border: 1px dashed #cfd4ca; border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 14px; outline-color: var(--green); }
 .otherRow button { border: 0; border-radius: 12px; padding: 0 16px; background: #111; color: #fff; font-weight: 600; }
 .otherRow button:disabled { background: #e6e8e3; color: #a3a89e; cursor: default; }
+
+/* Goal tiles: two columns */
+.goalGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.goalTile { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; background: #fff; border: 1.5px solid var(--line); border-radius: 16px; padding: 12px; color: var(--ink); }
+.goalTile.selected { border-color: var(--green); background: var(--green-tint); }
+.goalTop { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; margin-bottom: 8px; }
+.goalTile b { font-size: 15px; font-weight: 600; }
+.goalTile > span:last-child { font-size: 12px; color: var(--muted); }
 
 /* Balances */
 .amount { display: flex; align-items: center; gap: 2px; border-bottom: 1.5px solid var(--line); width: 96px; }

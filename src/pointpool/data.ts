@@ -39,17 +39,17 @@ const GOAL_IDS: GoalId[] = ['travel', 'everyday', 'cashback']
 export const GOALS: Record<GoalId, { label: string; points: string[]; cashback: string[] }> = {
   travel: {
     label: '✈️ Flight',
-    points: ["Sign in to your card's rewards portal", 'Search flights in the travel section', 'Choose "pay with points" at checkout'],
+    points: ['Sign in to your card’s rewards portal', 'Search flights in the travel section', 'Choose "pay with points" at checkout'],
     cashback: ['Book the flight with any card', 'Redeem cashback as a statement credit to offset it'],
   },
   everyday: {
     label: '🛒 Everyday',
-    points: ["Open your card's rewards page", 'Pick gift cards or "shop with points" (e.g. Amazon)', 'Apply points at checkout'],
+    points: ['Open your card’s rewards page', 'Pick gift cards or "shop with points" (e.g. Amazon)', 'Apply points at checkout'],
     cashback: ['Use cashback at checkout with supported merchants (e.g. Amazon, PayPal)'],
   },
   cashback: {
     label: '💵 Cash',
-    points: ["Open your card's rewards page", 'Choose "statement credit" or "deposit to bank"', 'Enter the amount to redeem'],
+    points: ['Open your card’s rewards page', 'Choose "statement credit" or "deposit to bank"', 'Enter the amount to redeem'],
     cashback: ['Choose statement credit or direct deposit', 'Funds usually post in 1–3 business days'],
   },
 }
@@ -74,9 +74,12 @@ export const fmtMoney = (n: number) => {
   const digits = c >= 100 ? 0 : 2
   return c.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: digits, maximumFractionDigits: digits })
 }
-export const ageDays = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 864e5)
+// Never negative: a balance saved with a clock slightly ahead still reads as today.
+export const ageDays = (iso: string) => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 864e5))
 export const isCash = (b: Balance) => PROGRAMS[b.programId].type === 'cashback'
-export const utilization = (b: Balance) => b.creditLimit && b.creditLimit > 0 ? (b.cardBalance ?? 0) / b.creditLimit : null
+// Null until both the limit and the amount owed are entered, so a blank balance never reads as 0%.
+export const utilization = (b: Balance) =>
+  b.creditLimit && b.creditLimit > 0 && b.cardBalance != null ? b.cardBalance / b.creditLimit : null
 export const isStale = (b: Balance) => ageDays(b.updatedAt) > STALE_DAYS
 // A program has estimates when it's supported and has a value per point (cashback is always $1 = $1).
 export const hasEstimates = (p: Program) => p.supported && (p.type === 'cashback' || !!p.cpp)
@@ -126,6 +129,9 @@ export function last30DaysSpend(txns: Transaction[], asOf: string): Spend {
 // SAMPLE: counted back from the newest sample transaction rather than today, so the demo doesn't run empty.
 const SAMPLE_AS_OF = TRANSACTIONS.reduce((d, t) => (t.date > d ? t.date : d), '')
 export const SPEND = last30DaysSpend(TRANSACTIONS, SAMPLE_AS_OF)
+// How many sample transactions the 30 days cover, for "based on N transactions".
+const WINDOW_FROM = new Date(new Date(`${SAMPLE_AS_OF}T12:00:00Z`).getTime() - 29 * 864e5).toISOString().slice(0, 10)
+export const SPEND_TXN_COUNT = TRANSACTIONS.filter((t) => t.date >= WINDOW_FROM && t.date <= SAMPLE_AS_OF).length
 
 export const categoriesBySpend = (spend: Spend = SPEND) => [...CATEGORIES].sort((a, b) => spend[b.id] - spend[a.id])
 
@@ -172,6 +178,7 @@ export const CARD_RULES: Record<string, CardRule> = {
       transport: { rate: 3, note: 'Gas stations and EV charging.' },
     },
   },
+  Venture: { base: 2, rates: {} },
   'Discover it': {
     rates: {
       shopping: { rate: 5, cap: { amount: 1500, per: 'quarter' }, quarters: 1, note: ROTATING },
@@ -196,7 +203,8 @@ export interface CardEarning {
   terms?: CategoryRate // the card's terms in this category, as counted (a rate that needs an extra step isn't)
   known: boolean // false = card not in the sample rules, estimated at the base 1× / 1%
   note?: string
-  monthly: number // points a month, or dollars a month for cashback cards
+  avgRate: number // the rate averaged over a year, after caps and rotating quarters (equals `rate` without them)
+  monthly: number // points a month, or dollars a month for cashback cards, averaged over a year
   yearly: number
   value: Record<GoalId, number> // estimated $ a month for each way to use it
 }
@@ -218,12 +226,17 @@ export function cardEarnings(balances: Balance[], cat: CategoryId, spend: Spend 
     const rate = terms?.rate ?? base
     const note = listed?.needs ? `${fmtRate(program.type, listed.rate)} if you ${listed.needs}. Counted at ${fmtRate(program.type, base)}.` : listed?.note
     const cash = program.type === 'cashback'
-    const monthly = cash ? cents((amount * rate) / 100) : Math.round(amount * rate)
-    const yearly = cash ? cents((amount * rate * 12) / 100) : Math.round(amount * rate * 12)
+    // A year of spend, with the bonus rate only on the part a cap or rotating quarter allows (same as compareCards).
+    const yearSpend = amount * 12
+    const bonus = terms ? bonusSpend(yearSpend, terms) : 0
+    const yearUnits = bonus * rate + (yearSpend - bonus) * base // points, or cents for cashback
+    const avgRate = yearSpend > 0 ? Math.round((yearUnits / yearSpend) * 10) / 10 : rate
+    const yearly = cash ? cents(yearUnits / 100) : Math.round(yearUnits)
+    const monthly = cash ? cents(yearUnits / 1200) : Math.round(yearUnits / 12)
     const value = Object.fromEntries(
-      GOAL_IDS.map((g) => [g, cash ? monthly : cents((monthly * (program.cpp?.[g] ?? 0)) / 100)]),
+      GOAL_IDS.map((g) => [g, cash ? monthly : cents((yearUnits / 12) * (program.cpp?.[g] ?? 0) / 100)]),
     ) as Record<GoalId, number>
-    out.push({ balance, program, base, rate, terms, known: !!rule, note, monthly, yearly, value })
+    out.push({ balance, program, base, rate, terms, known: !!rule, note, avgRate, monthly, yearly, value })
   }
   return out
 }
@@ -237,13 +250,13 @@ export interface BalanceUse {
 }
 
 const POINT_USES: Omit<BalanceUse, 'value'>[] = [
-  { id: 'travel', emoji: '✈️', label: 'toward travel', detail: "Flights or hotels booked through the card's travel site" },
+  { id: 'travel', emoji: '✈️', label: 'toward travel', detail: 'Flights or hotels booked through the card’s travel site' },
   { id: 'everyday', emoji: '🛒', label: 'in gift cards', detail: 'Gift cards, or shop with points at stores like Amazon' },
-  { id: 'cashback', emoji: '💵', label: 'as a statement credit', detail: 'Credit on your card bill, or a deposit to your bank' },
+  { id: 'cashback', emoji: '💵', label: 'as a statement credit', detail: 'Comes off what you owe, or lands in your bank' },
 ]
 
 const CASH_USES: Omit<BalanceUse, 'value'>[] = [
-  { id: 'cashback', emoji: '💵', label: 'as a statement credit', detail: 'Credit on your card bill' },
+  { id: 'cashback', emoji: '💵', label: 'as a statement credit', detail: 'Comes off what you owe on the card' },
   { id: 'deposit', emoji: '🏦', label: 'as a bank deposit', detail: 'Sent to your bank, usually in 1–3 business days' },
   { id: 'checkout', emoji: '🛍️', label: 'at checkout', detail: 'Pay with cashback at Amazon or PayPal' },
 ]
@@ -314,7 +327,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
     id: 'payoff',
     kind: 'payoff',
     icon: '✅',
-    text: 'Pay your full balance each month. Card interest is often 25% a year or more — far more than any card earns back.',
+    text: 'Paying the full balance each month keeps interest away. Card interest is often 25% a year or more, more than any card earns back.',
     href: '#coach',
   })
 
@@ -354,7 +367,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
       id: `uses-${b.id}`,
       kind: 'uses',
       icon: '✈️',
-      text: `${fmtBalance(b)} → ≈${fmtMoney(travel.value)} travel or ≈${fmtMoney(credit.value)} credit.`,
+      text: `${fmtBalance(b)} could be ≈${fmtMoney(travel.value)} toward travel or ≈${fmtMoney(credit.value)} as a statement credit.`,
       href: '#redeem',
     })
   }
@@ -369,7 +382,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
         id: `rotating-${b.id}`,
         kind: 'rotating',
         icon: '🔁',
-        text: `${b.cardName} rotates ${rate}% categories each quarter, including ${joinAnd(bonus.map((c) => catName(c.id)))}. Activate each one to earn it.`,
+        text: `${b.cardName} rotates ${rate}% categories each quarter, including ${joinAnd(bonus.map((c) => catName(c.id)))}. The bonus rate applies once it’s activated each quarter.`,
         href: '#coach',
       })
     } else if (!rule && b.programId === 'discover') {
@@ -377,7 +390,7 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
         id: `rotating-${b.id}`,
         kind: 'rotating',
         icon: '🔁',
-        text: 'Some Discover cards rotate bonus categories quarterly — activate them to earn extra cashback.',
+        text: 'Some Discover cards rotate bonus categories each quarter. The bonus applies once it’s activated.',
         href: '#coach',
       })
     }
@@ -389,13 +402,244 @@ export function coachTips(balances: Balance[], spend: Spend = SPEND): CoachTip[]
       id: `stale-${b.id}`,
       kind: 'stale',
       icon: '⏰',
-      text: `${b.cardName} balance is ${ageDays(b.updatedAt)} days old — update for better estimates.`,
+      text: `${b.cardName} balance is ${ageDays(b.updatedAt)} days old. Updating it refreshes these estimates.`,
       href: '#',
       balanceId: b.id,
     })
   }
 
   return tips
+}
+
+// ---- Card stacking: which card to use for each spending category ----
+
+export interface StackingRule {
+  category: { id: CategoryId; label: string; noun: string; emoji: string }
+  card: Balance
+  rate: number
+  rateLabel: string
+  monthly: number
+}
+
+export function cardStacking(balances: Balance[], spend: Spend = SPEND): StackingRule[] {
+  const cards = balances.filter((b) => hasEstimates(PROGRAMS[b.programId]))
+  if (cards.length === 0) return []
+  return CATEGORIES
+    .filter((c) => spend[c.id] > 0)
+    .map((c) => {
+      const earnings = cardEarnings(cards, c.id, spend)
+      const best = earnings.length > 0
+        ? earnings.reduce((a, b) => (a.value.cashback >= b.value.cashback ? a : b))
+        : null
+      if (!best) return null
+      return {
+        category: c,
+        card: best.balance,
+        rate: best.rate,
+        rateLabel: fmtRate(best.program.type, best.avgRate),
+        monthly: best.value.cashback,
+      }
+    })
+    .filter((r): r is StackingRule => r !== null)
+}
+
+// ---- "What you left on the table" ----
+
+export interface LeftOnTable {
+  total: number
+  byCategory: { id: CategoryId; label: string; emoji: string; actual: number; optimal: number; missed: number }[]
+}
+
+export function leftOnTable(balances: Balance[], spend: Spend = SPEND): LeftOnTable | null {
+  const cards = balances.filter((b) => hasEstimates(PROGRAMS[b.programId]))
+  if (cards.length === 0) return null
+  const byCategory = CATEGORIES
+    .filter((c) => spend[c.id] > 0)
+    .map((c) => {
+      const earnings = cardEarnings(cards, c.id, spend)
+      const best = earnings.length > 0
+        ? earnings.reduce((a, b) => (a.value.cashback >= b.value.cashback ? a : b))
+        : null
+      const optimal = best?.value.cashback ?? 0
+      const base = spend[c.id] * 0.01
+      return { id: c.id, label: c.label, emoji: c.emoji, actual: base, optimal, missed: cents(optimal - base) }
+    })
+    .filter((c) => c.missed > 0)
+  const total = cents(byCategory.reduce((s, c) => s + c.missed, 0))
+  if (total <= 0) return null
+  return { total, byCategory }
+}
+
+// ---- Seasonal / calendar-aware tips ----
+
+export interface SeasonalTip {
+  id: string
+  icon: string
+  title: string
+  detail: string
+  months: number[]
+}
+
+const SEASONAL_TIPS: SeasonalTip[] = [
+  { id: 'holiday', icon: '🎄', title: 'Holiday spending ahead', detail: 'Use your highest-earning shopping card for gifts. Many cards offer extra rewards on department stores in Q4.', months: [10, 11] },
+  { id: 'back-to-school', icon: '📚', title: 'Back-to-school season', detail: 'School supplies, electronics, and clothing — use your best shopping card for these purchases.', months: [7, 8] },
+  { id: 'summer-travel', icon: '🏖️', title: 'Summer travel season', detail: 'Book travel through your card portal for bonus rates. Gas spending goes up — use your best transport card.', months: [5, 6] },
+  { id: 'tax-season', icon: '📋', title: 'Tax season reminder', detail: 'Some cards earn bonus rewards on tax prep services. Check if your cashback or points can offset your tax prep costs.', months: [1, 2, 3] },
+  { id: 'q1-rotate', icon: '🔄', title: 'Q1 rotating categories are live', detail: 'If you have a Discover it or Chase Freedom, activate your Q1 bonus categories now to earn 5%.', months: [0] },
+  { id: 'q2-rotate', icon: '🔄', title: 'Q2 rotating categories are live', detail: 'Activate your Q2 bonus categories on Discover it or Chase Freedom to keep earning 5%.', months: [3] },
+  { id: 'q3-rotate', icon: '🔄', title: 'Q3 rotating categories are live', detail: 'Activate your Q3 bonus categories. Rotating category cards need manual opt-in each quarter.', months: [6] },
+  { id: 'q4-rotate', icon: '🔄', title: 'Q4 rotating categories are live', detail: 'Last quarter of the year — activate your Q4 bonus categories for holiday shopping rewards.', months: [9] },
+  { id: 'new-year', icon: '🎯', title: 'New year, new rewards strategy', detail: 'Annual caps reset in January. Review your card lineup and make sure you are using the right card for each category.', months: [0] },
+]
+
+export function seasonalTips(month?: number): SeasonalTip[] {
+  const m = month ?? new Date().getMonth()
+  return SEASONAL_TIPS.filter((t) => t.months.includes(m))
+}
+
+// ---- Points expiration warnings ----
+
+export interface ExpirationWarning {
+  balance: Balance
+  message: string
+  severity: 'info' | 'warning'
+}
+
+const EXPIRATION_RULES: Partial<Record<ProgramId, { months: number; note: string }>> = {
+  capone: { months: 24, note: 'Capital One miles expire after 24 months of account inactivity.' },
+  citi_typ: { months: 12, note: 'Citi ThankYou Points expire 12 months after your last account activity.' },
+  discover: { months: 0, note: 'Discover cashback does not expire while your account is open.' },
+}
+
+export function expirationWarnings(balances: Balance[]): ExpirationWarning[] {
+  const warnings: ExpirationWarning[] = []
+  for (const b of balances) {
+    if (!(b.amount > 0)) continue
+    const rule = EXPIRATION_RULES[b.programId]
+    if (!rule) continue
+    if (rule.months === 0) continue
+    const daysSinceUpdate = ageDays(b.updatedAt)
+    const monthsSinceUpdate = daysSinceUpdate / 30
+    if (monthsSinceUpdate > rule.months * 0.75) {
+      warnings.push({
+        balance: b,
+        message: `${rule.note} Make a purchase or redeem soon to keep them active.`,
+        severity: monthsSinceUpdate > rule.months * 0.9 ? 'warning' : 'info',
+      })
+    }
+  }
+  return warnings
+}
+
+// ---- Kikoff graduation milestones ----
+
+export interface GraduationMilestone {
+  id: string
+  icon: string
+  title: string
+  detail: string
+  progress: number
+  achieved: boolean
+}
+
+export function graduationMilestones(balances: Balance[], score: number = CREDIT_SCORE): GraduationMilestone[] {
+  const milestones: GraduationMilestone[] = []
+  const tier = tierFor(score)
+
+  const allUnder30 = balances.every((b) => {
+    const u = utilization(b)
+    return u === null || u < 0.3
+  })
+  const allUnder10 = balances.every((b) => {
+    const u = utilization(b)
+    return u === null || u < 0.1
+  })
+
+  milestones.push({
+    id: 'util-30',
+    icon: '📊',
+    title: 'Keep utilization under 30%',
+    detail: allUnder30
+      ? 'You are under 30% on all cards. Keep it up — this is a key factor in your credit score.'
+      : 'Pay down balances to get all cards under 30% utilization. This is the biggest quick win for your score.',
+    progress: allUnder30 ? 1 : Math.max(0, 1 - (balances.reduce((max, b) => Math.max(max, utilization(b) ?? 0), 0) - 0.3) / 0.7),
+    achieved: allUnder30,
+  })
+
+  milestones.push({
+    id: 'util-10',
+    icon: '🏆',
+    title: 'Get to single-digit utilization',
+    detail: allUnder10
+      ? 'Excellent — under 10% utilization is ideal for the highest credit scores.'
+      : 'Below 10% utilization is where credit scores really improve. Pay down a bit more to reach this level.',
+    progress: allUnder10 ? 1 : allUnder30 ? 0.5 : 0,
+    achieved: allUnder10,
+  })
+
+  if (tier === 'building' || tier === 'fair') {
+    const target = tier === 'building' ? 580 : 670
+    const from = tier === 'building' ? 300 : 580
+    milestones.push({
+      id: 'score-up',
+      icon: '📈',
+      title: tier === 'building' ? 'Reach fair credit (580+)' : 'Reach good credit (670+)',
+      detail: tier === 'building'
+        ? `At ${score}, you are ${target - score} points from fair credit. Fair credit opens unsecured cards with real rewards.`
+        : `At ${score}, you are ${target - score} points from good credit. Good credit unlocks the best no-fee rewards cards.`,
+      progress: Math.min(1, (score - from) / (target - from)),
+      achieved: false,
+    })
+  }
+
+  const nextTier = CREDIT_TIERS[tierRank(tier) + 1]
+  if (nextTier) {
+    const cardsAtNextTier = MARKET_CARDS.filter((c) => c.credit === nextTier.id && c.annualFee === 0)
+    if (cardsAtNextTier.length > 0) {
+      const best = cardsAtNextTier.sort((a, b) => b.base - a.base)[0]
+      milestones.push({
+        id: 'next-card',
+        icon: '💳',
+        title: `Unlock: ${best.issuer} ${best.name}`,
+        detail: `At ${nextTier.range} credit, you could qualify for cards like the ${best.issuer} ${best.name} (${fmtRate(best.type, best.base)} on everything, no annual fee).`,
+        progress: Math.min(1, (score - CREDIT_TIERS[tierRank(tier)].min) / (nextTier.min - CREDIT_TIERS[tierRank(tier)].min)),
+        achieved: false,
+      })
+    }
+  }
+
+  return milestones
+}
+
+// ---- Redemption math: real value of points across methods ----
+
+export interface RedemptionComparison {
+  balance: Balance
+  program: Program
+  methods: { id: string; label: string; emoji: string; cpp: number; value: number; best: boolean }[]
+}
+
+export function redemptionMath(balances: Balance[]): RedemptionComparison[] {
+  return balances
+    .filter((b) => {
+      const p = PROGRAMS[b.programId]
+      return p.type === 'points' && p.cpp && b.amount > 0
+    })
+    .map((b) => {
+      const p = PROGRAMS[b.programId]
+      const cpp = p.cpp!
+      const methods = [
+        { id: 'travel', label: 'Travel portal', emoji: '✈️', cpp: cpp.travel, value: cents((b.amount * cpp.travel) / 100) },
+        { id: 'everyday', label: 'Gift cards / shopping', emoji: '🛒', cpp: cpp.everyday, value: cents((b.amount * cpp.everyday) / 100) },
+        { id: 'cashback', label: 'Statement credit', emoji: '💵', cpp: cpp.cashback, value: cents((b.amount * cpp.cashback) / 100) },
+      ]
+      const maxVal = Math.max(...methods.map((m) => m.value))
+      return {
+        balance: b,
+        program: p,
+        methods: methods.map((m) => ({ ...m, best: m.value === maxVal })),
+      }
+    })
 }
 
 // Highest-spend category where every card earns the base rate — a spot Marketplace cards could add to.
@@ -513,7 +757,7 @@ const MORE_APP_CARDS: MarketCard[] = [
   { name: 'Wander Amex', issuer: 'Credit One', short: 'CO', type: 'points', cpp: 1, base: 1, rates: { food: { rate: 1, note: '5× at restaurants.' }, transport: { rate: 5, note: 'At gas stations.' } }, annualFee: 95, credit: 'fair', inApp: true, url: 'https://www.creditonebank.com/credit-cards/wander-card' },
   { name: 'Aspire Cash Back Rewards', issuer: 'Aspire', short: 'AS', type: 'cashback', base: 1, rates: { food: { rate: 3, note: 'At grocery stores.' }, transport: { rate: 3, note: 'At gas stations.' } }, annualFee: 99, feeNote: 'varies by offer, and a monthly fee starts in year two', credit: 'building', inApp: true, url: 'https://www.aspirecreditcard.com/' },
   { name: 'Fortiva Cash Back Rewards', issuer: 'Fortiva', short: 'FO', type: 'cashback', base: 1, rates: { food: { rate: 3, note: 'At grocery stores.' }, transport: { rate: 3, note: 'At gas stations.' } }, annualFee: 99, feeNote: 'varies by offer, and a monthly fee starts in year two', credit: 'building', inApp: true, url: 'https://www.fortivacreditcard.com/' },
-  { name: 'Bilt Mastercard', issuer: 'Bilt', short: 'BI', type: 'points', cpp: 1, base: 1, rates: { food: { rate: 1, note: '3× at restaurants, in months with 5 or more purchases.' } }, annualFee: 0, credit: 'good', note: 'Also earns on rent, with no fee.', inApp: true, url: 'https://www.biltrewards.com/card' },
+  { name: 'Bilt Mastercard', issuer: 'Bilt', short: 'BI', type: 'points', cpp: 0.55, base: 1, rates: { food: { rate: 1, note: '3× at restaurants, in months with 5 or more purchases.' } }, annualFee: 0, credit: 'good', note: 'Also earns on rent, with no fee.', inApp: true, url: 'https://www.biltrewards.com/card' },
 ]
 
 const ALL_CARDS = [...MARKET_CARDS, ...MORE_APP_CARDS]
@@ -615,7 +859,9 @@ function earnSteps(yearSpend: number, base: number, type: Program['type'], cpp: 
   const bonus = bonusSpend(yearSpend, r)
   const label = r.quarters
     ? `${fmtDollars(bonus)} in its featured ${r.quarters === 1 ? 'quarter' : 'quarters'} at ${at(r.rate)}`
-    : `First ${fmtDollars(r.cap!.amount)} a ${r.cap!.per} at ${at(r.rate)}`
+    : bonus < yearSpend
+      ? `First ${fmtDollars(r.cap!.amount)} a ${r.cap!.per} at ${at(r.rate)}`
+      : `${fmtDollars(yearSpend)} at ${at(r.rate)} (up to ${fmtDollars(r.cap!.amount)} a ${r.cap!.per})`
   const steps = [step(label, bonus, r.rate)]
   if (yearSpend > bonus) steps.push(step(`Then ${fmtDollars(yearSpend - bonus)} at ${at(base)}`, yearSpend - bonus, base))
   return steps
@@ -642,6 +888,8 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
       return {
         key: `yours-${e.balance.id}`,
         name: e.balance.cardName,
+        // Named issuer where the program identifies one, so the card face reads "Discover", not "DI".
+        issuer: e.program.supported ? e.program.brand : undefined,
         short: e.program.short,
         type: e.program.type,
         unit: e.program.unit,
@@ -698,11 +946,11 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
         if (r?.needs && worthAt(monthSpend, c, r)) return ['step', `${at(r.rate)} only if you ${r.needs}`]
         const beatsBefore = rewards > baseline // earns more than your card, until the fee
         if (c.annualFee > 0 && beatsBefore && even && even > monthSpend)
-          return ['spend', `Worth the ${fee} fee only if you spend ${fmtMoney(even)}+/mo`]
-        if (gain > 0) return ['small', 'Not enough extra to be worth a credit check']
+          return ['spend', `Covers the ${fee} fee from ${fmtMoney(even)}+/mo`]
+        if (gain > 0) return ['small', `Adds less than ${fmtMoney(MIN_GAIN)}/mo here`]
         if (c.annualFee > 0 && (beatsBefore || !best)) return ['fee', `The ${fee} fee is more than it adds`]
         if (best) return ['less', `Your ${best.name} already earns ${Math.abs(gain) < 0.12 ? 'as much' : 'more'}`]
-        return ['less', 'Not enough to be worth a credit check']
+        return ['less', `Adds less than ${fmtMoney(MIN_GAIN)}/mo here`]
       }
       const [whyKind, why] = worth ? [undefined, undefined] : whyNot()
 
@@ -711,7 +959,7 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
         r?.note,
         c.note,
         c.deposit && `Needs a refundable deposit of at least ${fmtDollars(c.deposit)}.`,
-        worth && even && `Worth the ${fee} fee from ${fmtMoney(even)} a month in ${catName(cat)}. You spend ${fmtMoney(monthSpend)}.`,
+        worth && even && `Covers the ${fee} fee from ${fmtMoney(even)} a month in ${catName(cat)}. You spend ${fmtMoney(monthSpend)}.`,
       ].filter((n): n is string => !!n)
 
       return {
@@ -753,7 +1001,7 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
       continue
     }
     const [keep, drop] = worth[i].type !== 'cashback' && o.type === 'cashback' ? [o, worth[i]] : [worth[i], o]
-    keep.notes.push(`The ${drop.name} earns about the same, as ${drop.type === 'cashback' ? 'cash back' : 'points'}.`)
+    keep.notes.push(`The ${drop.name} earns about the same, as ${drop.type === 'cashback' ? 'cashback' : 'points'}.`)
     worth[i] = keep
   }
 
