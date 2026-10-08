@@ -94,7 +94,7 @@ export function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdi
             <div className={styles.cardHead}><h2>{example.title} <LuArrowUpRight className={styles.inlineRewardIcon} aria-hidden="true" /></h2><span className={styles.rewardExampleTag}>Example</span></div>
             {/* Cashback redeems 1:1, so restating the balance as its own "value" says nothing. Lead with the effect instead. */}
             {estimate && (cash ? <div className={styles.rewardsEstimate}>
-              <strong>{fmtUSD(estimate.value)}</strong> off what you owe on this card.
+              <strong>{fmtUSD(estimate.covered)}</strong> off what you owe on this card.
               <span>Cashback converts 1:1 — each $1 of cashback takes $1 off what you owe. Not an airline or hotel points redemption.</span>
             </div> : <div className={styles.rewardsEstimate}>
               <strong>≈{rewardMoney(estimate.value)}</strong> in {example.goal === 'travel' ? 'travel value' : example.goal === 'everyday' ? 'gift-card value' : 'statement-credit value'} from your {fmtBalance(b)}.

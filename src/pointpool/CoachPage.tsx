@@ -78,7 +78,7 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
   const cards = balances.filter((b) => hasEstimates(PROGRAMS[b.programId]))
 
   for (const i of insights) {
-    if (i.bestCard && i.bestCard.rate > 1) {
+    if (i.bestCard && i.bestCard.terms && i.bestCard.rate > i.bestCard.base) {
       actions.push({
         id: `use-${i.id}`,
         icon: i.emoji,
@@ -91,7 +91,8 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
   }
 
   for (const i of insights) {
-    if (!i.bestCard || i.bestCard.rate <= 1) {
+    // Only for wallets with cards we can estimate; with none, every category would read "base rate".
+    if (cards.length > 0 && (!i.bestCard || !i.bestCard.terms || i.bestCard.rate <= i.bestCard.base)) {
       actions.push({
         id: `gap-${i.id}`,
         icon: '🔍',
@@ -128,17 +129,17 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
   return actions
 }
 
+// Share of spending matched to a strong rate: each category's best card, in cash value per dollar over a year (caps,
+// rotating quarters and points value included), against a 5%-back card. A rotating 5% reads as its ~2% average.
 function walletScore(insights: CategoryInsight[]): number {
-  if (insights.length === 0) return 0
   let totalSpend = 0
-  let weightedRate = 0
+  let weighted = 0
   for (const i of insights) {
     totalSpend += i.spend
-    const rate = i.bestCard?.rate ?? 1
-    const maxRate = Math.max(rate, 5)
-    weightedRate += i.spend * (rate / maxRate)
+    const pct = i.spend > 0 ? (i.monthlyReward / i.spend) * 100 : 0
+    weighted += i.spend * Math.min(1, pct / 5)
   }
-  return totalSpend > 0 ? Math.round((weightedRate / totalSpend) * 100) : 0
+  return totalSpend > 0 ? Math.round((weighted / totalSpend) * 100) : 0
 }
 
 // --- Component ---
@@ -149,13 +150,11 @@ export function CoachPage({ balances, onEdit }: Props) {
   const actions = generateActions(balances, insights)
   const tips = coachTips(balances).filter((t) => t.kind !== 'bonus' && t.kind !== 'rotating')
 
-  const totalMonthlyRewards = insights.reduce((sum, i) => sum + i.monthlyReward, 0)
-  const totalYearlyRewards = totalMonthlyRewards * 12
   const hasCards = balances.some((b) => hasEstimates(PROGRAMS[b.programId]))
 
   const stacking = cardStacking(balances)
   const missed = leftOnTable(balances)
-  const seasonal = seasonalTips()
+  const seasonal = seasonalTips(undefined, balances)
   const expirations = expirationWarnings(balances)
   const milestones = graduationMilestones(balances, CREDIT_SCORE)
   const redemptions = redemptionMath(balances)
@@ -179,32 +178,28 @@ export function CoachPage({ balances, onEdit }: Props) {
         <h1 className={styles.pageTitle}>Card Coach</h1>
       </div>
 
-      {/* Rewards score hero */}
-      <div className={c.hero}>
-        <div className={c.heroTop}>
-          <div>
-            <div className={c.heroLabel}>Your rewards score</div>
-            <div className={c.heroLine}>Your wallet is matched</div>
-            <div className={c.heroScore}>{score}% 🎯</div>
-          </div>
-          <div className={c.heroBadge} aria-hidden>✨</div>
-        </div>
-        <div className={c.heroNote}>
-          {score >= 70 ? 'Great — your cards match your spending well.'
-            : score >= 40 ? 'Room to improve. Follow the tips below.'
-            : hasCards ? "Your spending doesn't match your card bonuses."
-            : 'Add your cards to get a personalized score.'}
-        </div>
-        {hasCards && (
-          <>
-            <div className={c.heroMeterHead}>
-              <span>Est. rewards</span>
-              <span>{fmtMoney(totalMonthlyRewards)}/mo · {fmtMoney(totalYearlyRewards)}/yr</span>
+      {/* Rewards score hero. No combined rewards total: each program's rewards stay in that program. */}
+      {hasCards && (
+        <div className={c.hero}>
+          <div className={c.heroTop}>
+            <div>
+              <div className={c.heroLabel}>Your rewards score</div>
+              <div className={c.heroLine}>Your cards match</div>
+              <div className={c.heroScore}>{score}% 🎯</div>
             </div>
-            <div className={c.heroMeter}><span style={{ width: `${score}%` }} /></div>
-          </>
-        )}
-      </div>
+            <div className={c.heroBadge} aria-hidden>✨</div>
+          </div>
+          <div className={c.heroNote}>
+            {score >= 70 ? 'of your spending with a strong rate. Your cards fit how you spend.'
+              : score >= 40 ? 'of your spending with a strong rate. The ideas below show where it could go higher.'
+              : 'of your spending with a strong rate. Most of it earns about 1–2% today.'}
+          </div>
+          <div className={c.heroMeterHead}>
+            <span>Compared with a 5%-back card in every category</span>
+          </div>
+          <div className={c.heroMeter}><span style={{ width: `${score}%` }} /></div>
+        </div>
+      )}
 
       {!hasCards && (
         <div className={c.panel}>
@@ -219,11 +214,10 @@ export function CoachPage({ balances, onEdit }: Props) {
         <button className={c.promo} onClick={() => jump(stacking.length > 0 ? 'coach-cheat' : 'coach-breakdown')}>
           <div className={c.promoMain}>
             <div className={c.promoIcon} aria-hidden>💸</div>
-            <div className={c.promoTitle}>You left money on the table</div>
-            <div className={c.promoSub}>Using the right card for each purchase last month would have earned more.</div>
+            <div className={c.promoTitle}>Your best card for each category</div>
+            <div className={c.promoSub}>Compared with a flat 1% card, using your best card in {topMissed.label.toLowerCase()} could add about {fmtMoney(topMissed.missed)} a month. Illustrative.</div>
             <div className={c.promoFoot}>
-              +{fmtMoney(missed.total)} more
-              <span className={c.pill}>{topMissed.emoji} {topMissed.label} +{fmtMoney(topMissed.missed)}</span>
+              <span className={c.pill}>{topMissed.emoji} {topMissed.label} +{fmtMoney(topMissed.missed)}/mo</span>
             </div>
           </div>
           <span className={c.promoChev} aria-hidden>›</span>
@@ -279,9 +273,9 @@ export function CoachPage({ balances, onEdit }: Props) {
           <div className={c.list}>
             {expirations.map((w) => (
               <button key={w.balance.id} className={c.item} onClick={() => onEdit(w.balance.id)}>
-                <div className={`${c.itemIcon} ${c.tint3}`} aria-hidden>{w.severity === 'warning' ? '🚨' : '⏳'}</div>
+                <div className={`${c.itemIcon} ${c.tint3}`} aria-hidden>⏳</div>
                 <div className={c.itemMain}>
-                  <div className={c.itemTitle}>{w.balance.cardName} points expiring</div>
+                  <div className={c.itemTitle}>Check when your {w.balance.cardName} {PROGRAMS[w.balance.programId].unit} expire</div>
                   <div className={c.itemSub}>{w.message}</div>
                 </div>
                 <span className={c.itemAction} aria-hidden>›</span>
@@ -385,10 +379,10 @@ export function CoachPage({ balances, onEdit }: Props) {
           </div>
           {missed && (
             <div className={c.chipBox}>
-              <div className={c.chipLabel}>Missed last month vs. the 1% base rate</div>
+              <div className={c.chipLabel}>Your best card in each category, compared with a 1% card</div>
               <div className={c.chips}>
                 {missed.byCategory.map((m) => (
-                  <span key={m.id} className={c.chip}>{m.emoji} {m.label} +{fmtMoney(m.missed)}</span>
+                  <span key={m.id} className={c.chip}>{m.emoji} {m.label} +{fmtMoney(m.missed)}/mo</span>
                 ))}
               </div>
             </div>
