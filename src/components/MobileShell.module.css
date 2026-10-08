@@ -15,7 +15,7 @@
   /* One wash from the very top, so the logo and the page name below it sit on the same
      gradient instead of the logo reading as a separate white strip. Fades into the page. */
   background: linear-gradient(180deg, #e6f4d8 0%, rgba(230, 244, 216, 0) 230px) no-repeat, #fafbf7;
-  padding-bottom: 72px;
+  padding-bottom: 96px;
 }
 
 .topbar {
@@ -37,19 +37,51 @@
 .account:focus-visible { outline: 2px solid #196b36; outline-offset: 2px; }
 .brand:focus-visible { outline: 2px solid #196b36; outline-offset: 5px; border-radius: 9px; }
 
+/* Liquid glass pill: a translucent, saturated blur of the page behind it, with a bright rim and a
+   specular sheen on top. The active tab sits in its own raised glass bubble. */
 .tabbar {
-  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-  width: 100%; max-width: 430px;
-  display: flex; justify-content: space-around;
-  background: #fff; border-top: 1px solid #f0f0f0;
-  padding: 6px 2px calc(8px + env(safe-area-inset-bottom));
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  width: calc(100% - 48px); max-width: 340px;
+  display: flex; justify-content: space-between; align-items: center;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.16) 100%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  padding: 6px;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 2px rgba(255, 255, 255, 0.35),
+    inset 0 -10px 20px rgba(255, 255, 255, 0.12),
+    0 12px 32px rgba(17, 20, 16, 0.16),
+    0 2px 6px rgba(17, 20, 16, 0.08);
+  overflow: hidden;
   z-index: 5;
 }
-.tab {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  font-size: 10px; color: #737b6c; text-decoration: none; width: 60px;
+/* Specular highlight across the top half of the glass. */
+.tabbar::before {
+  content: ""; position: absolute; inset: 1px 12px auto; height: 45%;
+  border-radius: 999px 999px 40px 40px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+  pointer-events: none;
 }
-.tab svg { width: 20px; height: 20px; color: #737b6c; }
-/* The active label is bold so the tab bar and the page title agree on which section you're on. */
-.active { color: #196b36; font-weight: 700; }
-.active svg { color: #196b36; background: #e7f8e9; box-shadow: 0 0 0 4px #e7f8e9; border-radius: 5px; }
+.tab {
+  position: relative; z-index: 1;
+  display: grid; place-items: center;
+  width: 52px; height: 52px; border-radius: 50%;
+  color: #3d4939; text-decoration: none;
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+.tab svg { width: 22px; height: 22px; }
+.tab:hover { color: #111410; }
+.tab:active { transform: scale(0.94); }
+.tab:focus-visible { outline: 2px solid #196b36; outline-offset: 2px; }
+.active {
+  color: #196b36;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.45));
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 1),
+    inset 0 -2px 4px rgba(25, 107, 54, 0.08),
+    0 4px 14px rgba(17, 20, 16, 0.14);
+}
+.active:hover { color: #196b36; }
