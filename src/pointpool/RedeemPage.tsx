@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { LuArrowUpRight, LuChevronDown, LuCoins, LuGift, LuHotel, LuPencil, LuPlane, LuPlus, LuWallet } from 'react-icons/lu'
-import { ageDays, fmtBalance, fmtDollars, fmtPts, fmtUSD, GOALS, hasEstimates, isCash, PROGRAMS, type Balance } from './data'
+import { ageDays, fmtBalance, isStale, fmtDollars, fmtPts, fmtUSD, GOALS, hasEstimates, isCash, PROGRAMS, type Balance } from './data'
 import { redemptionEstimate, redemptionExamples, REDEMPTION_EXAMPLES, type RedemptionId } from './redemption'
 import styles from './pointpool.module.css'
 
@@ -60,7 +60,9 @@ function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdit: () =
   const supported = hasEstimates(p)
   const examples = redemptionExamples(b)
   const example = examples.find((e) => e.id === choice) ?? examples[0]
-  const priceFor = (item: typeof REDEMPTION_EXAMPLES[number]) => prices[item.id] === undefined ? item.price : Number(prices[item.id])
+  // Paying down the card starts from what's actually owed when it's been entered, not the $100 example.
+  const defaultPrice = (item: typeof REDEMPTION_EXAMPLES[number]) => item.id === 'credit' && b.cardBalance && b.cardBalance > 0 ? b.cardBalance : item.price
+  const priceFor = (item: typeof REDEMPTION_EXAMPLES[number]) => prices[item.id] === undefined ? defaultPrice(item) : Number(prices[item.id])
   const price = priceFor(example)
   const estimate = redemptionEstimate(b, example.goal, price)
   const days = ageDays(b.updatedAt)
@@ -76,7 +78,7 @@ function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdit: () =
         <div className={styles.rewardsAmount}>{cash ? fmtUSD(b.amount) : fmtPts(b.amount)}<span>{cash ? 'cashback' : p.unit}</span></div>
         <div className={styles.rewardsBalanceBottom}><span>{updated}<small>Saved in this browser · {b.cardName}</small></span><button onClick={onEdit}><LuPencil aria-hidden="true" /> Update balance</button></div>
       </section>
-      {days >= 30 && <div className={styles.rewardsRefresh}>Your balance may have changed. Update it before planning a redemption.</div>}
+      {isStale(b) && <div className={styles.rewardsRefresh}>Your balance may have changed. Update it before planning a redemption.</div>}
       {!supported ? (
         <div className={styles.card}><h2>Keep track of this balance</h2><p className={styles.body}>We don’t have a value estimate for this program yet. Check its rewards portal for redemption options.</p><button className={styles.btnText} onClick={onEdit}>Edit rewards program</button></div>
       ) : (
@@ -117,7 +119,7 @@ function RewardsPreview({ balance: b, onEdit }: { balance: Balance; onEdit: () =
               <div><span>Against a {rewardMoney(price)} balance</span><strong>{estimate.remaining === 0 ? 'Covers all of it' : `${rewardMoney(estimate.remaining)} left to pay`}</strong></div>
               <span className={styles.redemptionProgress} aria-hidden="true"><span style={{width: `${estimate.percent}%`}} /></span>
             </div>}
-            <details className={styles.rewardsCustomPrice}><summary>Try a different {cash ? 'balance' : 'price'} <LuChevronDown aria-hidden="true" /></summary><label>{cash ? 'Card balance ($)' : 'Target price ($)'}<input type="number" min="0.01" step="0.01" inputMode="decimal" value={prices[example.id] ?? example.price} onChange={(e) => setPrices((prev) => ({...prev, [example.id]: e.target.value}))} /></label>{!estimate && <p role="status">Enter an amount greater than $0.</p>}</details>
+            <details className={styles.rewardsCustomPrice}><summary>Try a different {cash ? 'balance' : 'price'} <LuChevronDown aria-hidden="true" /></summary><label>{cash ? 'Card balance ($)' : 'Target price ($)'}<input type="number" min="0.01" step="0.01" inputMode="decimal" value={prices[example.id] ?? defaultPrice(example)} onChange={(e) => setPrices((prev) => ({...prev, [example.id]: e.target.value}))} /></label>{!estimate && <p role="status">Enter an amount greater than $0.</p>}</details>
             <details className={styles.rewardsCustomPrice}><summary>How to {cash ? 'redeem it' : 'use them'} <LuChevronDown aria-hidden="true" /></summary>
               <ol className={styles.rewardsSteps}>{steps.map((step) => <li key={step}>{step}</li>)}</ol>
               <p className={styles.rewardsAlternatives}>Confirm the final value in your issuer’s app. This preview doesn’t book or redeem anything.</p>

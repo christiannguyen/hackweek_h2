@@ -3,13 +3,13 @@ import {
   CATEGORIES,
   catName,
   coachTips,
-  earnRateLabel,
+  fmtRate,
   fmtMoney,
   hasEstimates,
   PROGRAMS,
   ruleFor,
   SPEND,
-  TRANSACTIONS,
+  SPEND_TXN_COUNT,
   type Balance,
   type CardEarning,
   type CategoryId,
@@ -51,7 +51,8 @@ function analyzeSpending(balances: Balance[], spend: Spend): CategoryInsight[] {
         emoji: c.emoji,
         spend: spend[c.id],
         bestCard: best,
-        bestRate: best ? earnRateLabel(best) : '1×',
+        // The year-average rate, so a rotating 5% category reads as what it earns over a year.
+        bestRate: best ? fmtRate(best.program.type, best.avgRate) : '1×',
         monthlyReward: best?.value.cashback ?? 0,
       }
     })
@@ -88,7 +89,9 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
         id: `use-${i.id}`,
         icon: i.emoji,
         title: `Use ${i.bestCard.balance.cardName} for ${catName(i.id)}`,
-        detail: `Earns ${i.bestRate} — about ${fmtMoney(i.monthlyReward)}/mo on your ${fmtMoney(i.spend)}/mo spend.`,
+        detail: i.bestCard.avgRate !== i.bestCard.rate
+          ? `Earns ${fmtRate(i.bestCard.program.type, i.bestCard.rate)} in bonus periods, about ${i.bestRate} over a year — about ${fmtMoney(i.monthlyReward)}/mo on your ${fmtMoney(i.spend)}/mo spend.`
+          : `Earns ${i.bestRate} — about ${fmtMoney(i.monthlyReward)}/mo on your ${fmtMoney(i.spend)}/mo spend.`,
         tag: i.bestCard.rate >= 4 ? 'Top earn' : undefined,
       })
     }
@@ -141,11 +144,8 @@ export function CoachPage({ balances, onEdit }: Props) {
   const score = walletScore(insights)
   const actions = generateActions(balances, insights)
   const tips = coachTips(balances)
-  const totalMonthlyRewards = insights.reduce((sum, i) => sum + i.monthlyReward, 0)
-  const totalYearlyRewards = totalMonthlyRewards * 12
 
   const hasCards = balances.some((b) => hasEstimates(PROGRAMS[b.programId]))
-  const txnCount = TRANSACTIONS.length
 
   return (
     <>
@@ -180,25 +180,13 @@ export function CoachPage({ balances, onEdit }: Props) {
           </div>
         </div>
 
-        {hasCards && (
-          <div className={styles.tileSection}>
-            <div className={styles.tileStat}>
-              <span className={styles.tileLabel}>Monthly rewards</span>
-              <span className={styles.tileValue}>{fmtMoney(totalMonthlyRewards)}</span>
-            </div>
-            <div className={styles.tileStat}>
-              <span className={styles.tileLabel}>Yearly estimate</span>
-              <span className={styles.tileValue}>{fmtMoney(totalYearlyRewards)}</span>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Spending breakdown */}
       {insights.length > 0 && (
         <div className={styles.card}>
           <h2>Your spending breakdown</h2>
-          <div className={styles.cardSub}>Based on {txnCount} transactions. Here's where your money goes and how each card earns.</div>
+          <div className={styles.cardSub}>Based on {SPEND_TXN_COUNT} transactions from the last 30 days. Here’s where your money goes and how each card earns.</div>
           {insights.map((i) => (
             <div key={i.id} className={styles.coachCatRow}>
               <div className={styles.coachCatHead}>
