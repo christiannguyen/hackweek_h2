@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { IconType } from 'react-icons'
-import { LuCircleUserRound, LuCreditCard, LuChartNoAxesColumnIncreasing, LuHouse, LuWallet } from 'react-icons/lu'
+import { LuCircleUserRound, LuCreditCard, LuGraduationCap, LuChartNoAxesColumnIncreasing, LuHouse, LuWallet } from 'react-icons/lu'
 import styles from './MobileShell.module.css'
 
 const TABS: { label: string; icon: IconType; hash: string }[] = [
   { label: 'Home', icon: LuHouse, hash: '#home' },
-  { label: 'Compare', icon: LuChartNoAxesColumnIncreasing, hash: '#coach' },
+  { label: 'Compare', icon: LuChartNoAxesColumnIncreasing, hash: '#compare' },
+  { label: 'Card Coach', icon: LuGraduationCap, hash: '#coach' },
   { label: 'Wallet', icon: LuWallet, hash: '#wallet' },
   { label: 'Offers', icon: LuCreditCard, hash: '#offers' },
 ]
@@ -22,8 +23,9 @@ export function MobileShell({ children, onAccount }: { children: ReactNode; onAc
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
-  const base = hash.split('/')[0]
-  const routeHash = TAB_ALIAS[base] ?? base
+  const [baseHash, card] = hash.split('/')
+  // "#coach/<card>" is a Compare deep link, so it lights up Compare rather than Card Coach.
+  const routeHash = baseHash === '#coach' && card ? '#compare' : (TAB_ALIAS[baseHash] ?? baseHash)
   const isTab = TABS.some((t) => t.hash === routeHash)
 
   return (
@@ -48,9 +50,10 @@ export function MobileShell({ children, onAccount }: { children: ReactNode; onAc
               href={h}
               className={`${styles.tab} ${(isTab ? routeHash === h : h === '#home') ? styles.active : ''}`}
               aria-current={routeHash === h ? 'page' : undefined}
+              aria-label={label}
+              title={label}
             >
-              <Icon />
-              {label}
+              <Icon aria-hidden />
             </a>
           ))}
         </nav>

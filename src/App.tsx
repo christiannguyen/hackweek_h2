@@ -4,6 +4,7 @@ import { PointPoolDemo } from '@/demo/PointPoolDemo'
 import { AccountSheet } from '@/pointpool/AccountSheet'
 import { BalanceSheet } from '@/pointpool/BalanceSheet'
 import { CoachPage } from '@/pointpool/CoachPage'
+import { ComparePage } from '@/pointpool/ComparePage'
 import type { CompareProps } from '@/pointpool/CardCompare'
 import { TOP_CATEGORY, type CategoryId } from '@/pointpool/data'
 import { HomePage } from '@/pointpool/HomePage'
@@ -23,7 +24,7 @@ function App() {
   // A first run swaps the sample wallet for the user's picks; a replay adds new picks to the cards already saved.
   // Read each render: finishing marks onboarding done, so a later replay in the same visit counts as a replay.
   const firstRun = !isOnboarded()
-  // Shared so the category picked on the home hero carries into the full Coach page. Starts on the user's
+  // Shared so the category picked on the home hero carries into the full Compare page. Starts on the user's
   // highest-spend category.
   const [category, setCategory] = useState<CategoryId>(TOP_CATEGORY)
   const [accountOpen, setAccountOpen] = useState(0) // 0 = closed; a new number remounts the sheet fresh
@@ -64,7 +65,8 @@ function App() {
     <MobileShell onAccount={() => setAccountOpen(Date.now())}>
       <main className={`${styles.root} ${styles.view}`}>
         {route === 'home' && <HomePage balances={balances} compare={compare} />}
-        {route === 'coach' && <CoachPage balances={balances} onEdit={openSheet} compare={compare} />}
+        {route === 'compare' && <ComparePage balances={balances} onEdit={openSheet} compare={compare} />}
+        {route === 'coach' && <CoachPage balances={balances} onEdit={openSheet} />}
         {route === 'pointpool' && <PointpoolPage balances={balances} onEdit={openSheet} onRewards={openRewardsSheet} />}
         {route === 'offers' && <OffersPage balances={balances} onEdit={openSheet} />}
         {route === 'learn' && <LearnPage />}
