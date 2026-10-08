@@ -6,6 +6,7 @@ import {
   utilization,
   type Balance,
 } from './data'
+import { CardArt } from './CardArt'
 import { Disclaimer, FreshnessTag } from './shared'
 import styles from './pointpool.module.css'
 
@@ -76,8 +77,8 @@ function CardTile({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numb
   return (
     <div className={`${styles.card} ${styles.walletTile}`} onClick={() => onEdit(b.id)} style={{ cursor: 'pointer' }}>
       <div className={styles.cardHead}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-          <div className={styles.rowIcon}>{p.short}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>
+          <CardArt balance={b} />
           <div style={{ minWidth: 0 }}>
             <div className={`${styles.rowTitle} ${styles.ellipsis}`}>{b.cardName}</div>
             <div className={styles.rowSub}>{p.name}</div>

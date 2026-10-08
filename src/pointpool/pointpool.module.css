@@ -227,6 +227,63 @@ a.row { text-decoration: none; color: inherit; }
 .walletTile .meterBar { background: #3d4939; }
 .walletTile .tag.warn { background: #46331f; color: #ffbe7a; }
 
+/* Mini card face (CardArt.tsx) — stands in for issuer artwork on the wallet tiles. Brand colours
+   arrive as --art-from / --art-to so one rule set covers every program. */
+.cardArt {
+  position: relative;
+  width: 58px; height: 37px; flex-shrink: 0;
+  border-radius: 6px;
+  background: linear-gradient(140deg, var(--art-from, #7b8794), var(--art-to, #39424c));
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 5px 12px -3px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+/* Diagonal gloss sweep across the face. */
+.cardArt::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.36) 0 26%, rgba(255, 255, 255, 0.07) 40%, transparent 58%);
+}
+/* Soft brand orb tucked into the bottom-right, the way most card faces carry a highlight. */
+.cardArt::after {
+  content: '';
+  position: absolute; right: -11px; bottom: -15px;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+}
+.cardChip {
+  position: absolute; left: 6px; top: 12px; z-index: 1;
+  width: 11px; height: 8px; border-radius: 2px;
+  background: linear-gradient(135deg, #f8e9ad, #c6a04a 55%, #ecd79a);
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.3);
+}
+.cardBrand {
+  position: absolute; right: 5px; top: 4px; z-index: 1;
+  font-size: 8px; font-weight: 700; letter-spacing: 0.3px;
+  color: rgba(255, 255, 255, 0.96);
+  text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.45);
+}
+.cardNet {
+  position: absolute; right: 5px; bottom: 4px; z-index: 1;
+  font-size: 6px; font-weight: 800; letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.45);
+}
+.walletTile:hover .cardArt {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.4),
+    0 2px 3px rgba(0, 0, 0, 0.4),
+    0 8px 16px -4px rgba(0, 0, 0, 0.5);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cardArt { transition: none; }
+  .walletTile:hover .cardArt { transform: none; }
+}
+
 .disclaimer { font-size: 11px; color: var(--muted); margin: 2px 2px 0; line-height: 1.4; }
 .empty { text-align: center; color: #666; padding: 18px 0; font-size: 13px; }
 .mt { margin-top: 8px; }
