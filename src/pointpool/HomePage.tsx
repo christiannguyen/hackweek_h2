@@ -40,7 +40,8 @@ export function HomePage({ balances, onEdit, compare }: Props) {
         </a>
       </div>
 
-      <div className={styles.card}>
+      {/* The user's own cards, on the dark surface the wallet tiles use */}
+      <div className={`${styles.card} ${styles.darkCard}`}>
         <div className={styles.cardHead}>
           <h2>Your cards</h2>
           <button className={`${styles.btnText} ${styles.add}`} onClick={() => onEdit()}>

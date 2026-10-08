@@ -19,6 +19,16 @@
   --line: #f0f0f0;
   --orange: #f05a1a;
   --orange-tint: #fdeee8;
+  /* The dark surface (see .darkCard) that carries "something of yours" everywhere in the app: the
+     wallet tiles, the rewards balance, and the per-card panels on Home, Card Coach and Offers. */
+  --dark: #1c241b;
+  --dark-raised: #2f3b2d;
+  --dark-line: #3d4939;
+  --dark-text: #e2e9db;
+  --dark-muted: #b5c2ad;
+  --dark-warn: #46331f;
+  --dark-warn-ink: #ffbe7a;
+  --lime-ink: #182117;
   --radius: 18px;
   --shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
 }
@@ -186,17 +196,43 @@ a.row { text-decoration: none; color: inherit; }
 .tileValue { font-size: 16px; font-weight: 600; }
 .tileSection > .meterBar { width: 100%; margin-top: 4px; }
 
-/* Wallet tiles borrow the dark + lime treatment from the rewards balance card on the Use points page,
-   so "a card of yours" reads the same way everywhere. Scoped to the tile, not .card generally. */
-.walletTile { background: #1c241b; color: #fff; box-shadow: none; }
-.walletTile .rowIcon { background: #2f3b2d; color: var(--lime); }
-.walletTile .rowSub { color: #b5c2ad; }
-.walletTile .tileSection { border-top-color: #3d4939; }
-.walletTile .tileLabel { color: #b5c2ad; }
+/* The dark + lime surface, first used by the rewards balance card on the Use points page and the
+   wallet tiles, now the app-wide treatment for a panel about the user's own cards: Home's "Your
+   cards", Card Coach's spending breakdown, and both Offers panels. Add it alongside .card; it
+   recolours the primitives (rows, tags, meters, text buttons) that those panels are built from, so
+   a panel doesn't need per-page overrides. Light cards are still the default — tips, promos and
+   the comparison tiles stay light so the card faces and rate numbers keep their contrast. */
+.darkCard, .walletTile { background: var(--dark); color: #fff; box-shadow: none; }
+.darkCard .rowIcon, .walletTile .rowIcon { background: var(--dark-raised); color: var(--lime); }
+.darkCard .rowSub, .walletTile .rowSub { color: var(--dark-muted); }
+.darkCard .cardSub { color: var(--dark-text); }
+.darkCard .empty { color: var(--dark-muted); }
+.darkCard .row { border-top-color: var(--dark-line); }
+.darkCard .chev { color: var(--dark-muted); }
+.darkCard .rowSub b { color: var(--dark-text); }
+.darkCard .rowAmount { color: var(--lime); }
+.darkCard .btnText { color: var(--lime); }
+.darkCard .tag { background: var(--dark-raised); color: var(--lime); }
+.darkCard .tag.gray { background: var(--dark-raised); color: var(--dark-muted); }
+.walletTile .tileSection { border-top-color: var(--dark-line); }
+.walletTile .tileLabel { color: var(--dark-muted); }
 .walletTile .tileValue { color: #fff; }
 .walletTile .tileSection:last-child .tileValue { color: var(--lime); }
-.walletTile .meterBar { background: #3d4939; }
-.walletTile .tag.warn { background: #46331f; color: #ffbe7a; }
+.darkCard .meterBar, .walletTile .meterBar { background: var(--dark-line); }
+.darkCard .tag.warn, .walletTile .tag.warn { background: var(--dark-warn); color: var(--dark-warn-ink); }
+
+/* Card Coach's spending breakdown on the dark surface. */
+.darkCard .coachCatRow { border-top-color: var(--dark-line); }
+.darkCard .coachCatDetail { color: var(--dark-text); }
+.darkCard .coachCatEarn { color: var(--lime); }
+
+/* Offers' location controls on the dark surface: the detect button takes the lime the dark cards use
+   for their primary action, and the ZIP field becomes a raised panel rather than a white cut-out. */
+.darkCard .locBtn { background: var(--lime); color: var(--lime-ink); }
+.darkCard .locOr, .darkCard .locStatus { color: var(--dark-muted); }
+.darkCard .locInput { background: var(--dark-raised); border-color: var(--dark-line); color: #fff; }
+.darkCard .locInput::placeholder { color: var(--dark-muted); }
+.darkCard .locResolved { background: var(--dark-raised); }
 
 /* Mini card face (CardArt.tsx) — stands in for issuer artwork on the wallet tiles. Brand colours
    arrive as --art-from / --art-to so one rule set covers every program. */
@@ -260,6 +296,32 @@ a.row { text-decoration: none; color: inherit; }
 .mt { margin-top: 8px; }
 
 /* Card compare: the last 30 days in one of the user's top categories, and what each card earns on it a month */
+
+/* The hero's header rides on the dark surface, so Home opens the same way the wallet tiles and the
+   rewards balance read. It's the hero card's first child, and the negative margins bleed it out to
+   the card's edges. Only the header is dark: the comparison tiles below stay light so the card faces
+   and the rate numbers keep their contrast. */
+.compareHead {
+  margin: -16px -16px 16px; padding: 16px 16px 18px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--dark); color: #fff;
+}
+.compareHead .groupHead { margin-top: 0; color: #fff; }
+.compareHead .compareHeading { margin-bottom: 0; }
+.compareHead .compareHeading > span { color: var(--dark-muted); }
+/* Category tabs become raised panels on the dark band; the picked one takes the lime rather than the
+   green tint, which would disappear against it. */
+.compareHead .catTab { background: var(--dark-raised); border-color: transparent; color: #fff; }
+.compareHead .catLabel { color: #fff; }
+.compareHead .categoryIcon { color: var(--dark-muted); }
+.compareHead .catSpend small { color: var(--dark-muted); }
+.compareHead .catTab.active {
+  background: var(--dark-raised); border-color: var(--lime-border);
+  box-shadow: inset 0 0 0 1px var(--lime-border);
+}
+.compareHead .catTab.active .catLabel, .compareHead .catTab.active .categoryIcon { color: var(--lime); }
+.compareHead .catTab:focus-visible { outline-color: var(--lime); }
+
 .catTabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; margin-top: 8px; }
 .catTab {
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0;
@@ -480,6 +542,11 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .barRow:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
 .row[role="button"]:focus-visible, .walletTile[role="button"]:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 2px; }
 .row[role="button"] { cursor: pointer; }
+/* The green focus ring above is too dark to see on a dark panel, so those take the lime instead. */
+.darkCard .row[role="button"]:focus-visible, .darkCard a.row:focus-visible,
+.darkCard .btnText:focus-visible, .darkCard .locBtn:focus-visible, .darkCard .locInput:focus-visible {
+  outline: 2px solid var(--lime); outline-offset: 2px;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .barRow::after, .bar { transition: none; }
@@ -490,15 +557,15 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .rewardsProgramRow label { flex: 1; min-width: 0; font-size: 11px; color: #626b5e; }
 .rewardsProgramRow select { display: block; width: 100%; margin-top: 5px; padding: 10px; border: 1px solid #dfdfd8; border-radius: 10px; background: white; color: var(--ink); font: inherit; font-size: 13px; }
 .rewardsProgramRow button { display: flex; align-items: center; gap: 4px; padding-bottom: 10px; color: var(--green-ink); }
-.rewardsBalance { background: #1c241b; border-radius: 20px; padding: 20px; color: white; }
-.rewardsBalanceTop { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; color: #e2e9db; }
+.rewardsBalance { background: var(--dark); border-radius: 20px; padding: 20px; color: white; }
+.rewardsBalanceTop { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--dark-text); }
 .rewardsBalanceTop > svg { flex-shrink: 0; color: #ffc857; width: 28px; height: 28px; }
 .rewardsAmount { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin: 8px 0 18px; font-size: 42px; font-weight: 650; letter-spacing: -1.5px; line-height: 1.2; color: var(--lime); overflow-wrap: anywhere; }
-.rewardsAmount > span { color: #e2e9db; font-size: 13px; font-weight: 400; letter-spacing: 0; }
-.rewardsBalanceBottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid #3d4939; padding-top: 12px; }
-.rewardsBalanceBottom > span { font-size: 11px; line-height: 1.4; color: #e2e9db; }
-.rewardsBalanceBottom small { display: block; font-size: 10px; color: #b5c2ad; margin-top: 3px; }
-.rewardsBalanceBottom button { flex-shrink: 0; display: flex; align-items: center; gap: 5px; border: 0; background: var(--lime); color: #182117; padding: 8px 10px; border-radius: 9px; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+.rewardsAmount > span { color: var(--dark-text); font-size: 13px; font-weight: 400; letter-spacing: 0; }
+.rewardsBalanceBottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--dark-line); padding-top: 12px; }
+.rewardsBalanceBottom > span { font-size: 11px; line-height: 1.4; color: var(--dark-text); }
+.rewardsBalanceBottom small { display: block; font-size: 10px; color: var(--dark-muted); margin-top: 3px; }
+.rewardsBalanceBottom button { flex-shrink: 0; display: flex; align-items: center; gap: 5px; border: 0; background: var(--lime); color: var(--lime-ink); padding: 8px 10px; border-radius: 9px; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
 .rewardsSectionHead { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
 .rewardsSectionHead h2 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.2px; }
 .rewardsSectionHead span { color: #626b5e; font-size: 11px; }
