@@ -15,7 +15,7 @@
   /* One wash from the very top, so the logo and the page name below it sit on the same
      gradient instead of the logo reading as a separate white strip. Fades into the page. */
   background: linear-gradient(180deg, #e6f4d8 0%, rgba(230, 244, 216, 0) 230px) no-repeat, #fafbf7;
-  padding-bottom: 72px;
+  padding-bottom: calc(72px + env(safe-area-inset-bottom));
 }
 
 .topbar {
@@ -47,9 +47,9 @@
 }
 .tab {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  font-size: 10px; color: #737b6c; text-decoration: none; flex: 1; min-width: 0; padding: 4px 0; min-height: 44px;
+  font-size: 11px; color: #626b5e; text-decoration: none; flex: 1; min-width: 0; padding: 4px 0; min-height: 44px;
 }
-.tab svg { width: 20px; height: 20px; color: #737b6c; }
+.tab svg { width: 20px; height: 20px; color: #626b5e; }
 /* The active label is bold so the tab bar and the page title agree on which section you're on. */
 .active { color: #196b36; font-weight: 700; }
 .active svg { color: #196b36; background: #e7f8e9; box-shadow: 0 0 0 4px #e7f8e9; border-radius: 5px; }

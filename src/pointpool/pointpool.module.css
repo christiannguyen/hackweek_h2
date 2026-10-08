@@ -15,7 +15,7 @@
   --fee-tint: #fff0e4;
   --ink: #111;
   --text: #2b2b2b;
-  --muted: #8a8a8e;
+  --muted: #6e7569; /* same green-gray family as onboarding; 4.8:1 on white */
   --line: #f0f0f0;
   --surface-soft: #f5f6f3;
   --orange: #f05a1a;
@@ -70,16 +70,16 @@ a.card { text-decoration: none; color: inherit; display: block; }
 .cardHead h2 { min-width: 0; }
 .cardHead > :last-child:not(:first-child) { flex-shrink: 0; }
 .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chev { color: #9a9a9a; font-size: 20px; line-height: 1; text-decoration: none; }
+.chev { color: #737b6c; font-size: 20px; line-height: 1; text-decoration: none; }
 .body { color: var(--text); font-size: 14px; line-height: 1.45; }
 
 .tag {
   display: inline-block; font-size: 12px; font-weight: 500;
   padding: 2px 9px; border-radius: 999px; white-space: nowrap;
-  background: var(--green-tint); color: var(--green);
+  background: var(--green-tint); color: var(--green-ink);
 }
 .tag.sm { font-size: 11px; padding: 1px 8px; }
-.tag.warn { background: var(--orange-tint); color: var(--orange); }
+.tag.warn { background: var(--orange-tint); color: var(--fee-ink); }
 .tag.gray { background: #f0f0f0; color: #777; }
 
 
@@ -143,7 +143,7 @@ a.row { text-decoration: none; color: inherit; }
 .coachHero { border: none; background: #fff; }
 .note { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
 .sample { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.4; }
-.moreLink { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 500; color: var(--green); text-decoration: none; }
+.moreLink { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 500; color: var(--green-ink); text-decoration: none; }
 /* Card Coach: spending analysis */
 .coachCatRow { padding: 12px 0; border-top: 1px solid var(--line); }
 .coachCatRow:first-of-type { border-top: none; margin-top: 10px; }
@@ -176,7 +176,7 @@ a.row { text-decoration: none; color: inherit; }
 .locOr { font-size: 12px; color: var(--muted); }
 .locZip { width: 100%; }
 .locInput {
-  font: inherit; font-size: 15px; width: 100%; text-align: center;
+  font: inherit; font-size: 16px; width: 100%; text-align: center;
   padding: 9px 12px; border: 1px solid #e2e2e2; border-radius: 12px; background: #fff;
 }
 .locInput::placeholder { color: #bbb; }
@@ -349,7 +349,7 @@ a.walletLink { display: block; color: #fff; }
   text-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.5);
 }
 .deckFaceFoot { position: absolute; left: 13px; right: 13px; bottom: 11px; z-index: 1; display: block; }
-.deckProgram { display: block; font-size: 9.5px; color: rgba(255, 255, 255, 0.78); }
+.deckProgram { display: block; font-size: 11px; color: rgba(255, 255, 255, 0.9); }
 .deckName {
   display: block; margin-top: 2px;
   font-size: 15px; font-weight: 650; letter-spacing: -0.2px; line-height: 1.2; color: #fff;
@@ -376,6 +376,7 @@ a.walletLink { display: block; color: #fff; }
 .deckFoot {
   display: flex; align-items: center; gap: 10px;
   margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--dark-line);
+  flex-wrap: wrap; row-gap: 6px;
 }
 .deckAge { font-size: 12px; color: var(--dark-muted); }
 .deckActions { display: flex; align-items: center; gap: 14px; margin-left: auto; }
@@ -430,7 +431,7 @@ a.walletLink { display: block; color: #fff; }
 .catTab.active .categoryIcon { color: var(--selection-ink); }
 .catLabel { max-width: 100%; font-size: 13px; font-weight: 700; color: var(--ink); }
 .catSpend { font-size: 16px; font-weight: 500; }
-.catSpend small { font-size: 10px; color: #626b5e; font-weight: 400; }
+.catSpend small { font-size: 11px; color: #626b5e; font-weight: 400; }
 .categoryIcon { color: #737b6c; width: 22px; height: 22px; margin: 2px 0 8px; }
 .feeFilters { display: flex; flex-wrap: wrap; gap: 6px; }
 /* Small chips: they qualify the tiles above rather than competing with them. Drawn at 32px, but the
@@ -447,14 +448,14 @@ a.walletLink { display: block; color: #fff; }
    between) can't push that column's tile out of line with the other. */
 .compareGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto 1fr; gap: 10px; }
 .compareColumn { display: grid; grid-template-rows: subgrid; grid-row: span 2; min-width: 0; }
-.compareColumn h4 { align-self: end; font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; font-weight: 700; color: #626b5e; margin: 0 2px 4px; }
+.compareColumn h4 { align-self: end; font-size: 11px; text-transform: uppercase; letter-spacing: 0.7px; font-weight: 700; color: #626b5e; margin: 0 2px 4px; }
 .compareColumn:nth-child(2) h4 { color: var(--selection-ink); }
 /* Shared neutral eyebrow: both columns are advice, so the axis of comparison is the action, not the endorsement. */
-.colEyebrow { display: block; font-size: 9px; font-weight: 650; letter-spacing: 0.8px; color: #8d948a; margin-bottom: 3px; }
+.colEyebrow { display: block; font-size: 11px; font-weight: 650; letter-spacing: 0.6px; color: #626b5e; margin-bottom: 3px; }
 .compareColumn:nth-child(2) h4 .colEyebrow { color: #8d948a; }
 .compareTile { position: relative; flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 12px 10px; background: #f7f8f3; border: 1.5px solid #e0e5d9; border-radius: 20px; }
 .compareWinner { border-color: var(--selection-border); box-shadow: 0 0 0 3px var(--selection-glow); }
-.winnerBadge { position: absolute; top: -12px; right: 8px; background: var(--lime); color: #182117; border: 1px solid var(--lime-border); padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.winnerBadge { position: absolute; top: -12px; right: 8px; background: var(--lime); color: #182117; border: 1px solid var(--lime-border); padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 /* Comparison card faces — the wallet's brand-tinted card art (.cardArt above) at tile size, so
    "Discover it Secured" reads as a Discover card rather than a generic green panel. Colours arrive
    as --art-from / --art-to from artFor() in cardColors.ts. The height is fixed, not min-height, so
@@ -495,14 +496,14 @@ a.walletLink { display: block; color: #fff; }
   background: linear-gradient(135deg, #f8e9ad, #c6a04a 55%, #ecd79a);
   box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.3);
 }
-.cardIssuer { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.9; text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.35); }
+.cardIssuer { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; opacity: 1; text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.35); }
 /* Three lines fit the fixed face; the few longer names clamp rather than overflow it. */
 .cardFace strong {
   margin-top: auto; font-size: 13px; font-weight: 650; line-height: 1.2;
   overflow-wrap: anywhere; text-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.4);
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
 }
-.cardOwnership { font-size: 9px; opacity: 0.88; text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.35); }
+.cardOwnership { font-size: 10px; opacity: 1; text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.35); }
 .pickerSpace { min-height: 33px; }
 /* Your card in the comparison: tap the card to step through the wallet */
 .tileBody, .tileTap { display: flex; flex-direction: column; flex: 1; }
@@ -521,7 +522,7 @@ a.walletLink { display: block; color: #fff; }
 .compareRate { font-size: 36px; line-height: 1.15; letter-spacing: -1.5px; font-weight: 700; }
 .compareRate small { font-size: 18px; vertical-align: top; }
 .compareRateLabel { font-size: 12px; line-height: 1.4; color: #626b5e; margin: 4px 0 12px; }
-.rateNote { font-size: 10px; color: #626b5e; line-height: 1.4; margin-bottom: 12px; }
+.rateNote { font-size: 11px; color: #626b5e; line-height: 1.4; margin-bottom: 12px; }
 .compareNumbers { margin: auto 0 0; font-size: 11px; }
 .compareNumbers > div { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; padding: 5px 0; }
 .compareNumbers dt { color: #626b5e; }
@@ -530,7 +531,7 @@ a.walletLink { display: block; color: #fff; }
 .paidFeeRow dt, .paidFeeRow dd { color: var(--fee-ink); font-weight: 650; }
 .compareNet { border-top: 1px solid #e0e5d9; margin-top: 4px; }
 .compareNet dd { color: var(--green-ink); }
-.tileDetails { font-size: 10px; color: #626b5e; margin-top: 8px; line-height: 1.4; }
+.tileDetails { font-size: 11px; color: #626b5e; margin-top: 8px; line-height: 1.4; }
 .tileDetails summary { cursor: pointer; }
 .tileDetails p { margin: 6px 0; }
 .compareEmpty { flex: 1; background: #f7f8f3; border: 1px dashed #e0e5d9; border-radius: 20px; padding: 18px 12px; font-size: 12px; line-height: 1.5; color: #626b5e; }
@@ -549,7 +550,7 @@ a.walletLink { display: block; color: #fff; }
 .compareCta:hover { background: #9fee35; }
 .firstCardIntro { margin: -8px 0 16px; font-size: 13px; line-height: 1.5; color: #626b5e; }
 .firstCardOpportunity { padding: 20px 16px 14px; border: 1.5px solid var(--selection-border); border-radius: 20px; background: #fff; box-shadow: 0 0 0 3px var(--selection-glow); }
-.firstCardEyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--green-ink); }
+.firstCardEyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--green-ink); }
 .firstCardValue { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; font-size: 46px; line-height: 1.15; letter-spacing: -1.5px; font-weight: 700; }
 .firstCardValue > span { font-size: 15px; font-weight: 400; letter-spacing: 0; color: #626b5e; }
 .firstCardMonthly { margin: 4px 0 20px; font-size: 12px; color: #626b5e; }
@@ -567,7 +568,6 @@ a.walletLink { display: block; color: #fff; }
 .compareCta:focus-visible, .tileDetails summary:focus-visible, .compareTakeaway summary:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 3px; }
 @media (max-width: 360px) {
   .compareTile { padding: 12px 8px; }
-  .compareColumn h4 { font-size: 9px; letter-spacing: 0; }
   .compareNumbers > div { flex-wrap: wrap; }
   .catTab { padding: 8px 6px; }
 }
@@ -676,10 +676,10 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .redemptionProgress { display: block; height: 6px; margin: 8px 0; border-radius: 20px; background: #e6eadf; overflow: hidden; }
 .redemptionProgress > span { display: block; height: 100%; border-radius: inherit; background: var(--green); }
 .redemptionTile > strong { font-size: 13px; font-weight: 650; color: var(--green-ink); }
-.redemptionRemaining { margin-top: 3px; font-size: 10px; color: #626b5e; line-height: 1.4; }
+.redemptionRemaining { margin-top: 3px; font-size: 11px; color: #626b5e; line-height: 1.4; }
 .rewardsAlternatives { margin: 0; color: #626b5e; font-size: 11px; line-height: 1.5; }
 .inlineRewardIcon { display: inline; vertical-align: middle; width: 15px; height: 15px; color: #737b6c; }
-.rewardExampleTag { padding: 3px 8px; border-radius: 20px; background: #fff0cf; color: #7a5a14; font-size: 10px; }
+.rewardExampleTag { padding: 3px 8px; border-radius: 20px; background: #fff0cf; color: #7a5a14; font-size: 11px; }
 .rewardsEstimate { margin-top: 12px; font-size: 13px; line-height: 1.5; }
 .rewardsEstimate > strong { color: var(--green-ink); font-size: 18px; }
 .rewardsEstimate > span { display: block; margin-top: 7px; color: #626b5e; font-size: 11px; }
@@ -694,7 +694,7 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .rewardsCustomPrice summary > svg { flex: none; margin-left: auto; width: 15px; height: 15px; transition: transform 0.15s ease; }
 .rewardsCustomPrice[open] summary > svg { transform: rotate(180deg); }
 .rewardsCustomPrice label { display: flex; align-items: center; gap: 10px; margin: 10px 0 12px; color: #626b5e; }
-.rewardsCustomPrice input { min-width: 0; width: 120px; border: 1px solid #c8cdbf; border-radius: 8px; padding: 8px; font: inherit; color: var(--ink); }
+.rewardsCustomPrice input { min-width: 0; width: 120px; border: 1px solid #c8cdbf; border-radius: 8px; padding: 8px; font: inherit; font-size: 16px; color: var(--ink); }
 .rewardsCustomPrice > p { color: var(--selection-ink); }
 .rewardsCustomPrice .rewardsAlternatives { margin: 8px 0 12px; }
 .rewardsFinePrint { font-size: 11px; color: #626b5e; padding: 0 2px; }
@@ -714,7 +714,7 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .rewardsWelcome .compareCta { width: 100%; border: 0; cursor: pointer; font-family: inherit; }
 .rewardsPrivacy { display: block; margin-top: 10px; font-size: 11px; color: #626b5e; }
 .rewardsTeasers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; border-top: 1px solid #eee; padding-top: 20px; margin-top: 22px; }
-.rewardsTeasers > div { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 10px; color: #626b5e; }
+.rewardsTeasers > div { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 11px; color: #626b5e; }
 .rewardsTeasers svg { width: 22px; height: 22px; color: #8c6724; }
 .redemptionTile:focus-visible { outline: 2px solid var(--selection-border); outline-offset: 3px; }
 .rewardsCustomPrice summary:focus-visible, .rewardsCustomPrice input:focus-visible,
@@ -795,3 +795,7 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 .chartNote { margin: 0 2px; font-size: 11px; line-height: 1.5; color: var(--text); }
 .chartNote strong { font-weight: 600; color: var(--ink); }
 .col:focus-visible, .chartApply:focus-visible { outline: 2px solid var(--green); outline-offset: -2px; }
+
+/* Text buttons ("+ Add", "Edit card", "Change"…) keep their look but get a 44px-tall touch area. */
+.btnText { position: relative; }
+.btnText::after { content: ''; position: absolute; left: -4px; right: -4px; top: 50%; height: 44px; transform: translateY(-50%); }

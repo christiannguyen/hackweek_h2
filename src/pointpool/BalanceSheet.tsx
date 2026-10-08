@@ -51,7 +51,7 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
         <Drawer.Positioner>
           <Drawer.Content maxW="430px" mx="auto" roundedTop="20px" pb="env(safe-area-inset-bottom)">
             <Drawer.Header>
-              <Drawer.Title fontSize="17px" fontWeight="500">
+              <Drawer.Title fontSize="18px" fontWeight="600">
                 {balance ? 'Edit card' : 'Add a card'}
               </Drawer.Title>
             </Drawer.Header>
@@ -62,6 +62,7 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
                   <Field.Label fontSize="13px">Rewards program</Field.Label>
                   <NativeSelect.Root size="md">
                     <NativeSelect.Field
+                      fontSize="16px"
                       value={programId}
                       onChange={(e) => setProgramId(e.currentTarget.value as ProgramId)}
                       rounded="12px"
@@ -78,6 +79,7 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
                 <Field.Root>
                   <Field.Label fontSize="13px">Card name</Field.Label>
                   <Input
+                    fontSize="16px"
                     value={cardName}
                     onChange={(e) => setCardName(e.currentTarget.value)}
                     placeholder="e.g. Discover it Secured"
@@ -87,6 +89,7 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
                 <Field.Root invalid={!!amountError}>
                   <Field.Label fontSize="13px">{cash ? 'Cashback balance ($)' : PROGRAMS[programId].unit === 'miles' ? 'Miles balance' : 'Points balance'}</Field.Label>
                   <Input
+                    fontSize="16px"
                     type="number"
                     inputMode="decimal"
                     min={0}
@@ -103,6 +106,7 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
                 <Field.Root>
                   <Field.Label fontSize="13px">Credit limit ($), optional</Field.Label>
                   <Input
+                    fontSize="16px"
                     type="number"
                     inputMode="decimal"
                     min={0}
@@ -115,6 +119,7 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
                 <Field.Root>
                   <Field.Label fontSize="13px">Amount you owe ($), optional</Field.Label>
                   <Input
+                    fontSize="16px"
                     type="number"
                     inputMode="decimal"
                     min={0}
@@ -140,7 +145,7 @@ export function BalanceSheet({ open, balance, purpose, onClose, onSave, onRemove
               </Button>
             </Drawer.Footer>
             <Drawer.CloseTrigger asChild>
-              <CloseButton size="sm" aria-label="Close" />
+              <CloseButton size="md" aria-label="Close" />
             </Drawer.CloseTrigger>
           </Drawer.Content>
         </Drawer.Positioner>

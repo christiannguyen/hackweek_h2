@@ -28,7 +28,7 @@ export function PointpoolPage({ balances, onEdit, onRewards }: Props) {
   return (
     <>
       <div className={styles.pageHead}>
-        <div className={styles.pageTitle}>Wallet</div>
+        <h1 className={styles.pageTitle}>Wallet</h1>
         {balances.length > 0 && (
           <button className={`${styles.btnText} ${styles.add}`} onClick={() => onEdit()}>
             + Add
