@@ -7,7 +7,7 @@ import styles from './MobileShell.module.css'
 const TABS: { label: string; icon: IconType; hash: string }[] = [
   { label: 'Home', icon: LuHouse, hash: '#home' },
   { label: 'Card Coach', icon: LuGraduationCap, hash: '#coach' },
-  { label: 'Use points', icon: LuGift, hash: '#redeem' },
+  { label: 'Use rewards', icon: LuGift, hash: '#redeem' },
   { label: 'Wallet', icon: LuWallet, hash: '#pointpool' },
   { label: 'Offers', icon: LuCreditCard, hash: '#offers' },
 ]

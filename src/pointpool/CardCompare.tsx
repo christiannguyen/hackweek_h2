@@ -73,7 +73,7 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
         })}
       </div>
       <div className={styles.compareHeading}>
-        <h3>{categoryLabel} · {noCards ? 'what could you earn?' : 'which card wins?'}</h3>
+        <h3>{categoryLabel} · {noCards ? 'what could your spending earn?' : 'how your cards compare'}</h3>
         <span>{fmtDollars(spend * 12)} / yr</span>
       </div>
       {noCards ? (
@@ -87,7 +87,7 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
         <div className={styles.compareColumn}>
           <h4>
             <span className={styles.colEyebrow}>Now</span>
-            {!selected ? 'Your wallet' : isBest ? 'Best in your wallet' : 'Your selected card'}
+            {!selected ? 'Your wallet' : isBest ? 'Highest estimate in your wallet' : 'Your selected card'}
           </h4>
           {selected ? (
             <CompareTile option={selected} category={category} winner={!recommends && isBest}>
@@ -96,7 +96,7 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
                   <span>Compare another card <LuChevronDown aria-hidden="true" /></span>
                   <select aria-label="Compare another card" value={selected.key}
                     onChange={(e) => setSelection({ category, key: e.target.value })}>
-                    {yours.map((o) => <option key={o.key} value={o.key}>{o.name}{o.key === best?.key ? ' — Best in your wallet' : ''}</option>)}
+                    {yours.map((o) => <option key={o.key} value={o.key}>{o.name}{o.key === best?.key ? ' — highest estimate' : ''}</option>)}
                   </select>
                 </label>
               )}
@@ -111,7 +111,7 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
         <div className={styles.compareColumn}>
           <h4>
             <span className={styles.colEyebrow}>If you apply</span>
-            {!suggested ? 'No options yet' : recommends ? 'Suggested new card' : 'Closest new card'}
+            {!suggested ? 'No options yet' : recommends ? 'A card that could earn more' : 'Closest new card'}
           </h4>
           {suggested ? <CompareTile option={suggested} category={category} winner={recommends} /> : (
             <div className={styles.compareEmpty}>No new cards to compare for this category.</div>
@@ -126,17 +126,17 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
               <><strong>Your spending could earn {fmtDollars(suggested.net)} a year</strong> on {catName(category)}
                 {suggested.fee > 0 ? ` after the ${fmtDollars(suggested.fee)} annual fee` : ', with no annual fee'}.
                 {' '}Estimate assumes you pay in full.</>
-            ) : <><strong>No card to recommend on this spending yet.</strong> Try another category to explore its potential rewards.</>
+            ) : <><strong>No new card earns noticeably more here yet.</strong> Try another category to see its potential rewards.</>
           ) : recommends && suggested ? (
             <><strong>{fmtDollars(gain)} {selected ? 'more ' : ''}per year</strong>{selected
-              ? ` compared with ${isBest ? 'your best existing card' : selected.name} for ${catName(category)}`
+              ? ` compared with ${isBest ? 'your highest-earning card' : selected.name} for ${catName(category)}`
               : ` in estimated rewards on ${catName(category)}`}{suggested.fee > 0 ? `, after the ${fmtDollars(suggested.fee)} annual fee.` : ', with no annual fee.'}</>
           ) : best ? (
-            <><strong>You already have a great card for {catName(category)}.</strong> {best.name} {suggested && suggested.net > best.net
-              ? 'earns almost as much; the small gain from a new card doesn’t meet our recommendation threshold.'
-              : 'is your best wallet option. No new card adds enough to recommend applying.'}</>
-          ) : 'Add a supported card to see how a new card compares with your wallet.'}
-          {!isBest && best && <button className={styles.resetCompare} onClick={() => setSelection(undefined)}>Back to best in your wallet</button>}
+            <><strong>{best.name} already earns well on {catName(category)}.</strong> {suggested && suggested.net > best.net
+              ? `New cards we looked at would add less than ${fmtMoney(MIN_GAIN)} a month.`
+              : 'New cards we looked at wouldn’t earn more here.'}</>
+          ) : 'Add a card we can estimate to see how a new card compares.'}
+          {!isBest && best && <button className={styles.resetCompare} onClick={() => setSelection(undefined)}>Back to your highest estimate</button>}
         </div>
       </div>
       {recommends && suggested && <NewCardCommitment option={suggested} />}
@@ -145,20 +145,20 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
       )}
       {noCards && <div className={styles.firstCardAdd}>Already have a card? <button className={styles.btnText} onClick={() => onEdit()}>Add it to compare</button></div>}
       <p className={styles.compareFootnote}>
-        Estimates assume all {fmtMoney(spend)}/mo in this category goes on each card, based on your last 30 days.
-        {incomplete && ' Wallet ranking uses available estimates; some card rates are estimated or unavailable.'}
-        {' '}A new card’s full annual fee is shown once in this comparison. These are separate category scenarios, not amounts to add together.
+        Estimates put all {fmtMoney(spend)}/mo of your last 30 days of {catName(category)} on each card, one card at a time.
+        {incomplete && ' Some card rates are estimated or unavailable.'}
+        {' '}New-card fees are included; fees on cards you have aren’t. Each category is its own example, not an amount to add to the others.
         {noCards ? ' Potential rewards aren’t savings versus your current payment method. Pay in full each month; interest and other charges are not included. Approval isn’t guaranteed.' : ' Existing card fees are excluded because you already hold those cards.'}
       </p>
       {full && (
         <>
-          <div className={styles.colHead}><h3>All cards and the math</h3><span>{best ? 'Compared with your best' : 'Potential rewards'}</span></div>
+          <div className={styles.colHead}><h3>All cards and the math</h3><span>{best ? 'Compared with your highest estimate' : 'Potential rewards'}</span></div>
           <Legend options={charted} best={best} />
           {charted.map((o) => <BarRow key={o.key} option={o} best={best} max={max} full open={o.key === focus} />)}
           <div className={styles.sample}>
             Example terms, using each card’s rate for the main part of a category (like grocery stores for food & drink).
-            Points count at their cash value. A new card is recommended when it {best ? 'adds' : 'earns'} at least {fmtMoney(MIN_GAIN)} a month
-            after its fee{best ? ' compared with your best existing card' : ''}. Score ranges are a guide, not a cutoff.
+            Points count at their cash value. A new card shows up here when it {best ? 'adds' : 'earns'} at least {fmtMoney(MIN_GAIN)} a month
+            after its fee{best ? ' compared with your highest-earning card' : ''}. Score ranges are a guide, not a cutoff.
             Applying means a credit check, and approval isn’t guaranteed.
           </div>
         </>
@@ -212,7 +212,7 @@ function FirstCardOpportunity({ option: o, category, recommended }: {
         </div>
         <div>
           <div className={styles.compareRate}>{fmtRate(o.type, avgRate(o))}{o.steps.length > 1 && <small>*</small>}</div>
-          <div className={styles.compareRateLabel}>{o.type === 'cashback' ? 'cash back' : 'points'} on {catName(category)}</div>
+          <div className={styles.compareRateLabel}>{o.type === 'cashback' ? 'cashback' : 'points'} on {catName(category)}</div>
           {o.steps.length > 1 && <div className={styles.rateNote}>{rateNote(o)}</div>}
           {o.type === 'points' && <div className={styles.rateNote}>Valued at {o.cpp}¢/point.</div>}
         </div>
@@ -232,7 +232,7 @@ function CompareTile({ option: o, category, winner, children }: {
 }) {
   return (
     <div className={`${styles.compareTile} ${winner ? styles.compareWinner : ''}`}>
-      {winner && <span className={styles.winnerBadge}>{o.yours ? 'Already yours' : 'Best pick'}</span>}
+      {winner && <span className={styles.winnerBadge}>{o.yours ? 'In your wallet' : 'Earns more here'}</span>}
       <div className={`${styles.cardFace} ${!o.yours ? styles.newCardFace : ''}`}>
         <span className={styles.cardIssuer}>{o.issuer ?? o.short}</span>
         <strong>{o.name}</strong>
@@ -243,7 +243,7 @@ function CompareTile({ option: o, category, winner, children }: {
         {!o.yours && <span className={o.fee > 0 ? styles.cardFeeTag : styles.cardNoFeeTag}>{o.fee > 0 ? `${fmtDollars(o.fee)}/yr fee` : 'No annual fee'}</span>}
       </div>
       <div className={styles.compareRate}>{fmtRate(o.type, avgRate(o))}{o.steps.length > 1 && <small>*</small>}</div>
-      <div className={styles.compareRateLabel}>{o.type === 'cashback' ? 'cash back' : 'points'} on {catName(category)}</div>
+      <div className={styles.compareRateLabel}>{o.type === 'cashback' ? 'cashback' : 'points'} on {catName(category)}</div>
       {(!o.known || o.steps.length > 1 || o.type === 'points') && <div className={styles.rateNote}>
         {!o.known ? 'Estimated base rate. ' : ''}{o.steps.length > 1 ? `${rateNote(o)} ` : ''}{o.type === 'points' ? `Valued at ${o.cpp}¢/point.` : ''}
       </div>}
@@ -342,7 +342,7 @@ function BarRow({ option: o, best, max, full, open, showWhy = true }: RowProps) 
     : [o.fee > 0 && `${fmtDollars(o.fee)}/yr fee`, !!o.deposit && `${fmtDollars(o.deposit)} deposit`]
         .filter(Boolean)
         .join(', ')
-  const said = [cost && `, ${cost}`, o.why && `. Not worth it: ${o.why}`].filter(Boolean).join('')
+  const said = [cost && `, ${cost}`, o.why && `. ${o.why}`].filter(Boolean).join('')
 
   const body = (
     <span className={styles.barMain}>
@@ -390,7 +390,7 @@ function OptionMath({ option: o, best }: { option: CardOption; best?: CardOption
     <div className={styles.math}>
       <div className={styles.mathLine}>
         <span>
-          Rewards at {rates.join(', then ')} {o.type === 'cashback' ? 'cash back' : 'points'}
+          Rewards at {rates.join(', then ')} {o.type === 'cashback' ? 'cashback' : 'points'}
           {o.steps.length > 1 && <span className={styles.mathSub}>{o.steps[0].label}</span>}
           {o.type === 'points' && (
             <span className={styles.mathSub}>
@@ -475,7 +475,7 @@ export function ScoreGoal({ balances, category, variant = 'condensed' }: GoalPro
           style={{ width: `${Math.round(((CREDIT_SCORE - goal.from) / (goal.score - goal.from)) * 100)}%` }}
         />
       </span>
-      <span>{goal.toGo} points to go</span>
+      <span>{goal.toGo} to go to {goal.score}</span>
     </div>
   )
 

@@ -89,7 +89,7 @@ function CardTile({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numb
       {(b.cardBalance != null || b.creditLimit != null) && (
         <div className={styles.tileSection}>
           <div className={styles.tileStat}>
-            <span className={styles.tileLabel}>Balance</span>
+            <span className={styles.tileLabel}>You owe</span>
             <span className={styles.tileValue}>{b.cardBalance != null ? fmtUSD(b.cardBalance) : '—'}</span>
           </div>
           {b.creditLimit != null && b.creditLimit > 0 && (
@@ -100,7 +100,7 @@ function CardTile({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numb
           )}
           {utilPct !== null && (
             <div className={styles.tileStat}>
-              <span className={styles.tileLabel}>Utilization</span>
+              <span className={styles.tileLabel}>Limit used</span>
               <span className={styles.tileValue}>{utilPct}%</span>
             </div>
           )}
@@ -110,7 +110,7 @@ function CardTile({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numb
 
       <div className={styles.tileSection}>
         <div className={styles.tileStat}>
-          <span className={styles.tileLabel}>{cash ? 'Cashback' : 'Rewards'}</span>
+          <span className={styles.tileLabel}>{cash ? 'Cashback' : p.unit === 'miles' ? 'Miles' : 'Points'}</span>
           <span className={styles.tileValue}>
             {cash
               ? fmtUSD(b.amount)

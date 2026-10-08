@@ -58,25 +58,11 @@ function analyzeSpending(balances: Balance[], spend: Spend): CategoryInsight[] {
     })
 }
 
-function walletScore(insights: CategoryInsight[]): number {
-  if (insights.length === 0) return 0
-  let totalSpend = 0
-  let weightedRate = 0
-  for (const i of insights) {
-    totalSpend += i.spend
-    const rate = i.bestCard?.rate ?? 1
-    const maxRate = Math.max(rate, 5)
-    weightedRate += i.spend * (rate / maxRate)
-  }
-  return totalSpend > 0 ? Math.round((weightedRate / totalSpend) * 100) : 0
-}
-
 interface SpendingAction {
   id: string
   icon: string
   title: string
   detail: string
-  tag?: string
 }
 
 function generateActions(balances: Balance[], insights: CategoryInsight[]): SpendingAction[] {
@@ -88,11 +74,10 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
       actions.push({
         id: `use-${i.id}`,
         icon: i.emoji,
-        title: `Use ${i.bestCard.balance.cardName} for ${catName(i.id)}`,
+        title: `${i.bestCard.balance.cardName} could earn ${i.bestRate} on ${catName(i.id)}`,
         detail: i.bestCard.avgRate !== i.bestCard.rate
           ? `Earns ${fmtRate(i.bestCard.program.type, i.bestCard.rate)} in bonus periods, about ${i.bestRate} over a year — about ${fmtMoney(i.monthlyReward)}/mo on your ${fmtMoney(i.spend)}/mo spend.`
           : `Earns ${i.bestRate} — about ${fmtMoney(i.monthlyReward)}/mo on your ${fmtMoney(i.spend)}/mo spend.`,
-        tag: i.bestCard.rate >= 4 ? 'Top earn' : undefined,
       })
     }
   }
@@ -102,9 +87,8 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
       actions.push({
         id: `gap-${i.id}`,
         icon: '🔍',
-        title: `No bonus card for ${catName(i.id)}`,
-        detail: `You spend ${fmtMoney(i.spend)}/mo here at the base rate. A card with a bonus category here could earn more.`,
-        tag: 'Opportunity',
+        title: `${i.label}: earning the base rate`,
+        detail: `You spend ${fmtMoney(i.spend)}/mo here. A card with a bonus on ${catName(i.id)} could earn more; the comparison on Home shows options.`,
       })
     }
   }
@@ -116,8 +100,8 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
       actions.push({
         id: `rotate-${b.id}`,
         icon: '🔁',
-        title: `Activate ${b.cardName} quarterly bonus`,
-        detail: `Rotating categories include ${bonus.map((c) => catName(c.id)).join(', ')}. Activate each quarter to earn the bonus rate.`,
+        title: `${b.cardName} has a quarterly bonus to activate`,
+        detail: `Its rotating categories include ${bonus.map((c) => catName(c.id)).join(', ')}. The bonus rate applies once it’s activated each quarter.`,
       })
     }
   }
@@ -127,9 +111,8 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
       actions.push({
         id: `util-${b.id}`,
         icon: '💳',
-        title: `Lower your ${b.cardName} balance`,
-        detail: `${Math.round((b.cardBalance / b.creditLimit) * 100)}% utilization. Paying down below 30% helps your credit score and avoids interest eating into rewards.`,
-        tag: 'Credit tip',
+        title: `${b.cardName}: ${Math.round((b.cardBalance / b.creditLimit) * 100)}% of your limit in use`,
+        detail: 'Using less than 30% of your limit can help your credit score, and paying in full keeps interest from eating into rewards.',
       })
     }
   }
@@ -141,9 +124,9 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
 
 export function CoachPage({ balances, onEdit }: Props) {
   const insights = analyzeSpending(balances, SPEND)
-  const score = walletScore(insights)
   const actions = generateActions(balances, insights)
-  const tips = coachTips(balances)
+  // Bonus and rotating-category tips repeat the actions above, so this page shows the rest.
+  const tips = coachTips(balances).filter((t) => t.kind !== 'bonus' && t.kind !== 'rotating')
 
   const hasCards = balances.some((b) => hasEstimates(PROGRAMS[b.programId]))
 
@@ -153,34 +136,18 @@ export function CoachPage({ balances, onEdit }: Props) {
         <div className={styles.pageTitle}>Card Coach</div>
       </div>
 
-      {/* Wallet score + reward summary */}
-      <div className={styles.card}>
-        <div className={styles.coachScore}>
-          <div className={styles.scoreCircle}>
-            <svg viewBox="0 0 80 80" className={styles.scoreSvg}>
-              <circle cx="40" cy="40" r="35" fill="none" stroke="var(--line)" strokeWidth="6" />
-              <circle
-                cx="40" cy="40" r="35"
-                fill="none" stroke="var(--green)" strokeWidth="6"
-                strokeLinecap="round"
-                strokeDasharray={`${(score / 100) * 220} 220`}
-                transform="rotate(-90 40 40)"
-              />
-            </svg>
-            <div className={styles.scoreNum}>{score}</div>
-          </div>
-          <div>
-            <div className={styles.scoreTitle}>Rewards score</div>
-            <div className={styles.rowSub}>
-              {score >= 70 ? "Great — your cards are well-matched to your spending."
-                : score >= 40 ? 'Room to improve. Follow the tips below to earn more.'
-                : hasCards ? "Low — your spending categories don't match your card bonuses."
-                : 'Add your cards to get a personalized score.'}
+      {!hasCards && (
+        <div className={styles.card}>
+          <div className={styles.empty}>
+            Add your cards to get personalized coaching.
+            <div>
+              <button className={`${styles.btnText} ${styles.add}`} onClick={() => onEdit()}>
+                + Add a card
+              </button>
             </div>
           </div>
         </div>
-
-      </div>
+      )}
 
       {/* Spending breakdown */}
       {insights.length > 0 && (
@@ -196,7 +163,7 @@ export function CoachPage({ balances, onEdit }: Props) {
               {i.bestCard ? (
                 <div className={styles.coachCatDetail}>
                   <span className={styles.coachCatCard}>
-                    Best: <b>{i.bestCard.balance.cardName}</b> at {i.bestRate}
+                    Highest in your wallet: <b>{i.bestCard.balance.cardName}</b> at {i.bestRate}
                   </span>
                   <span className={styles.coachCatEarn}>
                     ≈{fmtMoney(i.monthlyReward)}/mo
@@ -215,15 +182,12 @@ export function CoachPage({ balances, onEdit }: Props) {
       {/* Actions */}
       {actions.length > 0 && (
         <div className={styles.card}>
-          <h2>How to maximize your rewards</h2>
+          <h2>Ideas for your spending</h2>
           {actions.map((a) => (
             <div key={a.id} className={styles.row}>
               <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>{a.icon}</div>
               <div className={styles.rowMain}>
-                <div className={styles.rowTitleLine}>
-                  <span className={styles.rowTitle}>{a.title}</span>
-                  {a.tag && <span className={`${styles.tag} ${styles.sm}`}>{a.tag}</span>}
-                </div>
+                <div className={styles.rowTitle}>{a.title}</div>
                 <div className={styles.rowSub}>{a.detail}</div>
               </div>
             </div>
@@ -263,18 +227,6 @@ export function CoachPage({ balances, onEdit }: Props) {
         </>
       )}
 
-      {!hasCards && (
-        <div className={styles.card}>
-          <div className={styles.empty}>
-            Add your cards to get personalized coaching.
-            <div>
-              <button className={`${styles.btnText} ${styles.add}`} onClick={() => onEdit()}>
-                + Add a card
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <Disclaimer />
     </>
