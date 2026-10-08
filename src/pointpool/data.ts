@@ -657,6 +657,8 @@ export function compareCards(balances: Balance[], cat: CategoryId, credit: Credi
       return {
         key: `yours-${e.balance.id}`,
         name: e.balance.cardName,
+        // Named issuer where the program identifies one, so the card face reads "Discover", not "DI".
+        issuer: e.program.supported ? e.program.brand : undefined,
         short: e.program.short,
         type: e.program.type,
         unit: e.program.unit,

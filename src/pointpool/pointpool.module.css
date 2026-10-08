@@ -275,9 +275,12 @@ a.row { text-decoration: none; color: inherit; }
 .compareHeading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 8px; margin: 22px 0 18px; }
 .compareHeading h3 { font-size: 16px; font-weight: 650; margin: 0; }
 .compareHeading > span { font-size: 12px; color: #626b5e; white-space: nowrap; }
-.compareGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.compareColumn { display: flex; flex-direction: column; min-width: 0; }
-.compareColumn h4 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; font-weight: 700; color: #626b5e; margin: 0 2px 14px; }
+/* Two rows — heading, then tile — shared by both columns via subgrid, so a longer heading on one
+   side ("Highest estimate in your wallet" vs "Your selected card", which the card picker switches
+   between) can't push that column's tile out of line with the other. */
+.compareGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto 1fr; gap: 10px; }
+.compareColumn { display: grid; grid-template-rows: subgrid; grid-row: span 2; min-width: 0; }
+.compareColumn h4 { align-self: end; font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; font-weight: 700; color: #626b5e; margin: 0 2px 4px; }
 .compareColumn:nth-child(2) h4 { color: var(--selection-ink); }
 /* Shared neutral eyebrow: both columns are advice, so the axis of comparison is the action, not the endorsement. */
 .colEyebrow { display: block; font-size: 9px; font-weight: 650; letter-spacing: 0.8px; color: #8d948a; margin-bottom: 3px; }
@@ -285,11 +288,54 @@ a.row { text-decoration: none; color: inherit; }
 .compareTile { position: relative; flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 12px 10px; background: #f7f8f3; border: 1.5px solid #e0e5d9; border-radius: 20px; }
 .compareWinner { border-color: var(--selection-border); box-shadow: 0 0 0 3px var(--selection-glow); }
 .winnerBadge { position: absolute; top: -12px; right: 8px; background: var(--lime); color: #182117; border: 1px solid var(--lime-border); padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-.cardFace { min-height: 110px; display: flex; flex-direction: column; gap: 6px; padding: 12px 10px; border-radius: 12px; color: white; background: linear-gradient(130deg, #252c25, #596351); }
-.newCardFace { color: #182117; background: linear-gradient(130deg, var(--new-card-light), var(--new-card)); }
-.cardIssuer { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.85; }
-.cardFace strong { margin-top: auto; font-size: 13px; font-weight: 650; line-height: 1.2; overflow-wrap: anywhere; }
-.cardOwnership { font-size: 9px; opacity: 0.85; }
+/* Comparison card faces — the wallet's brand-tinted card art (.cardArt above) at tile size, so
+   "Discover it Secured" reads as a Discover card rather than a generic green panel. Colours arrive
+   as --art-from / --art-to from artFor() in cardColors.ts. The height is fixed, not min-height, so
+   a card whose name wraps to more lines than the one beside it still lines up with it. */
+.cardFace {
+  position: relative; overflow: hidden;
+  height: 126px; display: flex; flex-direction: column; gap: 6px;
+  padding: 12px 10px; border-radius: 12px; color: white;
+  background: linear-gradient(140deg, var(--art-from, #7b8794), var(--art-to, #39424c));
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 6px 14px -5px rgba(0, 0, 0, 0.4);
+}
+/* Diagonal gloss sweep, then a soft brand orb in the bottom-right. */
+.cardFace::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(118deg, rgba(255, 255, 255, 0.3) 0 24%, rgba(255, 255, 255, 0.06) 40%, transparent 58%);
+}
+.cardFace::after {
+  content: '';
+  position: absolute; right: -26px; bottom: -34px;
+  width: 84px; height: 84px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+}
+.cardFace > * { position: relative; z-index: 1; }
+/* A new card keeps the issuer's face and is marked by the accent ring instead. */
+.newCardFace {
+  box-shadow:
+    inset 0 0 0 1.5px var(--new-card),
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 6px 14px -5px rgba(0, 0, 0, 0.4);
+}
+.faceChip {
+  width: 17px; height: 12px; flex-shrink: 0;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #f8e9ad, #c6a04a 55%, #ecd79a);
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.3);
+}
+.cardIssuer { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.9; text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.35); }
+/* Three lines fit the fixed face; the few longer names clamp rather than overflow it. */
+.cardFace strong {
+  margin-top: auto; font-size: 13px; font-weight: 650; line-height: 1.2;
+  overflow-wrap: anywhere; text-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.4);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+}
+.cardOwnership { font-size: 9px; opacity: 0.88; text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.35); }
 .pickerSpace { min-height: 33px; }
 .cardPicker { position: relative; display: block; margin: 8px 0; color: var(--selection-ink); }
 .cardPicker > span { display: flex; align-items: center; justify-content: space-between; gap: 2px; font-size: 10px; font-weight: 500; }
