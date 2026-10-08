@@ -38,7 +38,7 @@ export function HomePage({ balances, onEdit, compare }: Props) {
       <div className={`${styles.card} ${styles.coachHero}`}>
         <CardCompare {...compare} category={spotlight} />
         <ScoreGoal balances={compare.balances} category={spotlight} />
-        <a className={styles.moreLink} href="#coach" onClick={() => compare.onCategory(spotlight)}>
+        <a className={styles.moreLink} href="#compare" onClick={() => compare.onCategory(spotlight)}>
           Compare more cards ›
         </a>
       </div>

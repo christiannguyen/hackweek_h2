@@ -1,220 +1,440 @@
-import { useState } from 'react'
-import { LuArrowUpRight, LuFuel, LuShoppingBag, LuUtensils } from 'react-icons/lu'
-import type { CompareProps } from './CardCompare'
 import {
+  cardEarnings,
+  cardStacking,
+  CATEGORIES,
   catName,
-  compareCards,
-  creditLabel,
-  fmtDollars,
+  coachTips,
+  CREDIT_SCORE,
+  expirationWarnings,
   fmtMoney,
   fmtRate,
+  fmtUSD,
+  graduationMilestones,
+  hasEstimates,
+  leftOnTable,
+  PROGRAMS,
+  redemptionMath,
+  ruleFor,
+  seasonalTips,
   SPEND,
-  TOP_CATEGORIES,
+  SPEND_TXN_COUNT,
   type Balance,
-  type CardOption,
+  type CardEarning,
   type CategoryId,
+  type Spend,
 } from './data'
 import { Disclaimer } from './shared'
-import { routeParam } from './useHashRoute'
 import styles from './pointpool.module.css'
 
 interface Props {
   balances: Balance[]
   onEdit: (id?: number) => void
-  compare: CompareProps
 }
 
-const categoryIcons = { food: LuUtensils, shopping: LuShoppingBag, transport: LuFuel }
-const c2 = (n: number) => Math.round(n * 100) / 100
-const money = (n: number) => (n < 0 ? `−${fmtMoney(-n)}` : fmtMoney(n))
-const signed = (n: number) => (n < 0 ? `−${fmtMoney(-n)}` : `+${fmtMoney(n)}`)
-// A card's month: each line is rounded to cents first, so the math adds up to the column's number.
-const perMonth = (o: CardOption) => {
-  const rewards = c2(o.rewards / 12)
-  const fee = c2(o.fee / 12)
-  return { rewards, fee, net: c2(rewards - fee) }
+// --- Analysis helpers ---
+
+interface CategoryInsight {
+  id: CategoryId
+  label: string
+  emoji: string
+  spend: number
+  bestCard: CardEarning | null
+  bestRate: string
+  monthlyReward: number
 }
-// The chart always spans at least this much a month, so a $1 gain looks small instead of filling the chart.
-const MIN_SPAN = 5
-const feeFilters = [
-  { value: 'all', label: 'All cards' },
-  { value: 'none', label: 'No annual fee' },
-  { value: 'paid', label: 'Annual fee' },
-] as const
-type FeeFilter = typeof feeFilters[number]['value']
 
-// The user's best card is the baseline, not a column: up to three new cards, measured against it. When the top three
-// all charge a fee, the last slot goes to the best no-fee card, so the fee question answers itself.
-export function CoachPage({ balances, onEdit, compare: { category, onCategory } }: Props) {
-  const [feeFilter, setFeeFilter] = useState<FeeFilter>('all')
-  const { best, worth, close, rest } = compareCards(balances, category)
-  const market = [...worth, ...close, ...rest]
-    .filter((o) => feeFilter === 'all' || (feeFilter === 'none' ? o.fee === 0 : o.fee > 0))
-    .sort((a, b) => b.net - a.net)
-  const top = market[0]
-  const cards = market.slice(0, 3)
-  const noFee = cards.every((o) => o.fee > 0) ? market.find((o) => o.fee === 0) : undefined
-  if (noFee) cards.splice(2, 1, noFee)
+function analyzeSpending(balances: Balance[], spend: Spend): CategoryInsight[] {
+  const cards = balances.filter((b) => hasEstimates(PROGRAMS[b.programId]))
+  return CATEGORIES
+    .filter((c) => spend[c.id] > 0)
+    .sort((a, b) => spend[b.id] - spend[a.id])
+    .map((c) => {
+      const earnings = cardEarnings(cards, c.id, spend)
+      const best = earnings.length > 0
+        ? earnings.reduce((a, b) => (a.value.cashback >= b.value.cashback ? a : b))
+        : null
+      return {
+        id: c.id,
+        label: c.label,
+        emoji: c.emoji,
+        spend: spend[c.id],
+        bestCard: best,
+        bestRate: best ? fmtRate(best.program.type, best.avgRate) : '1x',
+        monthlyReward: best?.value.cashback ?? 0,
+      }
+    })
+}
 
-  return <>
-    <div className={styles.pageHead}>
-      <div>
-        <h1 className={styles.pageTitle}>Compare cards</h1>
-        <p className={styles.pageSub}>New cards next to your best card, after annual fees.</p>
+interface SpendingAction {
+  id: string
+  icon: string
+  title: string
+  detail: string
+}
+
+function generateActions(balances: Balance[], insights: CategoryInsight[]): SpendingAction[] {
+  const actions: SpendingAction[] = []
+  const cards = balances.filter((b) => hasEstimates(PROGRAMS[b.programId]))
+
+  for (const i of insights) {
+    if (i.bestCard && i.bestCard.rate > 1) {
+      actions.push({
+        id: `use-${i.id}`,
+        icon: i.emoji,
+        title: `${i.bestCard.balance.cardName} could earn ${i.bestRate} on ${catName(i.id)}`,
+        detail: i.bestCard.avgRate !== i.bestCard.rate
+          ? `Earns ${fmtRate(i.bestCard.program.type, i.bestCard.rate)} in bonus periods, about ${i.bestRate} over a year — about ${fmtMoney(i.monthlyReward)}/mo on your ${fmtMoney(i.spend)}/mo spend.`
+          : `Earns ${i.bestRate} — about ${fmtMoney(i.monthlyReward)}/mo on your ${fmtMoney(i.spend)}/mo spend.`,
+      })
+    }
+  }
+
+  for (const i of insights) {
+    if (!i.bestCard || i.bestCard.rate <= 1) {
+      actions.push({
+        id: `gap-${i.id}`,
+        icon: '🔍',
+        title: `${i.label}: earning the base rate`,
+        detail: `You spend ${fmtMoney(i.spend)}/mo here. A card with a bonus on ${catName(i.id)} could earn more; the comparison on Home shows options.`,
+      })
+    }
+  }
+
+  for (const b of cards) {
+    const rule = ruleFor(b.cardName)
+    const bonus = rule ? CATEGORIES.filter((c) => rule.rates[c.id]?.quarters) : []
+    if (bonus.length > 0) {
+      actions.push({
+        id: `rotate-${b.id}`,
+        icon: '🔁',
+        title: `${b.cardName} has a quarterly bonus to activate`,
+        detail: `Its rotating categories include ${bonus.map((c) => catName(c.id)).join(', ')}. The bonus rate applies once it's activated each quarter.`,
+      })
+    }
+  }
+
+  for (const b of balances) {
+    if (b.creditLimit && b.cardBalance && b.cardBalance / b.creditLimit > 0.3) {
+      actions.push({
+        id: `util-${b.id}`,
+        icon: '💳',
+        title: `${b.cardName}: ${Math.round((b.cardBalance / b.creditLimit) * 100)}% of your limit in use`,
+        detail: 'Using less than 30% of your limit can help your credit score, and paying in full keeps interest from eating into rewards.',
+      })
+    }
+  }
+
+  return actions
+}
+
+function walletScore(insights: CategoryInsight[]): number {
+  if (insights.length === 0) return 0
+  let totalSpend = 0
+  let weightedRate = 0
+  for (const i of insights) {
+    totalSpend += i.spend
+    const rate = i.bestCard?.rate ?? 1
+    const maxRate = Math.max(rate, 5)
+    weightedRate += i.spend * (rate / maxRate)
+  }
+  return totalSpend > 0 ? Math.round((weightedRate / totalSpend) * 100) : 0
+}
+
+// --- Component ---
+
+export function CoachPage({ balances, onEdit }: Props) {
+  const insights = analyzeSpending(balances, SPEND)
+  const score = walletScore(insights)
+  const actions = generateActions(balances, insights)
+  const tips = coachTips(balances).filter((t) => t.kind !== 'bonus' && t.kind !== 'rotating')
+
+  const totalMonthlyRewards = insights.reduce((sum, i) => sum + i.monthlyReward, 0)
+  const totalYearlyRewards = totalMonthlyRewards * 12
+  const hasCards = balances.some((b) => hasEstimates(PROGRAMS[b.programId]))
+
+  const stacking = cardStacking(balances)
+  const missed = leftOnTable(balances)
+  const seasonal = seasonalTips()
+  const expirations = expirationWarnings(balances)
+  const milestones = graduationMilestones(balances, CREDIT_SCORE)
+  const redemptions = redemptionMath(balances)
+
+  return (
+    <>
+      <div className={styles.pageHead}>
+        <h1 className={styles.pageTitle}>Card Coach</h1>
       </div>
-    </div>
-    <section className={styles.card} aria-labelledby="compare-chart-title">
-      <div className={styles.compareHead}>
-        <h2>Your monthly spending</h2>
-        <div className={styles.catTabs} role="group" aria-label="Spending category">
-          {TOP_CATEGORIES.map((c) => {
-            const Icon = categoryIcons[c.id]
-            return <button key={c.id} className={`${styles.catTab} ${c.id === category ? styles.active : ''}`}
-              aria-pressed={c.id === category} onClick={() => onCategory(c.id)}>
-              <Icon className={styles.categoryIcon} aria-hidden="true" />
-              <span className={styles.catLabel}>{c.label}</span>
-              <span className={styles.catSpend}>{fmtMoney(SPEND[c.id])}<small>/mo</small></span>
-            </button>
-          })}
+
+      {/* Rewards score hero */}
+      <div className={`${styles.card} ${styles.coachHeroCard}`}>
+        <div className={styles.coachScore}>
+          <div className={styles.scoreCircle}>
+            <svg viewBox="0 0 80 80" className={styles.scoreSvg}>
+              <circle cx="40" cy="40" r="35" fill="none" stroke="var(--dark-line)" strokeWidth="6" />
+              <circle
+                cx="40" cy="40" r="35"
+                fill="none" stroke="var(--lime)" strokeWidth="6"
+                strokeLinecap="round"
+                strokeDasharray={`${(score / 100) * 220} 220`}
+                transform="rotate(-90 40 40)"
+              />
+            </svg>
+            <div className={styles.scoreNum}>{score}</div>
+          </div>
+          <div>
+            <div className={styles.scoreTitle}>Rewards score</div>
+            <div className={styles.rowSub} style={{ color: 'var(--dark-muted)' }}>
+              {score >= 70 ? "Great — your cards match your spending well."
+                : score >= 40 ? 'Room to improve. Follow the tips below.'
+                : hasCards ? "Your spending doesn't match your card bonuses."
+                : 'Add your cards to get a personalized score.'}
+            </div>
+          </div>
         </div>
-        <div className={styles.feeFilters} role="group" aria-label="New card annual fee">
-          {feeFilters.map(({ value, label }) => <button key={value}
-            className={`${styles.feeFilter} ${feeFilter === value ? styles.active : ''}`}
-            aria-pressed={feeFilter === value} onClick={() => setFeeFilter(value)}>
-            {label}
-          </button>)}
-        </div>
-      </div>
-      <h2 id="compare-chart-title">{best ? 'Next to your card' : 'What you could earn'}</h2>
-      <p className={styles.cardSub}>On your {fmtMoney(SPEND[category])} of {catName(category)} a month, after fees</p>
-      <div role="status">
-        {top ? <Verdict category={category} best={best} top={top} worth={top.worth} /> : (
-          <p className={styles.chartEmpty}>
-            No new cards match this fee filter for {catName(category)}.
-            {feeFilter !== 'all' && <> <button className={styles.btnText} onClick={() => setFeeFilter('all')}>Show all cards</button></>}
-          </p>
+
+        {hasCards && (
+          <div className={styles.tileSection}>
+            <div className={styles.tileStat}>
+              <span className={styles.tileLabel}>Monthly rewards</span>
+              <span className={styles.tileValue}>{fmtMoney(totalMonthlyRewards)}</span>
+            </div>
+            <div className={styles.tileStat}>
+              <span className={styles.tileLabel}>Yearly estimate</span>
+              <span className={styles.tileValue}>{fmtMoney(totalYearlyRewards)}</span>
+            </div>
+          </div>
         )}
       </div>
-      {cards.length > 0 && <>
-        <p className={`${styles.chartBase} ${best ? '' : styles.chartBaseNone}`}>
-          <i aria-hidden="true" />
-          {best ? `Your ${best.name}, ${money(perMonth(best).net)}/mo` : 'No card yet, $0/mo'}
-        </p>
-        <ColumnChart key={`${category}-${feeFilter}`} cards={cards} category={category} best={best} />
-      </>}
-      {!best && <p className={styles.chartEmpty}>
-        {balances.length ? 'Your cards don’t have estimates for this yet.' : 'Add your cards to see them next to these.'}
-        {' '}<button className={styles.btnText} onClick={() => onEdit()}>{balances.length ? 'Manage cards' : 'Add a card'}</button>
-      </p>}
-    </section>
 
-    <p className={styles.chartNote}>
-      <strong>A new card is a new bill.</strong> Annual fees are charged even in months you earn little. Applying is a
-      credit check, and approval isn’t guaranteed. Estimates use your last 30 days of spending and sample card terms,
-      without interest or welcome bonuses. Fees on cards you already have aren’t counted.
-    </p>
-    <Disclaimer />
-  </>
-}
+      {!hasCards && (
+        <div className={styles.card}>
+          <div className={styles.empty}>
+            Add your cards to get personalized coaching.
+            <div>
+              <button className={`${styles.btnText} ${styles.add}`} onClick={() => onEdit()}>
+                + Add a card
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-// The answer first, in one line: a new card wins, it's a close call, or the user's card already wins.
-function Verdict({ category, best, top, worth }: { category: CategoryId; best?: CardOption; top?: CardOption; worth: boolean }) {
-  if (!top) return <p className={styles.verdict}><strong>Nothing to compare yet</strong> No new cards in these examples for {catName(category)}.</p>
-  const fee = top.fee > 0 ? `, after its ${fmtDollars(top.fee)}/yr fee` : ', with no annual fee'
-  if (!best) return <p className={`${styles.verdict} ${styles.verdictWin}`}>
-    <strong>Up to {money(perMonth(top).net)}/mo</strong> with {top.name}{fee}.
-  </p>
-  const gain = c2(perMonth(top).net - perMonth(best).net)
-  if (worth) return <p className={`${styles.verdict} ${styles.verdictWin}`}>
-    <strong>{signed(gain)}/mo</strong> more with {top.name}{fee}.
-  </p>
-  if (gain > 0) return <p className={styles.verdict}>
-    <strong>{signed(gain)}/mo</strong> with {top.name}. A small gain for a new credit account, so your {best.name} is fine here.
-  </p>
-  return <p className={`${styles.verdict} ${styles.verdictYours}`}>
-    <strong>Your card wins</strong> Your {best.name} already earns {gain === 0 ? 'as much as' : 'more than'} the new cards matching your filters on {catName(category)}.
-  </p>
-}
+      {/* What you left on the table */}
+      {missed && (
+        <div className={`${styles.card} ${styles.missedCard}`}>
+          <h2>What you left on the table</h2>
+          <div className={styles.cardSub}>
+            Last month you could have earned{' '}
+            <strong className={styles.missedAmount}>{fmtMoney(missed.total)} more</strong>{' '}
+            by using the right card for each purchase.
+          </div>
+          {missed.byCategory.map((c) => (
+            <div key={c.id} className={styles.coachCatRow}>
+              <div className={styles.coachCatHead}>
+                <span>{c.emoji} {c.label}</span>
+                <span className={styles.missedAmount}>+{fmtMoney(c.missed)}</span>
+              </div>
+              <div className={styles.coachCatDetail}>
+                <span className={styles.rowSub}>Base rate: {fmtMoney(c.actual)} vs optimal: {fmtMoney(c.optimal)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-// The line is the user's card (or $0 with no card): each column rises by what a new card adds over it, or drops by
-// what it would lose.
-function ColumnChart({ cards, category, best }: { cards: CardOption[]; category: CategoryId; best?: CardOption }) {
-  const [open, setOpen] = useState(routeParam)
-  const shown = cards.find((o) => o.key === open)
-  const baseNet = best ? perMonth(best).net : 0
-  const diffs = cards.map((o) => c2(perMonth(o).net - baseNet))
-  let hi = Math.max(0, ...diffs)
-  let lo = Math.min(0, ...diffs)
-  // Pad short charts in the direction they point: up for gains, down when every card loses.
-  if (hi - lo < MIN_SPAN) {
-    if (hi > 0 || lo === 0) hi = lo + MIN_SPAN
-    else lo = hi - MIN_SPAN
-  }
-  const span = hi - lo
-  const at = (n: number) => `${((n - lo) / span) * 100}%`
+      {/* Card stacking — wallet cheat sheet */}
+      {stacking.length > 0 && (
+        <div className={styles.card}>
+          <h2>Your wallet cheat sheet</h2>
+          <div className={styles.cardSub}>Which card to use for what — based on your spending.</div>
+          <div style={{ marginTop: 12 }}>
+            {stacking.map((s) => (
+              <button type="button" key={s.category.id} className={styles.stackCard} onClick={() => onEdit(s.card.id)}>
+                <div className={styles.stackEmoji}>{s.category.emoji}</div>
+                <div className={styles.stackMain}>
+                  <div className={styles.stackCategory}>{s.category.label}</div>
+                  <div className={styles.stackDetail}>Use <b>{s.card.cardName}</b> — ~{fmtMoney(s.monthly)}/mo</div>
+                </div>
+                <div className={styles.stackRate}>{s.rateLabel}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
-  return <>
-    <div className={styles.cols} style={{ gridTemplateColumns: `repeat(${cards.length}, 1fr)` }}>
-      {cards.map((o, i) => {
-        const m = perMonth(o)
-        const d = diffs[i]
-        const same = Math.abs(d) < 0.01
-        const label = same ? 'Same' : best ? signed(d) : money(d)
-        const isOpen = open === o.key
-        return <button key={o.key} className={`${styles.col} ${isOpen ? styles.colOpen : ''}`}
-          aria-expanded={isOpen} aria-controls={isOpen ? 'compare-math' : undefined} onClick={() => setOpen(isOpen ? '' : o.key)}
-          aria-label={`${o.name}: ${best ? `${same ? 'same as' : `${signed(d)} a month versus`} your card, ` : ''}${money(m.net)} a month after fees`}>
-          <span className={`${styles.colPlot} ${lo < 0 ? styles.colPlotLoss : ''}`} aria-hidden="true">
-            <span className={`${styles.colBase} ${best ? '' : styles.colBaseNone}`} style={{ bottom: at(0) }} />
-            {same ? <b className={styles.colSame} style={{ bottom: at(0) }}>Same</b>
-              : <span className={`${styles.colBar} ${d < 0 ? styles.colBarLoss : ''}`}
-                style={{ bottom: at(Math.min(0, d)), height: `${(Math.abs(d) / span) * 100}%` }}>
-                <b className={styles.colTop}>{label}</b>
-              </span>}
-          </span>
-          <span className={styles.colName}>{o.name}</span>
-          <small className={o.fee > 0 ? styles.chartFee : undefined}>{o.fee > 0 ? `${fmtDollars(o.fee)}/yr fee` : 'No annual fee'}</small>
-          <span className={`${styles.chartTip} ${i === 0 ? styles.tipStart : i === cards.length - 1 ? styles.tipEnd : ''}`} aria-hidden="true">
-            {o.fee === 0 ? `${fmtMoney(m.rewards)} in rewards, no annual fee`
-              : `${fmtMoney(m.rewards)} rewards − ${fmtMoney(m.fee)} fee = ${money(m.net)}`}
-          </span>
-        </button>
-      })}
-    </div>
-    {shown ? <CardMath option={shown} category={category} best={best} />
-      : <p className={styles.chartHint}>Tap a card to see the math.</p>}
-  </>
-}
+      {/* Seasonal / timely tips */}
+      {seasonal.length > 0 && (
+        <div className={styles.card}>
+          <h2>Timely tips</h2>
+          {seasonal.map((t) => (
+            <div key={t.id} className={styles.seasonalRow}>
+              <div className={styles.seasonalIcon}>{t.icon}</div>
+              <div>
+                <div className={styles.seasonalTitle}>{t.title}</div>
+                <div className={styles.seasonalDetail}>{t.detail}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-// The monthly math behind a column, and what to know before applying.
-function CardMath({ option: o, category, best }: { option: CardOption; category: CategoryId; best?: CardOption }) {
-  const m = perMonth(o)
-  const vs = best ? c2(m.net - perMonth(best).net) : undefined
-  return <div id="compare-math" className={styles.chartMath}>
-    <h3>{o.name}<small>New card</small></h3>
-    <dl>
-      <div>
-        <dt>Rewards<small>{fmtRate(o.type, o.rate)} {o.type === 'cashback' ? 'cash back' : 'points'} on {catName(category)}{o.steps.length > 1 ? ', with a cap' : ''}</small></dt>
-        <dd>{fmtMoney(m.rewards)}</dd>
-      </div>
-      <div>
-        <dt>Annual fee<small>{o.fee > 0 ? `${fmtDollars(o.fee)} once a year` : 'None'}</small></dt>
-        <dd>{m.fee > 0 ? `−${fmtMoney(m.fee)}` : '$0'}</dd>
-      </div>
-      <div className={styles.chartMathTotal}><dt>You keep</dt><dd>{money(m.net)}/mo</dd></div>
-    </dl>
-    {vs !== undefined && <p className={styles.chartVs}>
-      {Math.abs(vs) < 0.01 ? `Same as your ${best!.name}` : `${money(Math.abs(vs))}/mo ${vs > 0 ? 'more' : 'less'} than your ${best!.name}`}
-    </p>}
-    {o.steps.length > 1 && o.steps.map((s) => <p key={s.label}>{s.label}.</p>)}
-    {o.type === 'points' && <p>Points counted at {o.cpp}¢ each.</p>}
-    {!o.known && <p>Estimated at the card’s base rate.</p>}
-    {o.why && <p>{o.why}.</p>}
-    {o.notes.map((n) => <p key={n}>{n}</p>)}
-    {o.feeNote && <p>Fee: {o.feeNote}.</p>}
-    {o.credit && <p>{creditLabel(o.credit)}. Approval isn’t guaranteed.</p>}
-    {o.url && <a className={styles.chartApply} href={o.url} target="_blank" rel="noreferrer">
-      Review card & fees <LuArrowUpRight aria-hidden="true" />
-    </a>}
-  </div>
+      {/* Points expiration warnings */}
+      {expirations.length > 0 && (
+        <div className={`${styles.card} ${styles.expirationCard}`}>
+          <h2>Expiration alerts</h2>
+          {expirations.map((w) => (
+            <div key={w.balance.id} className={styles.row} onClick={() => onEdit(w.balance.id)}>
+              <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>
+                {w.severity === 'warning' ? '🚨' : '⏳'}
+              </div>
+              <div className={styles.rowMain}>
+                <div className={styles.rowTitle}>{w.balance.cardName}</div>
+                <div className={styles.rowSub}>{w.message}</div>
+              </div>
+              <span className={styles.chev}>›</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Redemption math */}
+      {redemptions.length > 0 && (
+        <div className={styles.card}>
+          <h2>The real math on redemption</h2>
+          <div className={styles.cardSub}>Not all redemption methods are equal. Here is what your points are actually worth.</div>
+          {redemptions.map((r) => (
+            <div key={r.balance.id} style={{ marginTop: 16 }}>
+              <div className={styles.rowTitle}>{r.balance.cardName}</div>
+              <div className={styles.rowSub}>
+                {Math.round(r.balance.amount).toLocaleString()} {r.program.unit}
+              </div>
+              {r.methods.map((m) => (
+                <div key={m.id} className={`${styles.redeemMethod} ${m.best ? styles.redeemBest : ''}`}>
+                  <div className={styles.redeemLeft}>
+                    <span>{m.emoji}</span>
+                    <span>{m.label}</span>
+                    <span className={styles.redeemCpp}>{m.cpp}c/pt</span>
+                  </div>
+                  <span className={styles.redeemValue}>
+                    {fmtUSD(m.value)}
+                    {m.best && <span className={styles.redeemBestTag}>Best</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Credit journey — graduation milestones */}
+      {milestones.length > 0 && (
+        <div className={styles.card}>
+          <h2>Your credit journey</h2>
+          <div className={styles.cardSub}>Building credit unlocks better cards with higher rewards.</div>
+          {milestones.map((m) => (
+            <div key={m.id} className={styles.milestoneRow}>
+              <div className={`${styles.milestoneIcon} ${m.achieved ? styles.achieved : ''}`}>
+                {m.achieved ? '✅' : m.icon}
+              </div>
+              <div className={styles.milestoneMain}>
+                <div className={styles.milestoneTitle}>
+                  {m.title}
+                  {m.achieved && <span className={`${styles.tag} ${styles.sm}`}>Done</span>}
+                </div>
+                <div className={styles.milestoneDetail}>{m.detail}</div>
+                {!m.achieved && (
+                  <div className={styles.meter} style={{ marginTop: 8 }}>
+                    <div className={styles.meterBar} style={{ height: 6 }}>
+                      <span className={styles.meterFill} style={{ width: `${Math.round(m.progress * 100)}%` }} />
+                    </div>
+                    <span>{Math.round(m.progress * 100)}%</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Spending breakdown */}
+      {insights.length > 0 && (
+        <div className={`${styles.card} ${styles.darkCard}`}>
+          <h2>Your spending breakdown</h2>
+          <div className={styles.cardSub}>Based on {SPEND_TXN_COUNT} transactions from the last 30 days.</div>
+          {insights.map((i) => (
+            <div key={i.id} className={styles.coachCatRow}>
+              <div className={styles.coachCatHead}>
+                <span>{i.emoji} {i.label}</span>
+                <span className={styles.coachCatSpend}>{fmtMoney(i.spend)}/mo</span>
+              </div>
+              {i.bestCard ? (
+                <div className={styles.coachCatDetail}>
+                  <span className={styles.coachCatCard}>
+                    Best: <b>{i.bestCard.balance.cardName}</b> at {i.bestRate}
+                  </span>
+                  <span className={styles.coachCatEarn}>
+                    ≈{fmtMoney(i.monthlyReward)}/mo
+                  </span>
+                </div>
+              ) : (
+                <div className={styles.coachCatDetail}>
+                  <span className={styles.rowSub}>No cards earn a bonus here</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Actions */}
+      {actions.length > 0 && (
+        <div className={styles.card}>
+          <h2>Ideas for your spending</h2>
+          {actions.map((a) => (
+            <div key={a.id} className={styles.row}>
+              <div className={`${styles.rowIcon} ${styles.gray} ${styles.emoji}`}>{a.icon}</div>
+              <div className={styles.rowMain}>
+                <div className={styles.rowTitle}>{a.title}</div>
+                <div className={styles.rowSub}>{a.detail}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Quick tips */}
+      {tips.length > 0 && (
+        <>
+          <div className={styles.sectionHead}>
+            <span className={styles.sectionTitle}>More tips</span>
+          </div>
+          {tips.map((t) =>
+            t.href === '#coach' && !t.balanceId ? (
+              <div key={t.id} className={styles.tip}>
+                <div className={styles.tipIcon}>{t.icon}</div>
+                <div className={`${styles.tipText} ${styles.tipMain}`}>{t.text}</div>
+              </div>
+            ) : (
+              <a
+                key={t.id}
+                className={styles.tip}
+                href={t.href}
+                onClick={
+                  t.balanceId
+                    ? (e) => { e.preventDefault(); onEdit(t.balanceId) }
+                    : undefined
+                }
+              >
+                <div className={styles.tipIcon}>{t.icon}</div>
+                <div className={`${styles.tipText} ${styles.tipMain}`}>{t.text}</div>
+                <span className={styles.chev}>›</span>
+              </a>
+            ),
+          )}
+        </>
+      )}
+
+      <Disclaimer />
+    </>
+  )
 }
