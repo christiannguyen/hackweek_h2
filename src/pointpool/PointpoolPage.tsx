@@ -4,6 +4,7 @@ import {
   fmtPts,
   fmtUSD,
   isCash,
+  hasEstimates,
   PROGRAMS,
   utilization,
   type Balance,
@@ -80,7 +81,8 @@ function WalletDeck({ balances, onEdit, onRewards }: Props) {
         <DeckDetails balance={front} onEdit={onEdit} onRewards={onRewards} />
       </div>
       {/* Remounted per card so the chosen example and any typed-in price start fresh. */}
-      <RewardsPreview key={front.id} balance={front} onEdit={() => onRewards(front.id)} />
+      {/* A program without estimates needs the card itself edited (its program), not just its balance. */}
+      <RewardsPreview key={front.id} balance={front} onEdit={() => (hasEstimates(PROGRAMS[front.programId]) ? onRewards : onEdit)(front.id)} />
     </>
   )
 }

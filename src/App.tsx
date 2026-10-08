@@ -12,7 +12,7 @@ import { LearnPage } from '@/pointpool/LearnPage'
 import { Onboarding } from '@/pointpool/Onboarding'
 import { OffersPage } from '@/pointpool/OffersPage'
 import { PointpoolPage } from '@/pointpool/PointpoolPage'
-import { isOnboarded, markLoggedOut, useBalances } from '@/pointpool/useBalances'
+import { hasOwnWallet, isOnboarded, markLoggedOut, useBalances } from '@/pointpool/useBalances'
 import { useHashRoute } from '@/pointpool/useHashRoute'
 import styles from '@/pointpool/pointpool.module.css'
 
@@ -21,9 +21,9 @@ function App() {
   const { balances, upsert, remove, replaceAll } = useBalances()
   // First visit (or "#welcome" to replay it) shows the simulated sign-up and card setup.
   const [onboarding, setOnboarding] = useState(() => !isOnboarded() || window.location.hash === '#welcome')
-  // A first run swaps the sample wallet for the user's picks; a replay adds new picks to the cards already saved.
-  // Read each render: finishing marks onboarding done, so a later replay in the same visit counts as a replay.
-  const firstRun = !isOnboarded()
+  // While the sample wallet is still showing, onboarding swaps it for the user's picks; once the cards are theirs
+  // (even after logging out), new picks are added to them instead.
+  const firstRun = !hasOwnWallet()
   // Shared so the category picked on the home hero carries into the full Compare page. Starts on the user's
   // highest-spend category.
   const [category, setCategory] = useState<CategoryId>(TOP_CATEGORY)
@@ -57,6 +57,9 @@ function App() {
           setOnboarding(false)
           window.location.hash = '#home'
         }}
+        hasWallet={!firstRun}
+        // Replaying from the Account menu: a way back to the app without signing in again.
+        onExit={isOnboarded() ? () => { setOnboarding(false); window.location.hash = '#home' } : undefined}
       />
     )
   }

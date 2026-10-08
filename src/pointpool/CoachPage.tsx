@@ -101,6 +101,7 @@ interface SpendingAction {
   Icon: IconType
   title: string
   detail: string
+  href?: string // makes the row a link (e.g. to Compare)
 }
 
 function generateActions(balances: Balance[], insights: CategoryInsight[]): SpendingAction[] {
@@ -127,7 +128,8 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
         id: `gap-${i.id}`,
         Icon: LuSearch,
         title: `${i.label}: earning the base rate`,
-        detail: `You spend ${fmtMoney(i.spend)}/mo here. A card with a bonus on ${catName(i.id)} could earn more; the comparison on Home shows options.`,
+        detail: `You spend ${fmtMoney(i.spend)}/mo here. A card with a bonus on ${catName(i.id)} could earn more.`,
+        href: '#compare',
       })
     }
   }
@@ -173,7 +175,7 @@ function walletScore(insights: CategoryInsight[]): number {
 }
 
 // A collapsed list row: the headline stays visible, the explanation is one tap away.
-function CoachItem({ Icon, title, detail }: { Icon: IconType; title: string; detail: string }) {
+function CoachItem({ Icon, title, detail, href, linkLabel }: { Icon: IconType; title: string; detail: string; href?: string; linkLabel?: string }) {
   return (
     <details className={c.itemDetails}>
       <summary>
@@ -182,6 +184,7 @@ function CoachItem({ Icon, title, detail }: { Icon: IconType; title: string; det
         <LuChevronDown className={c.itemChev} aria-hidden="true" />
       </summary>
       <p className={c.itemSub}>{detail}</p>
+      {href && <a className={c.itemLink} href={href}>{linkLabel ?? 'Open'} ›</a>}
     </details>
   )
 }
@@ -270,7 +273,7 @@ export function CoachPage({ balances, onEdit }: Props) {
   const insights = analyzeSpending(balances, SPEND)
   const score = walletScore(insights)
   const actions = generateActions(balances, insights)
-  const tips = coachTips(balances).filter((t) => t.kind !== 'bonus' && t.kind !== 'rotating')
+  const tips = coachTips(balances).filter((t) => t.kind !== 'bonus' && t.kind !== 'rotating' && t.kind !== 'uses')
 
   const hasCards = balances.some((b) => hasEstimates(PROGRAMS[b.programId]))
 
@@ -367,7 +370,7 @@ export function CoachPage({ balances, onEdit }: Props) {
           </div>
           <div className={c.carousel}>
             {stacking.map((s) => (
-              <button key={s.category.id} className={c.slide} onClick={() => onEdit(s.card.id)}>
+              <div key={s.category.id} className={c.slide}>
                 <div className={c.slideArt}>
                   <CategoryArt category={s.category.id} className={c.slideImg} />
                   <span className={c.slideRate}>{s.rateLabel}</span>
@@ -382,7 +385,7 @@ export function CoachPage({ balances, onEdit }: Props) {
                     <span style={{ width: `${maxStackMonthly > 0 ? Math.round((s.monthly / maxStackMonthly) * 100) : 0}%` }} />
                   </span>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         </>
@@ -407,7 +410,6 @@ export function CoachPage({ balances, onEdit }: Props) {
         </>
       )}
 
-      {/* Redemption math */}
       {redemptions.length > 0 && (
         <>
           <div id="coach-redeem" className={c.sectionHead}>
@@ -467,7 +469,7 @@ export function CoachPage({ balances, onEdit }: Props) {
           </div>
           <div className={c.list}>
             {actions.map((a) => (
-              <CoachItem key={a.id} Icon={a.Icon} title={a.title} detail={a.detail} />
+              <CoachItem key={a.id} Icon={a.Icon} title={a.title} detail={a.detail} href={a.href} linkLabel="See options in Compare" />
             ))}
             {tips.map((t) =>
               t.href === '#coach' && !t.balanceId ? (

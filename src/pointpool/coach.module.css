@@ -215,3 +215,6 @@ button.item { width: 100%; border: 0; text-align: left; cursor: pointer; font-fa
   background: var(--lime);
 }
 .cta:hover { background: #9fee35; }
+
+/* A link inside an opened Ideas row, e.g. to Compare. */
+.itemLink { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; font-weight: 600; color: var(--green-ink); text-decoration: none; }
