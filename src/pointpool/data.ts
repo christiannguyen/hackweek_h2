@@ -74,9 +74,12 @@ export const fmtMoney = (n: number) => {
   const digits = c >= 100 ? 0 : 2
   return c.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: digits, maximumFractionDigits: digits })
 }
-export const ageDays = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 864e5)
+// Never negative: a balance saved with a clock slightly ahead still reads as today.
+export const ageDays = (iso: string) => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 864e5))
 export const isCash = (b: Balance) => PROGRAMS[b.programId].type === 'cashback'
-export const utilization = (b: Balance) => b.creditLimit && b.creditLimit > 0 ? (b.cardBalance ?? 0) / b.creditLimit : null
+// Null until both the limit and the amount owed are entered, so a blank balance never reads as 0%.
+export const utilization = (b: Balance) =>
+  b.creditLimit && b.creditLimit > 0 && b.cardBalance != null ? b.cardBalance / b.creditLimit : null
 export const isStale = (b: Balance) => ageDays(b.updatedAt) > STALE_DAYS
 // A program has estimates when it's supported and has a value per point (cashback is always $1 = $1).
 export const hasEstimates = (p: Program) => p.supported && (p.type === 'cashback' || !!p.cpp)
@@ -126,6 +129,9 @@ export function last30DaysSpend(txns: Transaction[], asOf: string): Spend {
 // SAMPLE: counted back from the newest sample transaction rather than today, so the demo doesn't run empty.
 const SAMPLE_AS_OF = TRANSACTIONS.reduce((d, t) => (t.date > d ? t.date : d), '')
 export const SPEND = last30DaysSpend(TRANSACTIONS, SAMPLE_AS_OF)
+// How many sample transactions the 30 days cover, for "based on N transactions".
+const WINDOW_FROM = new Date(new Date(`${SAMPLE_AS_OF}T12:00:00Z`).getTime() - 29 * 864e5).toISOString().slice(0, 10)
+export const SPEND_TXN_COUNT = TRANSACTIONS.filter((t) => t.date >= WINDOW_FROM && t.date <= SAMPLE_AS_OF).length
 
 export const categoriesBySpend = (spend: Spend = SPEND) => [...CATEGORIES].sort((a, b) => spend[b.id] - spend[a.id])
 
@@ -172,6 +178,7 @@ export const CARD_RULES: Record<string, CardRule> = {
       transport: { rate: 3, note: 'Gas stations and EV charging.' },
     },
   },
+  Venture: { base: 2, rates: {} },
   'Discover it': {
     rates: {
       shopping: { rate: 5, cap: { amount: 1500, per: 'quarter' }, quarters: 1, note: ROTATING },
@@ -196,7 +203,8 @@ export interface CardEarning {
   terms?: CategoryRate // the card's terms in this category, as counted (a rate that needs an extra step isn't)
   known: boolean // false = card not in the sample rules, estimated at the base 1× / 1%
   note?: string
-  monthly: number // points a month, or dollars a month for cashback cards
+  avgRate: number // the rate averaged over a year, after caps and rotating quarters (equals `rate` without them)
+  monthly: number // points a month, or dollars a month for cashback cards, averaged over a year
   yearly: number
   value: Record<GoalId, number> // estimated $ a month for each way to use it
 }
@@ -218,12 +226,17 @@ export function cardEarnings(balances: Balance[], cat: CategoryId, spend: Spend 
     const rate = terms?.rate ?? base
     const note = listed?.needs ? `${fmtRate(program.type, listed.rate)} if you ${listed.needs}. Counted at ${fmtRate(program.type, base)}.` : listed?.note
     const cash = program.type === 'cashback'
-    const monthly = cash ? cents((amount * rate) / 100) : Math.round(amount * rate)
-    const yearly = cash ? cents((amount * rate * 12) / 100) : Math.round(amount * rate * 12)
+    // A year of spend, with the bonus rate only on the part a cap or rotating quarter allows (same as compareCards).
+    const yearSpend = amount * 12
+    const bonus = terms ? bonusSpend(yearSpend, terms) : 0
+    const yearUnits = bonus * rate + (yearSpend - bonus) * base // points, or cents for cashback
+    const avgRate = yearSpend > 0 ? Math.round((yearUnits / yearSpend) * 10) / 10 : rate
+    const yearly = cash ? cents(yearUnits / 100) : Math.round(yearUnits)
+    const monthly = cash ? cents(yearUnits / 1200) : Math.round(yearUnits / 12)
     const value = Object.fromEntries(
-      GOAL_IDS.map((g) => [g, cash ? monthly : cents((monthly * (program.cpp?.[g] ?? 0)) / 100)]),
+      GOAL_IDS.map((g) => [g, cash ? monthly : cents((yearUnits / 12) * (program.cpp?.[g] ?? 0) / 100)]),
     ) as Record<GoalId, number>
-    out.push({ balance, program, base, rate, terms, known: !!rule, note, monthly, yearly, value })
+    out.push({ balance, program, base, rate, terms, known: !!rule, note, avgRate, monthly, yearly, value })
   }
   return out
 }
@@ -513,7 +526,7 @@ const MORE_APP_CARDS: MarketCard[] = [
   { name: 'Wander Amex', issuer: 'Credit One', short: 'CO', type: 'points', cpp: 1, base: 1, rates: { food: { rate: 1, note: '5× at restaurants.' }, transport: { rate: 5, note: 'At gas stations.' } }, annualFee: 95, credit: 'fair', inApp: true, url: 'https://www.creditonebank.com/credit-cards/wander-card' },
   { name: 'Aspire Cash Back Rewards', issuer: 'Aspire', short: 'AS', type: 'cashback', base: 1, rates: { food: { rate: 3, note: 'At grocery stores.' }, transport: { rate: 3, note: 'At gas stations.' } }, annualFee: 99, feeNote: 'varies by offer, and a monthly fee starts in year two', credit: 'building', inApp: true, url: 'https://www.aspirecreditcard.com/' },
   { name: 'Fortiva Cash Back Rewards', issuer: 'Fortiva', short: 'FO', type: 'cashback', base: 1, rates: { food: { rate: 3, note: 'At grocery stores.' }, transport: { rate: 3, note: 'At gas stations.' } }, annualFee: 99, feeNote: 'varies by offer, and a monthly fee starts in year two', credit: 'building', inApp: true, url: 'https://www.fortivacreditcard.com/' },
-  { name: 'Bilt Mastercard', issuer: 'Bilt', short: 'BI', type: 'points', cpp: 1, base: 1, rates: { food: { rate: 1, note: '3× at restaurants, in months with 5 or more purchases.' } }, annualFee: 0, credit: 'good', note: 'Also earns on rent, with no fee.', inApp: true, url: 'https://www.biltrewards.com/card' },
+  { name: 'Bilt Mastercard', issuer: 'Bilt', short: 'BI', type: 'points', cpp: 0.55, base: 1, rates: { food: { rate: 1, note: '3× at restaurants, in months with 5 or more purchases.' } }, annualFee: 0, credit: 'good', note: 'Also earns on rent, with no fee.', inApp: true, url: 'https://www.biltrewards.com/card' },
 ]
 
 const ALL_CARDS = [...MARKET_CARDS, ...MORE_APP_CARDS]
@@ -615,7 +628,9 @@ function earnSteps(yearSpend: number, base: number, type: Program['type'], cpp: 
   const bonus = bonusSpend(yearSpend, r)
   const label = r.quarters
     ? `${fmtDollars(bonus)} in its featured ${r.quarters === 1 ? 'quarter' : 'quarters'} at ${at(r.rate)}`
-    : `First ${fmtDollars(r.cap!.amount)} a ${r.cap!.per} at ${at(r.rate)}`
+    : bonus < yearSpend
+      ? `First ${fmtDollars(r.cap!.amount)} a ${r.cap!.per} at ${at(r.rate)}`
+      : `${fmtDollars(yearSpend)} at ${at(r.rate)} (up to ${fmtDollars(r.cap!.amount)} a ${r.cap!.per})`
   const steps = [step(label, bonus, r.rate)]
   if (yearSpend > bonus) steps.push(step(`Then ${fmtDollars(yearSpend - bonus)} at ${at(base)}`, yearSpend - bonus, base))
   return steps

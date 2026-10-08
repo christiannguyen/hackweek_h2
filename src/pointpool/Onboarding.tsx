@@ -83,6 +83,13 @@ interface Picked {
   amount: string
 }
 
+// A typed balance as saved: never negative, whole points, cashback to the cent. Blank or invalid reads as 0.
+const cleanAmount = (p: Picked) => {
+  const n = Number(p.amount)
+  if (!Number.isFinite(n) || n < 0) return 0
+  return PROGRAMS[p.programId].type === 'cashback' ? Math.round(n * 100) / 100 : Math.round(n)
+}
+
 const isEmail = (s: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim())
 
 export function Onboarding({ onFinish }: { onFinish: (cards: Omit<Balance, 'id' | 'updatedAt'>[]) => void }) {
@@ -105,7 +112,7 @@ export function Onboarding({ onFinish }: { onFinish: (cards: Omit<Balance, 'id' 
 
   const finish = () => {
     markOnboarded()
-    onFinish(picked.map((p) => ({ programId: p.programId, cardName: p.name, amount: Number(p.amount) || 0 })))
+    onFinish(picked.map((p) => ({ programId: p.programId, cardName: p.name, amount: cleanAmount(p) })))
   }
 
   const stepIndex = PROGRESS.indexOf(step)
@@ -342,7 +349,7 @@ function Balances({ picked, setPicked, onNext }: { picked: Picked[]; setPicked: 
               </span>
               <span className={styles.amount}>
                 {cash && <em>$</em>}
-                <input type="number" inputMode="decimal" min={0} placeholder={cash ? '0.00' : '0'} value={p.amount} onChange={(e) => set(p.key, e.currentTarget.value)} />
+                <input type="number" inputMode="decimal" min={0} step={cash ? 0.01 : 1} placeholder={cash ? '0.00' : '0'} value={p.amount} onChange={(e) => set(p.key, e.currentTarget.value)} />
               </span>
             </label>
           )
@@ -407,13 +414,18 @@ function Done({ picked, goals, onFinish }: { picked: Picked[]; goals: string[]; 
       <p className={styles.sub}>Here’s what each balance could look like. Each program’s rewards are used within that program.</p>
       <div className={styles.list}>
         {picked.map((p) => {
-          const b: Balance = { id: 0, programId: p.programId, cardName: p.name, amount: Number(p.amount) || 0, updatedAt: '' }
+          const b: Balance = { id: 0, programId: p.programId, cardName: p.name, amount: cleanAmount(p), updatedAt: '' }
           const uses = balanceUses(b)
           const cash = PROGRAMS[p.programId].type === 'cashback'
+          // One line per way of using the balance: two picks that read from the same use (flights and hotels are both
+          // travel) would just repeat the same number. Cashback is exact, so it gets no "≈".
+          const seen = new Set<string>()
           const parts = (chosen.length ? chosen : [GOAL_OPTIONS.find((o) => o.id === 'bill')!])
             .map((o) => {
               const use = uses.find((u) => u.id === (cash ? o.cash : o.points))
-              return use && `≈${fmtMoney(use.value)} ${o.phrase}`
+              if (!use || seen.has(use.id)) return null
+              seen.add(use.id)
+              return `${cash ? '' : '≈'}${fmtMoney(use.value)} ${o.phrase}`
             })
             .filter(Boolean)
             .slice(0, 2)

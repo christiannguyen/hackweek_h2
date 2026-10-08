@@ -1,5 +1,4 @@
 import {
-  fmtMoney,
   fmtPts,
   fmtUSD,
   isCash,
@@ -91,12 +90,12 @@ function CardTile({ balance: b, onEdit }: { balance: Balance; onEdit: (id?: numb
         <div className={styles.tileSection}>
           <div className={styles.tileStat}>
             <span className={styles.tileLabel}>Balance</span>
-            <span className={styles.tileValue}>{fmtUSD(b.cardBalance ?? 0)}</span>
+            <span className={styles.tileValue}>{b.cardBalance != null ? fmtUSD(b.cardBalance) : '—'}</span>
           </div>
           {b.creditLimit != null && b.creditLimit > 0 && (
             <div className={styles.tileStat}>
               <span className={styles.tileLabel}>Limit</span>
-              <span className={styles.tileValue}>{fmtMoney(b.creditLimit)}</span>
+              <span className={styles.tileValue}>{fmtUSD(b.creditLimit)}</span>
             </div>
           )}
           {utilPct !== null && (

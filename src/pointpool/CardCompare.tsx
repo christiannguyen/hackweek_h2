@@ -189,6 +189,13 @@ function NewCardCommitment({ option: o }: { option: CardOption }) {
   )
 }
 
+// The rate averaged over a year of steps: a 5% rotating category featured one quarter reads as about 2%, not 5%.
+const avgRate = (o: CardOption) => {
+  const spend = o.steps.reduce((t, x) => t + x.spend, 0)
+  return spend > 0 ? Math.round((o.steps.reduce((t, x) => t + x.spend * x.rate, 0) / spend) * 10) / 10 : o.rate
+}
+const rateNote = (o: CardOption) => `*Averaged over a year: ${fmtRate(o.type, o.rate)} during bonus periods or up to a cap.`
+
 function FirstCardOpportunity({ option: o, category, recommended }: {
   option: CardOption; category: CategoryId; recommended: boolean
 }) {
@@ -196,7 +203,7 @@ function FirstCardOpportunity({ option: o, category, recommended }: {
     <div className={styles.firstCardOpportunity}>
       <div className={styles.firstCardEyebrow}>{recommended ? 'Your potential rewards' : 'Estimated annual value'}</div>
       <div className={styles.firstCardValue}>{fmtDollars(o.net)}<span>/ year</span></div>
-      <p className={styles.firstCardMonthly}>About {fmtMoney(o.net / 12)}/mo after the annual fee</p>
+      <p className={styles.firstCardMonthly}>About {fmtMoney(o.net / 12)}/mo{o.fee > 0 ? ' after the annual fee' : ''}</p>
       <div className={styles.firstCardProduct}>
         <div className={`${styles.cardFace} ${styles.newCardFace}`}>
           <span className={styles.cardIssuer}>{o.issuer ?? o.short}</span>
@@ -204,9 +211,9 @@ function FirstCardOpportunity({ option: o, category, recommended }: {
           <span className={styles.cardOwnership}>New card</span>
         </div>
         <div>
-          <div className={styles.compareRate}>{fmtRate(o.type, o.rate)}{o.steps.length > 1 && <small>*</small>}</div>
+          <div className={styles.compareRate}>{fmtRate(o.type, avgRate(o))}{o.steps.length > 1 && <small>*</small>}</div>
           <div className={styles.compareRateLabel}>{o.type === 'cashback' ? 'cash back' : 'points'} on {catName(category)}</div>
-          {o.steps.length > 1 && <div className={styles.rateNote}>*Caps or bonus periods apply.</div>}
+          {o.steps.length > 1 && <div className={styles.rateNote}>{rateNote(o)}</div>}
           {o.type === 'points' && <div className={styles.rateNote}>Valued at {o.cpp}¢/point.</div>}
         </div>
       </div>
@@ -235,10 +242,10 @@ function CompareTile({ option: o, category, winner, children }: {
         {children}
         {!o.yours && <span className={o.fee > 0 ? styles.cardFeeTag : styles.cardNoFeeTag}>{o.fee > 0 ? `${fmtDollars(o.fee)}/yr fee` : 'No annual fee'}</span>}
       </div>
-      <div className={styles.compareRate}>{fmtRate(o.type, o.rate)}{o.steps.length > 1 && <small>*</small>}</div>
+      <div className={styles.compareRate}>{fmtRate(o.type, avgRate(o))}{o.steps.length > 1 && <small>*</small>}</div>
       <div className={styles.compareRateLabel}>{o.type === 'cashback' ? 'cash back' : 'points'} on {catName(category)}</div>
       {(!o.known || o.steps.length > 1 || o.type === 'points') && <div className={styles.rateNote}>
-        {!o.known ? 'Estimated base rate. ' : ''}{o.steps.length > 1 ? '*Caps or bonus periods apply. ' : ''}{o.type === 'points' ? `Valued at ${o.cpp}¢/point.` : ''}
+        {!o.known ? 'Estimated base rate. ' : ''}{o.steps.length > 1 ? `${rateNote(o)} ` : ''}{o.type === 'points' ? `Valued at ${o.cpp}¢/point.` : ''}
       </div>}
       <dl className={styles.compareNumbers}>
         <div><dt>Rewards / yr</dt><dd>{fmtDollars(o.rewards)}</dd></div>
@@ -482,7 +489,7 @@ export function ScoreGoal({ balances, category, variant = 'condensed' }: GoalPro
         </span>
         <div className={styles.goalMain}>
           <div className={styles.goalText}>
-            <b>{top.name}</b> is usually for scores of {goal.score}+. It could {goal.best ? 'add' : 'earn'} {mo(extra)} on{' '}
+            <b>{top.name}</b> is usually for scores of {goal.score}+. It could {goal.best ? 'add' : 'earn'} {fmtDollars(extra * 12)} a year on{' '}
             {catName(category)}
             {top.fee === 0 && ', with no annual fee'}.
           </div>
