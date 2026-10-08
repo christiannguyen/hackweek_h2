@@ -44,6 +44,9 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
   const alternatives = [...worth, ...close, ...rest].sort((a, b) => b.net - a.net)
   const suggested = worth[0] ?? alternatives[0]
   const recommends = !!worth[0]
+  // The border and badge go on whichever of the two tiles earns more a year after fees, so they always match the
+  // numbers shown. (The $2/mo threshold still decides the wording and the "Review card" button, not the highlight.)
+  const suggestedEarnsMore = !!suggested && (!selected || suggested.net > selected.net)
   const gain = suggested ? Math.round((suggested.net - (selected?.net ?? 0)) * 100) / 100 : 0
   const spend = SPEND[category]
   const categoryLabel = TOP_CATEGORIES.find((c) => c.id === category)?.label ?? catName(category)
@@ -90,7 +93,7 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
             {!selected ? 'Your wallet' : isBest ? 'Highest estimate in your wallet' : 'Your selected card'}
           </h4>
           {selected ? (
-            <CompareTile option={selected} category={category} winner={!recommends && isBest}>
+            <CompareTile option={selected} category={category} winner={!suggestedEarnsMore}>
               {yours.length > 1 && (
                 <label className={styles.cardPicker}>
                   <span>Compare another card <LuChevronDown aria-hidden="true" /></span>
@@ -113,7 +116,7 @@ export function CardCompare({ balances, category, onCategory, onEdit, variant = 
             <span className={styles.colEyebrow}>If you apply</span>
             {!suggested ? 'No options yet' : recommends ? 'A card that could earn more' : 'Closest new card'}
           </h4>
-          {suggested ? <CompareTile option={suggested} category={category} winner={recommends} /> : (
+          {suggested ? <CompareTile option={suggested} category={category} winner={suggestedEarnsMore} /> : (
             <div className={styles.compareEmpty}>No new cards to compare for this category.</div>
           )}
         </div>
