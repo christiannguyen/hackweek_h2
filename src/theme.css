@@ -4,16 +4,16 @@
 :root {
   color-scheme: dark;
 
-  --bg: #17141b;
-  --surface: #221e28;
-  --surface-2: #2c2732;
-  --surface-3: #38323f;
-  --line: #37323d;
-  --line-strong: #4a4351;
+  --bg: #1e1a24;
+  --surface: #2a2530;
+  --surface-2: #342e3b;
+  --surface-3: #40394a;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.15);
 
-  --text: #f6f3f8;
-  --text-2: #b8b0be;
-  --text-3: #8e8697;
+  --text: #faf7fc;
+  --text-2: #c6bfcd;
+  --text-3: #9a92a4;
 
   /* Soft lilac: selection, badges, small highlights. Dark text on it, like the reference's "Active" pills. */
   --accent: #c9a8ee;
@@ -29,25 +29,25 @@
   --on-primary: #141016;
 
   /* The lilac corner light from the Marketplace card, for the main card on each tab. */
-  --card-glow:
-    radial-gradient(85% 65% at 100% 0%, rgba(201, 168, 238, 0.30), rgba(201, 168, 238, 0) 62%),
-    radial-gradient(70% 50% at 0% 100%, rgba(230, 169, 214, 0.08), rgba(230, 169, 214, 0) 60%),
+  --card-glow: 
+    radial-gradient(85% 65% at 100% 0%, rgba(201, 168, 238, 0.36), rgba(201, 168, 238, 0) 62%),
+    radial-gradient(70% 50% at 0% 100%, rgba(230, 169, 214, 0.10), rgba(230, 169, 214, 0) 60%),
     var(--surface);
 
-  /* Compare chart: earns more vs earns less than your card. */
-  --gain: #4cc38a;
-  --gain-ink: #7fdcab;
-  --loss: #ef6b6b;
-  --loss-ink: #f59a9a;
+  /* Compare chart: earns more (mint) vs earns less (coral) than your card. Gradients fade toward the tip. */
+  --gain: linear-gradient(180deg, #a3f0c8 0%, #52c992 100%);
+  --gain-ink: #a8f0cb;
+  --loss: linear-gradient(180deg, #f07c8f 0%, #ffb0bc 100%);
+  --loss-ink: #ffb3be;
 
-  --glow: radial-gradient(120% 55% at 50% 0%, rgba(201, 168, 238, 0.1), rgba(201, 168, 238, 0) 70%);
+  --glow: radial-gradient(130% 70% at 50% 0%, rgba(201, 168, 238, 0.34), rgba(230, 169, 214, 0.12) 45%, rgba(201, 168, 238, 0) 78%);
 
   --warn-ink: #e8b27f;
   --warn-tint: rgba(232, 178, 127, 0.12);
   --warn-line: rgba(232, 178, 127, 0.35);
   --danger: #ef7d7d;
 
-  --shadow-dark: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-dark: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 28px rgba(10, 6, 16, 0.28);
 }
 
 html, body { background: var(--bg); color: var(--text); }

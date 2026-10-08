@@ -9,14 +9,14 @@
   --muted: var(--text-2);
   --error: var(--danger);
   min-height: 100svh;
-  background: var(--accent-tint);
+  background: #141118;
   font-family: "Figtree", -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
 }
-.phone { position: relative; max-width: 430px; min-height: 100svh; margin: 0 auto; background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
+.phone { position: relative; max-width: 430px; min-height: 100svh; margin: 0 auto; background: var(--glow) no-repeat, var(--bg); background-size: 100% 440px, auto; display: flex; flex-direction: column; overflow: hidden; }
 /* Matches the welcome surface, so the frame and the screen are one colour. */
-.phone.dark { background: var(--surface-2); color: var(--text); }
+.phone.dark { background: var(--glow) no-repeat, var(--bg); background-size: 100% 440px, auto; color: var(--text); }
 .phone button { font: inherit; cursor: pointer; }
 
 /* Top bar: back + progress */

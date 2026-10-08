@@ -29,7 +29,7 @@
   --dark-warn-ink: var(--warn-ink);
   --lime-ink: var(--on-primary);
   --radius: 18px;
-  --shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+  --shadow: var(--shadow-dark);
 }
 
 .view { padding: 4px 14px 16px; display: flex; flex-direction: column; gap: 14px; }
@@ -58,6 +58,7 @@
 
 .card {
   background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 16px;
   box-shadow: var(--shadow);
@@ -758,8 +759,8 @@ details[open] > .barRow::after { transform: rotate(90deg); }
 /* Each bar grows out of the baseline when the chart mounts — up for a gain, down for a loss — a column at a time,
    left to right. The chart remounts on a category or fee-filter change, so the move replays whenever the figures
    change, not only on the first open. The number rides the bar's growing edge; it fades in as the bar settles. */
-.colBar { position: absolute; left: 50%; width: 44px; min-height: 2px; margin-left: -22px; border-radius: 4px 4px 0 0; background: var(--gain); animation: barGrow 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards; animation-delay: calc(var(--i, 0) * 80ms); }
-.colBar.colBarLoss { border-radius: 0 0 4px 4px; background: var(--loss); }
+.colBar { position: absolute; left: 50%; width: 44px; min-height: 2px; margin-left: -22px; border-radius: 6px 6px 2px 2px; background: var(--gain); animation: barGrow 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards; animation-delay: calc(var(--i, 0) * 80ms); }
+.colBar.colBarLoss { border-radius: 2px 2px 6px 6px; background: var(--loss); }
 .colBar .colTop { color: var(--gain-ink); }
 .colBar.colBarLoss .colTop { color: var(--loss-ink); }
 @keyframes barGrow { from { height: 0; } }
