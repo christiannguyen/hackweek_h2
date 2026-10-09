@@ -1,4 +1,4 @@
-import { LuArrowRight, LuFuel, LuShoppingBag, LuSparkles, LuUtensils } from 'react-icons/lu'
+import { LuArrowRight, LuArrowUpRight, LuFuel, LuShoppingBag, LuSparkles, LuStore, LuUtensils } from 'react-icons/lu'
 import {
   cardStacking,
   catName,
@@ -31,6 +31,16 @@ export function HomePage({ balances, compare, onRewards }: Props) {
       <SpendingSnapshot balances={balances} />
       <HomeInsight balances={balances} onCategory={compare.onCategory} onEdit={compare.onEdit} />
       <HomeRewards balances={balances} onRewards={onRewards} />
+
+      {/* Out to Kikoff: the Marketplace lives in the Kikoff app, so this opens its login in a new tab. */}
+      <a className={styles.promo} href="https://kikoff.com/login" target="_blank" rel="noopener noreferrer">
+        <span className={styles.promoIcon}><LuStore aria-hidden="true" /></span>
+        <span className={styles.promoMain}>
+          <span className={styles.promoTitle}>Kikoff Marketplace</span>
+          <span className={styles.promoSub}>Log in to Kikoff to shop the Marketplace</span>
+        </span>
+        <LuArrowUpRight className={styles.promoArrow} aria-label="Opens in a new tab" />
+      </a>
 
       <p className={styles.disclaimer}>
         Sample spending and illustrative rates. Reward balances are entered by you; check the issuer for your current balance and redemption options.

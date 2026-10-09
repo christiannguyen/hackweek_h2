@@ -115,8 +115,17 @@ a.row { text-decoration: none; color: inherit; }
   box-shadow: var(--shadow);
   text-decoration: none; color: var(--ink);
 }
+.promo { min-height: 64px; }
+.promo:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 2px; }
+.promoIcon {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  display: grid; place-items: center; background: var(--green-tint); color: var(--green-ink);
+}
+.promoIcon svg { width: 20px; height: 20px; }
+.promoMain { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .promoTitle { font-size: 15px; font-weight: 600; }
 .promoSub { font-size: 13px; margin-top: 2px; color: var(--text); }
+.promoArrow { width: 20px; height: 20px; flex-shrink: 0; color: var(--green-ink); }
 
 /* Buttons */
 .btnText {
