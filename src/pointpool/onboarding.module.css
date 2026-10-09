@@ -160,6 +160,8 @@
 
 /* Goal tiles: two columns */
 .goalGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* An odd tile out takes the full last row instead of leaving a gap beside it. */
+.goalGrid > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 .goalTile { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; background: #fff; border: 1.5px solid var(--line); border-radius: 16px; padding: 12px; color: var(--ink); }
 .goalTile.selected { border-color: var(--green); background: var(--green-tint); }
 .goalTop { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; margin-bottom: 8px; }

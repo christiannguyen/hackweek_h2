@@ -7,7 +7,6 @@ import {
   LuEyeOff,
   LuGift,
   LuGraduationCap,
-  LuHeartHandshake,
   LuHotel,
   LuLandmark,
   LuLock,
@@ -68,7 +67,6 @@ const GOAL_OPTIONS: GoalOption[] = [
   { id: 'events', label: 'Experiences', sub: 'Concerts and events', icon: LuTicket },
   { id: 'bill', label: 'My card bill', sub: 'A statement credit', icon: LuCreditCard },
   { id: 'bank', label: 'Cash to my bank', sub: 'A direct deposit', icon: LuLandmark },
-  { id: 'charity', label: 'Charity', sub: 'Donate your rewards', icon: LuHeartHandshake },
 ]
 
 type Step = 'welcome' | 'login' | 'account' | 'cards' | 'balances' | 'goal' | 'setup'
@@ -429,7 +427,7 @@ function Goal({ goals, setGoals, onNext }: { goals: string[]; setGoals: (g: stri
     <div className={styles.body}>
       <h1 className={styles.title}>Where would you like your rewards to go?</h1>
       <p className={styles.sub}>Pick as many as you like. Your Wallet opens on the closest example, and every option stays one tap away.</p>
-      {/* Ten tiles, so the same deal as the card list: the grid scrolls and the two buttons stay put. */}
+      {/* Nine tiles, so the same deal as the card list: the grid scrolls and the two buttons stay put. */}
       <div className={`${styles.scroller} ${styles.scrollerGoal}`}>
         <div className={styles.goalGrid}>
           {GOAL_OPTIONS.map(({ id, label, sub, icon: Icon }) => {

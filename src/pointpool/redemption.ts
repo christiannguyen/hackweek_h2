@@ -12,7 +12,7 @@ export type RedemptionId = typeof REDEMPTION_EXAMPLES[number]['id']
 
 const GOAL_EXAMPLE: Record<string, RedemptionId> = {
   flights: 'flight', hotels: 'hotel', dining: 'gift', shopping: 'gift', gift: 'gift', events: 'gift',
-  groceries: 'credit', bill: 'credit', bank: 'credit', charity: 'credit',
+  groceries: 'credit', bill: 'credit', bank: 'credit',
 }
 export const preferredRedemption = (goals: string[]): RedemptionId => GOAL_EXAMPLE[goals[0]] ?? 'credit'
 

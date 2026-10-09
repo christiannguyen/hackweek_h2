@@ -10,6 +10,7 @@ import {
   LuLightbulb,
   LuPiggyBank,
   LuPlus,
+  LuRefreshCw,
   LuSearch,
   LuShoppingBag,
   LuSnowflake,
@@ -161,6 +162,49 @@ function generateActions(balances: Balance[], insights: CategoryInsight[]): Spen
   return actions
 }
 
+// Evergreen ideas that don't depend on the wallet, so "New ideas" has more to show than the few personal ones.
+const GENERAL_IDEAS: SpendingAction[] = [
+  {
+    id: 'general-autopay',
+    Icon: LuClock3,
+    title: 'Turn on autopay for at least the minimum',
+    detail: 'A missed payment can bring a late fee and hurt your credit score. Autopay for the minimum is a safety net; paying the full balance is still best.',
+  },
+  {
+    id: 'general-offers',
+    Icon: LuTarget,
+    title: 'Check your card app for merchant offers',
+    detail: 'Many cards have extra cashback deals at specific stores. They usually need a tap to activate before you shop.',
+  },
+  {
+    id: 'general-redeem',
+    Icon: LuPiggyBank,
+    title: 'Redeem your rewards regularly',
+    detail: 'Rewards don’t grow while they sit, and some programs expire after a stretch of inactivity. Using them now keeps their value.',
+  },
+  {
+    id: 'general-protection',
+    Icon: LuShoppingBag,
+    title: 'Look up your card’s purchase protections',
+    detail: 'Before a big purchase, check whether your card adds an extended warranty or covers damage and theft for a while after you buy.',
+  },
+  {
+    id: 'general-everyday',
+    Icon: LuWallet,
+    title: 'Use your card for purchases you’d make anyway',
+    detail: 'Groceries, gas and bills you already pay can earn rewards on a card instead of debit. Pay it off each month so interest doesn’t cancel them out.',
+  },
+  {
+    id: 'general-recurring',
+    Icon: LuLayers,
+    title: 'Move subscriptions to your best card',
+    detail: 'Streaming, phone and other monthly charges add up. Putting them on the card that earns the most on them earns rewards without extra spending.',
+  },
+]
+
+// How many ideas show at once; "New ideas" steps through the rest.
+const IDEAS_PER_PAGE = 5
+
 // Share of spending matched to a strong rate: each category's best card, in cash value per dollar over a year (caps,
 // rotating quarters and points value included), against a 5%-back card. A rotating 5% reads as its ~2% average.
 function walletScore(insights: CategoryInsight[]): number {
@@ -288,11 +332,50 @@ export function CoachPage({ balances, onEdit }: Props) {
   const topMissed = missed?.byCategory.reduce((a, b) => (a.missed >= b.missed ? a : b))
   const maxStackMonthly = Math.max(...stacking.map((s) => s.monthly), 0)
 
+
+  const [ideasPage, setIdeasPage] = useState(0)
+
+  const ideas = [
+    ...actions.map((a) => (
+      <CoachItem key={a.id} Icon={a.Icon} title={a.title} detail={a.detail} href={a.href} linkLabel="See options in Compare" />
+    )),
+    ...tips.map((t) =>
+      t.href === '#coach' && !t.balanceId ? (
+        <div key={t.id} className={c.item}>
+          <div className={c.itemIcon}><LuSparkles aria-hidden="true" /></div>
+          <div className={`${c.itemMain} ${c.itemSub}`} style={{ color: 'var(--text)' }}>{t.text}</div>
+        </div>
+      ) : (
+        <a
+          key={t.id}
+          className={c.item}
+          href={t.href}
+          style={{ textDecoration: 'none', color: 'inherit' }}
+          onClick={
+            t.balanceId
+              ? (e) => { e.preventDefault(); onEdit(t.balanceId) }
+              : undefined
+          }
+        >
+          <div className={c.itemIcon}><LuSparkles aria-hidden="true" /></div>
+          <div className={`${c.itemMain} ${c.itemSub}`} style={{ color: 'var(--text)' }}>{t.text}</div>
+          <span className={c.itemAction}><LuChevronRight aria-hidden="true" /></span>
+        </a>
+      ),
+    ),
+    ...GENERAL_IDEAS.map((g) => <CoachItem key={g.id} Icon={g.Icon} title={g.title} detail={g.detail} />),
+  ]
+  const ideasStart = (ideasPage * IDEAS_PER_PAGE) % Math.max(ideas.length, 1)
+  const visibleIdeas = Array.from(
+    { length: Math.min(IDEAS_PER_PAGE, ideas.length) },
+    (_, k) => ideas[(ideasStart + k) % ideas.length],
+  )
+
   const quickActions: { id: string; Icon: IconType; label: string; show: boolean }[] = [
     { id: 'coach-cheat', Icon: LuLayers, label: 'Cheat sheet', show: stacking.length > 0 },
     { id: 'coach-redeem', Icon: LuPiggyBank, label: 'Redeem', show: redemptions.length > 0 },
     { id: 'coach-credit', Icon: LuTrendingUp, label: 'Credit', show: milestones.length > 0 },
-    { id: 'coach-ideas', Icon: LuLightbulb, label: 'Ideas', show: actions.length > 0 || tips.length > 0 },
+    { id: 'coach-ideas', Icon: LuLightbulb, label: 'Ideas', show: ideas.length > 0 },
   ].filter((q) => q.show)
 
   const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -461,40 +544,20 @@ export function CoachPage({ balances, onEdit }: Props) {
 
       {/* The spending breakdown lived here; Home already shows monthly spend by category. */}
 
-      {/* Actions + quick tips */}
-      {(actions.length > 0 || tips.length > 0) && (
+      {/* Ideas: personal actions and tips first, then general ideas. "New ideas" pages through them. */}
+      {ideas.length > 0 && (
         <>
           <div id="coach-ideas" className={c.sectionHead}>
             <span className={c.sectionTitle}>Ideas for your spending</span>
-          </div>
-          <div className={c.list}>
-            {actions.map((a) => (
-              <CoachItem key={a.id} Icon={a.Icon} title={a.title} detail={a.detail} href={a.href} linkLabel="See options in Compare" />
-            ))}
-            {tips.map((t) =>
-              t.href === '#coach' && !t.balanceId ? (
-                <div key={t.id} className={c.item}>
-                  <div className={c.itemIcon}><LuSparkles aria-hidden="true" /></div>
-                  <div className={`${c.itemMain} ${c.itemSub}`} style={{ color: 'var(--text)' }}>{t.text}</div>
-                </div>
-              ) : (
-                <a
-                  key={t.id}
-                  className={c.item}
-                  href={t.href}
-                  style={{ textDecoration: 'none', color: 'inherit' }}
-                  onClick={
-                    t.balanceId
-                      ? (e) => { e.preventDefault(); onEdit(t.balanceId) }
-                      : undefined
-                  }
-                >
-                  <div className={c.itemIcon}><LuSparkles aria-hidden="true" /></div>
-                  <div className={`${c.itemMain} ${c.itemSub}`} style={{ color: 'var(--text)' }}>{t.text}</div>
-                  <span className={c.itemAction}><LuChevronRight aria-hidden="true" /></span>
-                </a>
-              ),
+            {ideas.length > IDEAS_PER_PAGE && (
+              <button type="button" className={c.refreshBtn} onClick={() => setIdeasPage((p) => p + 1)}>
+                <LuRefreshCw key={ideasPage} className={ideasPage > 0 ? c.refreshSpin : undefined} aria-hidden="true" />
+                New ideas
+              </button>
             )}
+          </div>
+          <div key={ideasPage} className={`${c.list} ${c.ideasFade}`} aria-live="polite">
+            {visibleIdeas}
           </div>
         </>
       )}
