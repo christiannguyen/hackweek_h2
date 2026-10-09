@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
-export type Route = 'home' | 'learn' | 'compare' | 'coach' | 'pointpool' | 'offers' | 'welcome' | 'demo'
-const ROUTES: Route[] = ['home', 'learn', 'compare', 'coach', 'pointpool', 'offers', 'welcome', 'demo']
+export type Route = 'home' | 'learn' | 'compare' | 'coach' | 'pointpool' | 'offers' | 'demo'
+const ROUTES: Route[] = ['home', 'learn', 'compare', 'coach', 'pointpool', 'offers', 'demo']
 
 // "#compare/market-Savor" opens Compare at one card; old #coach/card links still work.
 // "#wallet" is the Wallet tab. "#pointpool" (its old name) and "#redeem" (the Use rewards tab, now a

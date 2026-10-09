@@ -29,12 +29,6 @@
   font-size: 28px; line-height: 1; font-weight: 700; letter-spacing: -1.2px;
 }
 .brand img { display: block; border-radius: 9px; }
-.account {
-  margin-left: auto; width: 44px; height: 44px; margin-right: -6px;
-  display: grid; place-items: center; border: 0; background: none; color: #111410; cursor: pointer; border-radius: 50%;
-}
-.account svg { width: 26px; height: 26px; }
-.account:focus-visible { outline: 2px solid #196b36; outline-offset: 2px; }
 .brand:focus-visible { outline: 2px solid #196b36; outline-offset: 5px; border-radius: 9px; }
 
 .tabbar {
